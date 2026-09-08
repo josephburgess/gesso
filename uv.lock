@@ -35,12 +35,26 @@ wheels = [
 ]
 
 [[package]]
+name = "django-vite"
+version = "3.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/51/42/7c7a8b97f56468705bcd37cdd382b4d001c53890d04a9283ce2f151a01e6/django_vite-3.2.0.tar.gz", hash = "sha256:fdb96b3f4307466d1edd1c19a79cf7dbfabb1a7827c5cb2991d9a6aae528c9db", size = 23515 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0a/0b/48e0b6c1c9c107da9039d0997e0ae283682da56ee2bee04eca1342f2c508/django_vite-3.2.0-py3-none-any.whl", hash = "sha256:0e3a6a36674b2a27d94d5ace469d871cab1c1da0d69067daca4f4ab4aa44cc04", size = 20244 },
+]
+
+[[package]]
 name = "gesso-v2"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "django" },
     { name = "django-environ" },
+    { name = "django-vite" },
+    { name = "inertia-django" },
     { name = "psycopg", extra = ["binary"] },
 ]
 
@@ -48,7 +62,21 @@ dependencies = [
 requires-dist = [
     { name = "django", specifier = ">=6.1,<6.2" },
     { name = "django-environ", specifier = ">=0.14.0" },
+    { name = "django-vite", specifier = ">=3.2.0" },
+    { name = "inertia-django", specifier = ">=2.0.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.6" },
+]
+
+[[package]]
+name = "inertia-django"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/51/ae/abfa389f0944526a813e9c3ab644de091b22c7cf8b5284f4381e066509db/inertia_django-2.0.0.tar.gz", hash = "sha256:89ab1ea1a1f45c3441010ecb3d0bca0b0256404d1b1f84e1f1abd734e21006f5", size = 62091 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ab/6a/1c28b9b189b1dc5767b34165b01f65ef46aaab6a38ccc5254a0e3717ccf2/inertia_django-2.0.0-py3-none-any.whl", hash = "sha256:0d8d2200b0d273c39939015d9a2a42b69b7744e2e3b2a9a875bc9fa81df90e73", size = 73300 },
 ]
 
 [[package]]
