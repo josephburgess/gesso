@@ -71,7 +71,12 @@ INERTIA_LAYOUT = 'index.html'
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-DJANGO_VITE = {'default': {'dev_mode': DEBUG}}
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": DEBUG,
+        "manifest_path": BASE_DIR / "frontend/dist/manifest.json",
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
