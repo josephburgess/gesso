@@ -1,3 +1,5 @@
-export default function Home({ message }: { message: string }) {
-  return <h1>{message}</h1>;
+import { Link } from "@inertiajs/react";
+
+export default function Home() {
+  return <Link href="/work">Work</Link>;
 }
