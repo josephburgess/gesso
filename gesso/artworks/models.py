@@ -18,3 +18,14 @@ class Artwork(models.Model):
 
     def __str__(self):
         return self.title
+
+class ArtworkImage(models.Model):
+    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE, related_name="images")
+    original = models.ImageField(upload_to="originals/")
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ("position", "pk")
+
+    def __str__(self):
+        return self.original.name
