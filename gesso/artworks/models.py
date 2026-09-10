@@ -1,11 +1,16 @@
+from typing import Self
+
 from django.db import models
 
 
-class ArtworkQuerySet(models.QuerySet["Artwork"]):
-    def published(self):
+class ArtworkQuerySet(models.QuerySet['Artwork']):
+    def published(self) -> Self:
         return self.filter(is_published=True)
 
+
 class Artwork(models.Model):
+    images: models.Manager[ArtworkImage]
+
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
     year = models.PositiveSmallIntegerField()
@@ -19,13 +24,14 @@ class Artwork(models.Model):
     def __str__(self):
         return self.title
 
+
 class ArtworkImage(models.Model):
-    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE, related_name="images")
-    original = models.ImageField(upload_to="originals/")
+    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE, related_name='images')
+    original = models.ImageField(upload_to='originals/')
     position = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
-        ordering = ("position", "pk")
+        ordering = ('position', 'pk')
 
     def __str__(self):
         return self.original.name

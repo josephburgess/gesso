@@ -26,6 +26,7 @@ dev = [
     "django-types>=0.24.0",
     "pytest>=9.1.1",
     "pytest-django>=4.14.0",
+    "ty>=0.0.83",
 ]
 
 [tool.pytest.ini_options]
