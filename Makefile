@@ -1,0 +1,28 @@
+.PHONY: up down run migrate schema data test check
+
+up:
+	docker compose up -d
+
+down:
+	docker compose down
+
+run:
+	uv run manage.py runserver
+
+migrate:
+	uv run manage.py migrate
+
+schema:
+	@test -n "$(app)" -a -n "$(name)" || (echo "usage: make schema app=<app> name=<name>" && exit 1)
+	uv run manage.py makemigrations $(app) --name schema_$(name)
+
+data:
+	@test -n "$(app)" -a -n "$(name)" || (echo "usage: make data app=<app> name=<name>" && exit 1)
+	uv run manage.py makemigrations $(app) --empty --name data_$(name)
+
+test:
+	uv run pytest
+
+check:
+	uv run ty check
+	uv run manage.py makemigrations --check --dry-run
