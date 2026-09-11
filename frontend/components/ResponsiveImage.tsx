@@ -13,7 +13,6 @@ export default function ResponsiveImage({ image, alt, sizes, eager }: Props) {
       alt={alt}
       loading={eager ? 'eager' : 'lazy'}
       decoding="async"
-      style={{ maxWidth: '100%', height: 'auto' }}
     />
   );
 }

@@ -1,0 +1,102 @@
+@import 'tailwindcss';
+@import '@fontsource/libre-caslon-text/latin-400.css';
+@import '@fontsource/libre-caslon-text/latin-400-italic.css';
+@import '@fontsource/public-sans/latin-400.css';
+
+@theme {
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+
+  --font-serif: 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Public Sans', system-ui, -apple-system, sans-serif;
+
+  --text-display: clamp(21px, 2.6vw, 31px);
+  --text-h1: clamp(24px, 2.8vw, 34px);
+  --text-h2: clamp(22px, 2.4vw, 28px);
+  --text-title: 17.5px;
+  --text-title-lg: clamp(20px, 2.2vw, 26px);
+  --text-body: clamp(15px, 1.5vw, 16.5px);
+  --text-body--line-height: 1.8;
+  --text-body-sm: 14.5px;
+  --text-body-sm--line-height: 1.85;
+  --text-meta: 13px;
+  --text-meta--line-height: 1.65;
+  --text-meta-sm: 12.5px;
+  --text-label: 10.5px;
+  --text-label--letter-spacing: 0.14em;
+  --text-micro: 11.5px;
+
+  --color-transparent: transparent;
+  --color-paper: #fdfbf6;
+  --color-panel: #f2eee4;
+  --color-panel-hair: #e4ddcc;
+  --color-image-bg: #ece6d8;
+  --color-ink: #26241f;
+  --color-ink-body: #3f3b33;
+  --color-ink-muted: #57534a;
+  --color-ink-meta: #6f6a5f;
+  --color-ink-dim: #8f887b;
+  --color-ink-faint: #a59d8f;
+  --color-hair: #e0d8c6;
+  --color-hair-light: #eae4d6;
+  --color-rule: #26241f;
+  --color-accent: #8a5f1d;
+  --color-accent-soft: #ddcfb2;
+  --color-accent-tint: #f4f0e6;
+
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-io: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:root {
+  --d-ui: 160ms;
+  --d-state: 200ms;
+  --d-enter: 420ms;
+  --d-image: 900ms;
+}
+
+@layer base {
+  body {
+    @apply bg-paper font-sans text-body text-ink-body antialiased;
+  }
+
+  h1,
+  h2 {
+    @apply mb-4.5 font-serif font-normal leading-tight text-ink;
+  }
+  h1 {
+    @apply text-h1;
+  }
+  h2 {
+    @apply text-h2;
+  }
+
+  p {
+    @apply mb-[1em] max-w-[64ch];
+  }
+
+  a {
+    @apply border-b border-accent-soft text-accent no-underline transition-colors duration-(--d-ui) hover:border-accent;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+
+  img {
+    @apply block h-auto max-w-full bg-image-bg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
