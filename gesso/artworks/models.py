@@ -18,6 +18,9 @@ class Artwork(models.Model):
     slug = models.SlugField(unique=True)
     year = models.PositiveSmallIntegerField()
     is_published = models.BooleanField(default=False)
+    medium = models.CharField(max_length=200)
+    width_mm = models.PositiveIntegerField()
+    height_mm = models.PositiveIntegerField()
 
     objects = ArtworkQuerySet.as_manager()
 
