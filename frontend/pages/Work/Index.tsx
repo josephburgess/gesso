@@ -1,24 +1,16 @@
-import { Link } from '@inertiajs/react';
-import ResponsiveImage from '../../components/ResponsiveImage';
-import { ImageProps } from '../../types';
+import { ArtworkTile } from '../../types';
 import SiteLayout from '../../layouts/SiteLayout';
+import GalleryTile from '../../components/GalleryTile';
 
-type Tile = { title: string; year: number; href: string; cover: ImageProps | null };
-
-export default function Index({ artworks }: { artworks: Tile[] }) {
+export default function Index({ artworks }: { artworks: ArtworkTile[] }) {
   return (
     <SiteLayout>
-      <ul>
-        {artworks.map((a) => (
-          <li key={a.href}>
-            <Link href={a.href}>
-              {a.cover && <ResponsiveImage image={a.cover} alt={a.title} sizes="240px" />}
-              {a.title}
-            </Link>{' '}
-            ({a.year})
-          </li>
+      <h1>Work</h1>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] items-end gap-x-grid-col gap-y-grid-row">
+        {artworks.map((tile) => (
+          <GalleryTile key={tile.href} tile={tile} />
         ))}
-      </ul>
+      </div>
     </SiteLayout>
   );
 }

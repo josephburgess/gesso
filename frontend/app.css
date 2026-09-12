@@ -61,6 +61,12 @@
   --spacing-rail-x: clamp(22px, 2.4vw, 30px);
 
   --breakpoint-wide: 861px;
+  --text-tile: 16.5px;
+  --text-tile--line-height: 1.4;
+
+  --spacing-grid-row: clamp(26px, 3.4vw, 52px);
+  --spacing-grid-col: clamp(20px, 2.6vw, 40px);
+  --spacing-slot: clamp(20px, 2vw, 26px);
 }
 
 :root {
