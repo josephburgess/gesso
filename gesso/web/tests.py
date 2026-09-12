@@ -15,7 +15,7 @@ def test_published_artwork_renders(client):
 
     assert response.status_code == 200
     assert response.json()['component'] == 'Work/Show'
-    assert response.json()["props"]["artwork"] == {"title": "Live", "year": 2024, "cover": None}
+    assert response.json()['props']['artwork'] == {'title': 'Live', 'year': 2024, 'cover': None}
 
 
 @pytest.mark.django_db
@@ -39,3 +39,11 @@ def test_responsive_image():
         'width': 960,
         'height': 480,
     }
+
+
+@pytest.mark.parametrize(
+    ('path', 'current'),
+    [('/work', True), ('/work/some-painting', True), ('/workshop', False), ('/', False)],
+)
+def test_work_nav_current(path, current):
+    assert props.site_props(path)['nav'][0]['current'] is current

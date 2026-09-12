@@ -25,6 +25,33 @@ class ArtworkDetail(TypedDict):
     cover: ImageProps | None
 
 
+class NavLink(TypedDict):
+    label: str
+    href: str
+    current: bool
+
+
+class Site(TypedDict):
+    name: str
+    tagline: str
+    home_href: str
+    nav: list[NavLink]
+
+
+def _in_section(path: str, href: str) -> bool:
+    return path == href or path.startswith(href + '/')
+
+
+def site_props(path: str) -> Site:
+    nav = [('Work', reverse('work'))]
+    return {
+        'name': 'Elise Beer',
+        'tagline': 'Painter',
+        'home_href': reverse('home'),
+        'nav': [{'label': label, 'href': href, 'current': _in_section(path, href)} for label, href in nav],
+    }
+
+
 def responsive_image(image: ArtworkImage) -> ImageProps | None:
     if not image.variants:
         return None

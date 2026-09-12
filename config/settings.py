@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'inertia.middleware.InertiaMiddleware',
+    'gesso.web.middleware.share_site'
 ]
 
 ROOT_URLCONF = 'config.urls'
