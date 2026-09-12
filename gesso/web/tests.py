@@ -2,6 +2,7 @@ import pytest
 
 from gesso.artworks.models import ArtworkImage
 from gesso.web import props
+from gesso.web.formatting import dimensions
 
 INERTIA = {'X-Inertia': 'true'}
 
@@ -44,3 +45,11 @@ def test_responsive_image():
 )
 def test_work_nav_current(path, current):
     assert props.site_props(path)['nav'][0]['current'] is current
+
+@pytest.mark.parametrize(
+    ("height", "width", "expected"),
+    [(700, 500, "70 × 50 cm"), (705, 500, "70.5 × 50 cm")],
+)
+def test_dimensions(height, width, expected):
+    assert dimensions(height, width) == expected
+

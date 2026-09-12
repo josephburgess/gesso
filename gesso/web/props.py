@@ -1,3 +1,4 @@
+from gesso.web.formatting import dimensions
 from typing import TypedDict
 
 from django.urls import reverse
@@ -22,6 +23,8 @@ class ArtworkTile(TypedDict):
 class ArtworkDetail(TypedDict):
     title: str
     year: int
+    medium: str
+    size: str
     cover: ImageProps | None
 
 
@@ -83,5 +86,7 @@ def artwork_detail(artwork: Artwork) -> ArtworkDetail:
     return {
         'title': artwork.title,
         'year': artwork.year,
+        "medium": artwork.medium,
+        "size": dimensions(artwork.height_mm, artwork.width_mm),
         'cover': _cover(artwork),
     }

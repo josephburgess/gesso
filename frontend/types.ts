@@ -1,5 +1,12 @@
 export type ArtworkTile = { title: string; year: number; href: string; cover: ImageProps | null };
-export type ArtworkDetail = { title: string; year: number; cover: ImageProps | null };
+
+export type ArtworkDetail = {
+  title: string;
+  year: number;
+  medium: string;
+  size: string;
+  cover: ImageProps | null;
+};
 
 export type ImageProps = {
   src: string;
