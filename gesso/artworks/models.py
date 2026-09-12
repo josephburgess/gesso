@@ -3,7 +3,7 @@ from typing import Self
 from django.core.files.base import ContentFile
 from django.db import models
 
-from . import processing
+from gesso.artworks import processing
 
 
 class ArtworkQuerySet(models.QuerySet['Artwork']):
@@ -41,21 +41,21 @@ class ArtworkImage(models.Model):
         return self.original.name
 
     def save(self, *args, **kwargs):
-        new_upload = not self.original._committed # ty: ignore[unresolved-attribute]
+        new_upload = not self.original._committed  # ty: ignore[unresolved-attribute]
         super().save(*args, **kwargs)
         if new_upload:
             self.make_variants()
 
     def make_variants(self):
-        with self.original.open("rb") as f:
+        with self.original.open('rb') as f:
             rendered = processing.webp_variants(f)
         storage = self.original.storage
         self.variants = [
             {
-                "width": v.width,
-                "height": v.height,
-                "name": storage.save(f"variants/{self.pk}/{v.width}.webp", ContentFile(v.data)),
+                'width': v.width,
+                'height': v.height,
+                'name': storage.save(f'variants/{self.pk}/{v.width}.webp', ContentFile(v.data)),
             }
             for v in rendered
         ]
-        self.save(update_fields=["variants"])
+        self.save(update_fields=['variants'])

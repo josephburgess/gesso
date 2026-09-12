@@ -1,6 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import Nav from '../components/Nav';
+import Nav from '@/components/Nav';
 
 export default function SiteLayout({ rail, children }: { rail?: ReactNode; children: ReactNode }) {
   const { site } = usePage().props;

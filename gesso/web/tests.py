@@ -2,7 +2,7 @@ import pytest
 
 from gesso.artworks.models import Artwork, ArtworkImage
 
-from . import props
+from gesso.web import props
 
 INERTIA = {'X-Inertia': 'true'}
 

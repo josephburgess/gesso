@@ -3,8 +3,8 @@ import io
 import pytest
 from PIL import Image
 
-from . import processing
-from .models import Artwork
+from gesso.artworks import processing
+from gesso.artworks.models import Artwork
 
 
 def _png(width, height):

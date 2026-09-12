@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
-import type { ArtworkTile } from '../types';
-import ResponsiveImage from './ResponsiveImage';
+import type { ArtworkTile } from '@/types';
+import ResponsiveImage from '@/components/ResponsiveImage';
 
 export default function GalleryTile({ tile }: { tile: ArtworkTile }) {
   return (

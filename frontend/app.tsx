@@ -2,7 +2,7 @@ import 'vite/modulepreload-polyfill';
 import { createInertiaApp } from '@inertiajs/react';
 import type { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
-import './app.css';
+import '@/app.css';
 
 const pages = import.meta.glob<{ default: ComponentType }>('./pages/**/*.tsx', { eager: true });
 

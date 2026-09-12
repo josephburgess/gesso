@@ -1,4 +1,4 @@
-import SiteLayout from '../layouts/SiteLayout';
+import SiteLayout from '@/layouts/SiteLayout';
 
 export default function Home() {
   return (

@@ -5,7 +5,7 @@ from inertia import render
 
 from gesso.artworks.models import Artwork
 
-from . import props
+from gesso.web import props
 
 
 @require_GET

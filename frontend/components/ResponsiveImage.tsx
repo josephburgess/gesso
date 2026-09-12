@@ -1,4 +1,4 @@
-import type { ImageProps } from '../types';
+import type { ImageProps } from '@/types';
 
 type Props = { image: ImageProps; alt: string; sizes: string; eager?: boolean; className?: string };
 

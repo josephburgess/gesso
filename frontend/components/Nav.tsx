@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import type { NavLink } from '../types';
+import type { NavLink } from '@/types';
 
 export default function Nav({ links }: { links: NavLink[] }) {
   return (

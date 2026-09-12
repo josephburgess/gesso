@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Artwork, ArtworkImage
+from gesso.artworks.models import Artwork, ArtworkImage
 
 
 class ArtworkImageInline(admin.TabularInline):

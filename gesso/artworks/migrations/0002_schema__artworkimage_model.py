@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('artworks', '0001_schema__initial_artworks_model'),
     ]

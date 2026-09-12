@@ -1,6 +1,6 @@
-import ResponsiveImage from '../../components/ResponsiveImage';
-import { ArtworkDetail } from '../../types';
-import SiteLayout from '../../layouts/SiteLayout';
+import ResponsiveImage from '@/components/ResponsiveImage';
+import { ArtworkDetail } from '@/types';
+import SiteLayout from '@/layouts/SiteLayout';
 
 export default function Show({ artwork }: { artwork: ArtworkDetail }) {
   const rail = (

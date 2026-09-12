@@ -1,6 +1,6 @@
-import { ArtworkTile } from '../../types';
-import SiteLayout from '../../layouts/SiteLayout';
-import GalleryTile from '../../components/GalleryTile';
+import { ArtworkTile } from '@/types';
+import SiteLayout from '@/layouts/SiteLayout';
+import GalleryTile from '@/components/GalleryTile';
 
 export default function Index({ artworks }: { artworks: ArtworkTile[] }) {
   return (

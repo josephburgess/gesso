@@ -1,6 +1,6 @@
 from inertia import share
 
-from .props import site_props
+from gesso.web.props import site_props
 
 
 def share_site(get_response):

@@ -48,7 +48,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'inertia.middleware.InertiaMiddleware',
-    'gesso.web.middleware.share_site'
+    'gesso.web.middleware.share_site',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -73,9 +73,9 @@ INERTIA_LAYOUT = 'index.html'
 WSGI_APPLICATION = 'config.wsgi.application'
 
 DJANGO_VITE = {
-    "default": {
-        "dev_mode": DEBUG,
-        "manifest_path": BASE_DIR / "frontend/dist/manifest.json",
+    'default': {
+        'dev_mode': DEBUG,
+        'manifest_path': BASE_DIR / 'frontend/dist/manifest.json',
     }
 }
 
@@ -136,5 +136,5 @@ MAILERS = {
     },
 }
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
