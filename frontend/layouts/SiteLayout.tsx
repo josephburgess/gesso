@@ -2,7 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import Nav from '../components/Nav';
 
-export default function SiteLayout({ children }: { children: ReactNode }) {
+export default function SiteLayout({ rail, children }: { rail?: ReactNode; children: ReactNode }) {
   const { site } = usePage().props;
 
   return (
@@ -13,6 +13,11 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
           <span className="hidden text-tagline tracking-[0.04em] text-ink-meta wide:block">{site.tagline}</span>
         </Link>
         <Nav links={site.nav} />
+        {rail && (
+          <div className="basis-full border-t border-hair pt-slot text-meta text-ink-muted wide:basis-auto wide:self-stretch">
+            {rail}
+          </div>
+        )}
       </header>
       <main className="min-w-0 flex-1 px-gutter pt-block pb-section">{children}</main>
     </div>
