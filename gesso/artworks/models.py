@@ -4,6 +4,7 @@ from django.core.files.base import ContentFile
 from django.db import models
 
 from gesso.artworks import processing
+from gesso.artworks.constants import ArtworkConstants
 
 
 class ArtworkQuerySet(models.QuerySet['Artwork']):
@@ -11,7 +12,7 @@ class ArtworkQuerySet(models.QuerySet['Artwork']):
         return self.filter(is_published=True)
 
 
-class Artwork(models.Model):
+class Artwork(ArtworkConstants, models.Model):
     images: models.Manager[ArtworkImage]
 
     title = models.CharField(max_length=200)
@@ -21,11 +22,25 @@ class Artwork(models.Model):
     medium = models.CharField(max_length=200)
     width_mm = models.PositiveIntegerField()
     height_mm = models.PositiveIntegerField()
+    status = models.CharField(
+        max_length=20,
+        choices=ArtworkConstants.STATUS_CHOICES,
+        default=ArtworkConstants.STATUS_NOT_FOR_SALE,
+    )
+    price_pence = models.PositiveIntegerField(null=True, blank=True)
 
     objects = ArtworkQuerySet.as_manager()
 
     class Meta:
         ordering = ('-year', 'title')
+        constraints = (
+            models.CheckConstraint(
+                condition=~models.Q(status=ArtworkConstants.STATUS_AVAILABLE, price_pence__isnull=True),
+                name='artwork_available_needs_price',
+                violation_error_message='An available work needs a price.',
+            ),
+        )
+
 
     def __str__(self):
         return self.title
