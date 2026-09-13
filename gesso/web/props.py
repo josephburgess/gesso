@@ -3,7 +3,7 @@ from typing import TypedDict
 from django.urls import reverse
 
 from gesso.artworks.models import Artwork, ArtworkImage
-from gesso.web.formatting import dimensions, price
+from gesso.web.formatting import dimensions, price, paragraphs
 
 
 class ImageProps(TypedDict):
@@ -31,6 +31,7 @@ class ArtworkDetail(TypedDict):
     status: str
     available: bool
     price: str | None
+    description: list[str]
 
 
 class NavLink(TypedDict):
@@ -100,4 +101,5 @@ def artwork_detail(artwork: Artwork) -> ArtworkDetail:
         "available": available,
         "price": price(artwork.price_pence) if available and artwork.price_pence else None,
         "cover": _cover(artwork),
+        "description": paragraphs(artwork.description)
     }

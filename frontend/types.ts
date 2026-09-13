@@ -16,6 +16,7 @@ export type ArtworkDetail = {
   status: string;
   available: boolean;
   price: string | null;
+  description: string[];
 };
 
 export type ImageProps = {

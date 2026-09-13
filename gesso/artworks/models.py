@@ -28,6 +28,7 @@ class Artwork(ArtworkConstants, models.Model):
         default=ArtworkConstants.STATUS_NOT_FOR_SALE,
     )
     price_pence = models.PositiveIntegerField(null=True, blank=True)
+    description = models.TextField(blank=True)
 
     objects = ArtworkQuerySet.as_manager()
 

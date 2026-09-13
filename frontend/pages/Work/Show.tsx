@@ -41,6 +41,13 @@ export default function Show({ artwork }: { artwork: ArtworkDetail }) {
           className="max-h-[85vh] w-auto"
         />
       )}
+      {artwork.description.length > 0 && (
+        <div className="mt-block">
+          {artwork.description.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </div>
+      )}
     </SiteLayout>
   );
 }
