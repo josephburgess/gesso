@@ -1,11 +1,12 @@
 import ResponsiveImage from '@/components/ResponsiveImage';
 import { ArtworkDetail } from '@/types';
 import SiteLayout from '@/layouts/SiteLayout';
+import { Head } from '@inertiajs/react';
 
 export default function Show({ artwork }: { artwork: ArtworkDetail }) {
   const rail = (
     <>
-      <h1 className="mb-1 text-title-lg">{artwork.title}</h1>
+      <Head title={artwork.title} />
       <p className="text-meta text-ink-meta tabular-nums">{artwork.year}</p>
       <dl className="mt-6 flex flex-col gap-2">
         {[
