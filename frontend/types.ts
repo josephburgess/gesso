@@ -1,3 +1,5 @@
+export type About = { statement: string; biography: string[] };
+
 export type ArtworkTile = {
   title: string;
   year: number;

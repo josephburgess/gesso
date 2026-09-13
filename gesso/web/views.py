@@ -4,7 +4,7 @@ from django.views.decorators.http import require_GET
 from inertia import render
 
 from gesso.artworks.models import Artwork
-
+from gesso.content.models import SiteContent
 from gesso.web import props
 
 
@@ -23,3 +23,8 @@ def work_index(request: HttpRequest) -> HttpResponse:
 def work_show(request: HttpRequest, slug: str) -> HttpResponse:
     artwork = get_object_or_404(Artwork.objects.published(), slug=slug)
     return render(request, 'Work/Show', {'artwork': props.artwork_detail(artwork)})
+
+
+@require_GET
+def about(request: HttpRequest) -> HttpResponse:
+    return render(request, 'About', {'about': props.about(SiteContent.load())})
