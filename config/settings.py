@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django_vite',
     'inertia',
     'gesso.artworks',
+    'gesso.content',
 ]
 
 MIDDLEWARE = [
