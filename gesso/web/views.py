@@ -28,3 +28,8 @@ def work_show(request: HttpRequest, slug: str) -> HttpResponse:
 @require_GET
 def about(request: HttpRequest) -> HttpResponse:
     return render(request, 'About', {'about': props.about(SiteContent.load())})
+
+
+@require_GET
+def contact(request: HttpRequest) -> HttpResponse:
+    return render(request, 'Contact', {'contact': props.contact(SiteContent.load())})

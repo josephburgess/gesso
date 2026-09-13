@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('artworks', '0004_schema_medium_and_size'),
     ]
@@ -18,10 +17,18 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='artwork',
             name='status',
-            field=models.CharField(choices=[('available', 'Available'), ('sold', 'Sold'), ('not_for_sale', 'Not for sale')], default='not_for_sale', max_length=20),
+            field=models.CharField(
+                choices=[('available', 'Available'), ('sold', 'Sold'), ('not_for_sale', 'Not for sale')],
+                default='not_for_sale',
+                max_length=20,
+            ),
         ),
         migrations.AddConstraint(
             model_name='artwork',
-            constraint=models.CheckConstraint(condition=models.Q(('price_pence__isnull', True), ('status', 'available'), _negated=True), name='artwork_available_needs_price', violation_error_message='An available work needs a price.'),
+            constraint=models.CheckConstraint(
+                condition=models.Q(('price_pence__isnull', True), ('status', 'available'), _negated=True),
+                name='artwork_available_needs_price',
+                violation_error_message='An available work needs a price.',
+            ),
         ),
     ]

@@ -15,8 +15,8 @@ def _png(width, height):
 
 
 def test_published_excludes_drafts(make_artwork):
-    live = make_artwork(slug="live", is_published=True)
-    make_artwork(slug="draft")
+    live = make_artwork(slug='live', is_published=True)
+    make_artwork(slug='draft')
 
     assert list(Artwork.objects.published()) == [live]
 

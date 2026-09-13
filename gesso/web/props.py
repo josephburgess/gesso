@@ -53,6 +53,14 @@ class About(TypedDict):
     biography: list[str]
 
 
+class Contact(TypedDict):
+    details: str
+
+
+def contact(content: SiteContent) -> Contact:
+    return {'details': content.contact_details}
+
+
 def about(content: SiteContent) -> About:
     return {
         'statement': content.statement,
@@ -65,7 +73,7 @@ def _in_section(path: str, href: str) -> bool:
 
 
 def site_props(path: str) -> Site:
-    nav = [("Work", reverse("work")), ("About", reverse("about"))]
+    nav = [('Work', reverse('work')), ('About', reverse('about')), ('Contact', reverse('contact'))]
     return {
         'name': 'Elise Beer',
         'tagline': 'Painter',

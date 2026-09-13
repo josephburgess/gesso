@@ -10,7 +10,15 @@ class ArtworkImageInline(admin.TabularInline):
 
 @admin.register(Artwork)
 class ArtworkAdmin(admin.ModelAdmin):
-    list_display = ('title', 'year', 'is_published', 'status',)
-    list_filter = ('is_published', 'status',)
+    list_display = (
+        'title',
+        'year',
+        'is_published',
+        'status',
+    )
+    list_filter = (
+        'is_published',
+        'status',
+    )
     prepopulated_fields = {'slug': ('title',)}
     inlines = (ArtworkImageInline,)

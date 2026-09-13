@@ -21,6 +21,8 @@ export type ArtworkDetail = {
   description: string[];
 };
 
+export type Contact = { details: string };
+
 export type ImageProps = {
   src: string;
   srcset: string;
