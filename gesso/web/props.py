@@ -1,9 +1,9 @@
-from gesso.web.formatting import dimensions
 from typing import TypedDict
 
 from django.urls import reverse
 
 from gesso.artworks.models import Artwork, ArtworkImage
+from gesso.web.formatting import dimensions, price
 
 
 class ImageProps(TypedDict):
@@ -18,6 +18,8 @@ class ArtworkTile(TypedDict):
     year: int
     href: str
     cover: ImageProps | None
+    status: str
+    available: bool
 
 
 class ArtworkDetail(TypedDict):
@@ -26,6 +28,9 @@ class ArtworkDetail(TypedDict):
     medium: str
     size: str
     cover: ImageProps | None
+    status: str
+    available: bool
+    price: str | None
 
 
 class NavLink(TypedDict):
@@ -75,18 +80,24 @@ def _cover(artwork: Artwork) -> ImageProps | None:
 
 def artwork_tile(artwork: Artwork) -> ArtworkTile:
     return {
-        'title': artwork.title,
-        'year': artwork.year,
-        'href': reverse('work_show', args=[artwork.slug]),
-        'cover': _cover(artwork),
+        "title": artwork.title,
+        "year": artwork.year,
+        "href": reverse("work_show", args=[artwork.slug]),
+        "status": dict(Artwork.STATUS_CHOICES)[artwork.status],
+        "available": artwork.status == Artwork.STATUS_AVAILABLE,
+        "cover": _cover(artwork),
     }
 
 
 def artwork_detail(artwork: Artwork) -> ArtworkDetail:
+    available = artwork.status == Artwork.STATUS_AVAILABLE
     return {
-        'title': artwork.title,
-        'year': artwork.year,
+        "title": artwork.title,
+        "year": artwork.year,
         "medium": artwork.medium,
         "size": dimensions(artwork.height_mm, artwork.width_mm),
-        'cover': _cover(artwork),
+        "status": dict(Artwork.STATUS_CHOICES)[artwork.status],
+        "available": available,
+        "price": price(artwork.price_pence) if available and artwork.price_pence else None,
+        "cover": _cover(artwork),
     }

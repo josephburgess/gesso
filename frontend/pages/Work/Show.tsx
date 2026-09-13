@@ -18,6 +18,15 @@ export default function Show({ artwork }: { artwork: ArtworkDetail }) {
           </div>
         ))}
       </dl>
+      <div className="mt-6 flex items-baseline justify-between gap-3 text-body-sm">
+        <span className="flex items-center gap-2 text-ink-muted">
+          <span className={`size-2 rounded-[50%] border border-accent ${artwork.available ? 'bg-accent' : ''}`} />
+          {artwork.status}
+        </span>
+        {artwork.price && (
+          <span className="font-serif text-price leading-none text-ink tabular-nums">{artwork.price}</span>
+        )}
+      </div>
     </>
   );
 

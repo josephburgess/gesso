@@ -1,4 +1,11 @@
-export type ArtworkTile = { title: string; year: number; href: string; cover: ImageProps | null };
+export type ArtworkTile = {
+  title: string;
+  year: number;
+  href: string;
+  cover: ImageProps | null;
+  status: string;
+  available: boolean;
+};
 
 export type ArtworkDetail = {
   title: string;
@@ -6,6 +13,9 @@ export type ArtworkDetail = {
   medium: string;
   size: string;
   cover: ImageProps | null;
+  status: string;
+  available: boolean;
+  price: string | null;
 };
 
 export type ImageProps = {

@@ -2,7 +2,7 @@ import pytest
 
 from gesso.artworks.models import ArtworkImage
 from gesso.web import props
-from gesso.web.formatting import dimensions
+from gesso.web.formatting import dimensions, price
 
 INERTIA = {'X-Inertia': 'true'}
 
@@ -53,3 +53,6 @@ def test_work_nav_current(path, current):
 def test_dimensions(height, width, expected):
     assert dimensions(height, width) == expected
 
+@pytest.mark.parametrize(("pence", "expected"), [(340000, "£3,400"), (340050, "£3,400.50")])
+def test_price(pence, expected):
+    assert price(pence) == expected

@@ -67,6 +67,7 @@
   --spacing-grid-row: clamp(26px, 3.4vw, 52px);
   --spacing-grid-col: clamp(20px, 2.6vw, 40px);
   --spacing-slot: clamp(20px, 2vw, 26px);
+  --text-price: 19px;
 }
 
 :root {
