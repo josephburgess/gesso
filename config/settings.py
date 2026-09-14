@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'inertia',
     'gesso.artworks',
     'gesso.content',
+    'gesso.enquiries',
 ]
 
 MIDDLEWARE = [
