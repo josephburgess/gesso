@@ -84,7 +84,7 @@
 
   h1,
   h2 {
-    @apply mb-4.5 font-serif font-normal leading-tight text-ink;
+    @apply mb-4.5 font-serif leading-tight font-normal text-ink;
   }
   h1 {
     @apply text-h1;

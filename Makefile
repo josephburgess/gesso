@@ -1,4 +1,4 @@
-.PHONY: up down run migrate schema data test check
+.PHONY: up down run migrate schema data test check fmt lint
 
 up:
 	docker compose up -d
@@ -26,3 +26,19 @@ test:
 check:
 	uv run ty check
 	uv run manage.py makemigrations --check --dry-run
+
+fmt:
+	uv run ruff check --fix
+	uv run ruff format
+	npx prettier --write frontend
+
+lint:
+	uv run ruff check
+	uv run ruff format --check
+	npx prettier --check frontend
+
+dev:
+	$(MAKE) -j2 run vite
+
+vite:
+	npm run dev

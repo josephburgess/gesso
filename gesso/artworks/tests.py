@@ -1,6 +1,5 @@
 import io
 
-import pytest
 from PIL import Image
 
 from gesso.artworks import processing
