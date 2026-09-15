@@ -21,7 +21,7 @@ export type ArtworkDetail = {
   description: string[];
 };
 
-export type Contact = { details: string };
+export type Contact = { details: string; action: string };
 
 export type ImageProps = {
   src: string;
@@ -34,8 +34,11 @@ export type NavLink = { label: string; href: string; current: boolean };
 
 export type Site = { name: string; tagline: string; home_href: string; nav: NavLink[] };
 
+export type FlashMessage = { message: string };
+
 declare module '@inertiajs/core' {
   export interface InertiaConfig {
     sharedPageProps: { site: Site };
+    flashDataType: { messages?: FlashMessage[] };
   }
 }
