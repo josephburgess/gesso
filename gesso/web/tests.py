@@ -1,6 +1,7 @@
 import pytest
 
 from gesso.artworks.models import ArtworkImage
+from gesso.enquiries.models import Enquiry
 from gesso.web import props
 from gesso.web.formatting import dimensions, paragraphs, price
 
@@ -69,3 +70,22 @@ def test_about_renders(client, db):
 
     assert response.status_code == 200
     assert response.json()['component'] == 'About'
+
+
+def test_contact_post_saves_enquiry(client, db):
+    data = {'name': 'A', 'email': 'a@example.com', 'message': 'Hi'}
+
+    response = client.post('/contact', data, content_type='application/json', headers=INERTIA)
+
+    assert response.status_code == 302
+    assert Enquiry.objects.get().name == 'A'
+
+
+def test_contact_post_returns_errors(client, db):
+    data = {'name': '', 'email': 'nope', 'message': ''}
+
+    response = client.post('/contact', data, content_type='application/json', headers=INERTIA)
+
+    assert response.status_code == 200
+    assert response.json()['props']['errors'].keys() == {'name', 'email', 'message'}
+    assert not Enquiry.objects.exists()

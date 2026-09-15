@@ -1,5 +1,6 @@
 from typing import TypedDict
 
+from django.forms import BaseForm
 from django.urls import reverse
 
 from gesso.artworks.models import Artwork, ArtworkImage
@@ -55,10 +56,15 @@ class About(TypedDict):
 
 class Contact(TypedDict):
     details: str
+    action: str
 
 
 def contact(content: SiteContent) -> Contact:
-    return {'details': content.contact_details}
+    return {'details': content.contact_details, 'action': reverse('contact')}
+
+
+def form_errors(form: BaseForm) -> dict[str, str]:
+    return {field: errors[0] for field, errors in form.errors.get_json_data().items()}
 
 
 def about(content: SiteContent) -> About:

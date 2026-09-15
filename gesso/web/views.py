@@ -1,10 +1,14 @@
+import json
+
+from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_GET
+from django.shortcuts import get_object_or_404, redirect
+from django.views.decorators.http import require_GET, require_http_methods
 from inertia import render
 
 from gesso.artworks.models import Artwork
 from gesso.content.models import SiteContent
+from gesso.enquiries.forms import EnquiryForm
 from gesso.web import props
 
 
@@ -30,6 +34,11 @@ def about(request: HttpRequest) -> HttpResponse:
     return render(request, 'About', {'about': props.about(SiteContent.load())})
 
 
-@require_GET
+@require_http_methods(['GET', 'POST'])
 def contact(request: HttpRequest) -> HttpResponse:
-    return render(request, 'Contact', {'contact': props.contact(SiteContent.load())})
+    form = EnquiryForm(json.loads(request.body) if request.method == 'POST' else None)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'Thanks, your message is on its way.')
+        return redirect('contact')
+    return render(request, 'Contact', {'contact': props.contact(SiteContent.load()), 'errors': props.form_errors(form)})
