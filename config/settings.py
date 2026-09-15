@@ -125,6 +125,8 @@ STATIC_URL = 'static/'
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Joe Burgess <hello@joeburgess.dev>')
+
 MAILERS = {
     'default': {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
