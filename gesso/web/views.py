@@ -1,3 +1,4 @@
+from gesso.enquiries.services import submit_enquiry
 import json
 
 from django.contrib import messages
@@ -38,7 +39,7 @@ def about(request: HttpRequest) -> HttpResponse:
 def contact(request: HttpRequest) -> HttpResponse:
     form = EnquiryForm(json.loads(request.body) if request.method == 'POST' else None)
     if form.is_valid():
-        form.save()
+        submit_enquiry(form)
         messages.success(request, 'Thanks, your message is on its way.')
         return redirect('contact')
     return render(request, 'Contact', {'contact': props.contact(SiteContent.load()), 'errors': props.form_errors(form)})
