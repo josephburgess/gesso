@@ -38,17 +38,24 @@ def about(request: HttpRequest) -> HttpResponse:
 @require_http_methods(['GET', 'POST'])
 def contact(request: HttpRequest) -> HttpResponse:
     data = None
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-        except ValueError:
-            data = None
-        if not isinstance(data, dict):
-            return HttpResponseBadRequest()
+
+    if request.method == 'POST' and (data := _json_body(request)) is None:
+        return HttpResponseBadRequest()
+
     form = EnquiryForm(data)
+
     if form.is_valid():
         if not form.is_spam():
             submit_enquiry(form)
         messages.success(request, 'Thanks, your message is on its way.')
         return redirect('contact')
+
     return render(request, 'Contact', {'contact': props.contact(SiteContent.load()), 'errors': props.form_errors(form)})
+
+
+def _json_body(request: HttpRequest) -> dict | None:
+    try:
+        data = json.loads(request.body)
+    except ValueError, UnicodeDecodeError:
+        return None
+    return data if isinstance(data, dict) else None
