@@ -1,8 +1,7 @@
-from gesso.enquiries.services import submit_enquiry
 import json
 
 from django.contrib import messages
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_GET, require_http_methods
 from inertia import render
@@ -10,6 +9,7 @@ from inertia import render
 from gesso.artworks.models import Artwork
 from gesso.content.models import SiteContent
 from gesso.enquiries.forms import EnquiryForm
+from gesso.enquiries.services import submit_enquiry
 from gesso.web import props
 
 
@@ -37,9 +37,18 @@ def about(request: HttpRequest) -> HttpResponse:
 
 @require_http_methods(['GET', 'POST'])
 def contact(request: HttpRequest) -> HttpResponse:
-    form = EnquiryForm(json.loads(request.body) if request.method == 'POST' else None)
+    data = None
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except ValueError:
+            data = None
+        if not isinstance(data, dict):
+            return HttpResponseBadRequest()
+    form = EnquiryForm(data)
     if form.is_valid():
-        submit_enquiry(form)
+        if not form.is_spam():
+            submit_enquiry(form)
         messages.success(request, 'Thanks, your message is on its way.')
         return redirect('contact')
     return render(request, 'Contact', {'contact': props.contact(SiteContent.load()), 'errors': props.form_errors(form)})

@@ -89,3 +89,16 @@ def test_contact_post_returns_errors(client, db):
     assert response.status_code == 200
     assert response.json()['props']['errors'].keys() == {'name', 'email', 'message'}
     assert not Enquiry.objects.exists()
+
+
+def test_contact_spam_catcher_pretends_success(client, db):
+    data = {'name': 'A', 'email': 'a@example.com', 'message': 'Hi', 'website': 'spam.example'}
+
+    response = client.post('/contact', data, content_type='application/json', headers=INERTIA)
+
+    assert response.status_code == 302
+    assert not Enquiry.objects.exists()
+
+
+def test_contact_rejects_non_json(client, db):
+    assert client.post('/contact', {'name': 'A'}).status_code == 400
