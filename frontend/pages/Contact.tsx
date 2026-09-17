@@ -9,7 +9,7 @@ const line =
 
 export default function Contact({ contact }: { contact: ContactProps }) {
   const { flash } = usePage();
-  const form = useForm({ name: '', email: '', message: '' });
+  const form = useForm({ name: '', email: '', message: '', website: '' });
 
   function submit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -59,6 +59,16 @@ export default function Contact({ contact }: { contact: ContactProps }) {
             className={`resize-y border border-line p-3 leading-[1.7] ${line}`}
           />
         </Field>
+        <input
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          value={form.data.website}
+          onChange={(e) => form.setData('website', e.target.value)}
+          className="absolute -left-[9999px]"
+        />
         <button
           type="submit"
           disabled={form.processing}
