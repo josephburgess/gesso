@@ -1,6 +1,7 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin, TabularInline
 
+from gesso.artworks.forms import ArtworkAdminForm
 from gesso.artworks.models import Artwork, ArtworkImage
 
 
@@ -11,6 +12,7 @@ class ArtworkImageInline(TabularInline):
 
 @admin.register(Artwork)
 class ArtworkAdmin(ModelAdmin):
+    form = ArtworkAdminForm
     list_display = (
         'title',
         'year',
