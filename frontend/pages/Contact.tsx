@@ -26,7 +26,7 @@ export default function Contact({ contact }: { contact: ContactProps }) {
           {m.message}
         </p>
       ))}
-      <form onSubmit={submit} className="flex max-w-[760px] flex-col gap-5.5 pt-9.5">
+      <form onSubmit={submit} className="flex max-w-190 flex-col gap-5.5 pt-9.5">
         <div className="flex flex-wrap gap-5.5">
           <Field label="Name" error={form.errors.name} className="min-w-0 flex-[1_1_220px]">
             <input
@@ -67,7 +67,7 @@ export default function Contact({ contact }: { contact: ContactProps }) {
           aria-hidden="true"
           value={form.data.website}
           onChange={(e) => form.setData('website', e.target.value)}
-          className="absolute -left-[9999px]"
+          className="absolute left-[9999px]"
         />
         <button
           type="submit"
