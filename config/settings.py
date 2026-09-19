@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_vite',
     'inertia',
+    'gesso.accounts',
     'gesso.artworks',
     'gesso.content',
     'gesso.enquiries',
