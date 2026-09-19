@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.utils import timezone
+from unfold.admin import ModelAdmin
 
 from gesso.enquiries.models import Enquiry
 
 
 @admin.register(Enquiry)
-class EnquiryAdmin(admin.ModelAdmin):
+class EnquiryAdmin(ModelAdmin):
     list_display = ('name', 'email', 'artwork', 'created_at', 'is_read')
     search_fields = ('name', 'email', 'message')
     fields = ('name', 'email', 'artwork', 'message', 'created_at', 'read_at')

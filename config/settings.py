@@ -28,6 +28,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 # Application definition
 
 INSTALLED_APPS = [
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -69,6 +70,11 @@ TEMPLATES = [
         },
     },
 ]
+
+UNFOLD = {
+    'SITE_TITLE': 'Elise Beer',
+    'SITE_HEADER': 'Elise Beer',
+}
 
 INERTIA_LAYOUT = 'index.html'
 
