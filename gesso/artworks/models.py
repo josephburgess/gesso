@@ -65,9 +65,14 @@ class ArtworkImage(models.Model):
             self.make_variants()
 
     def make_variants(self):
+        storage = self.original.storage
+
+        for old in self.variants:
+            storage.delete(old['name'])
+
         with self.original.open('rb') as f:
             rendered = processing.webp_variants(f)
-        storage = self.original.storage
+
         self.variants = [
             {
                 'width': v.width,
