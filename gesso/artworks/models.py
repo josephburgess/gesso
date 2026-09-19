@@ -29,6 +29,11 @@ class Artwork(ArtworkConstants, models.Model):
     )
     price_pence = models.PositiveIntegerField(null=True, blank=True)
     description = models.TextField(blank=True)
+    featured_order = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text='Show on the home page. Lower numbers come first.',
+    )
 
     objects = ArtworkQuerySet.as_manager()
 

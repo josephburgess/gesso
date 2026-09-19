@@ -27,6 +27,7 @@ class ArtworkAdmin(ModelAdmin):
         'year',
         'is_published',
         'status',
+        'featured_order'
     )
     list_filter = (
         'is_published',
