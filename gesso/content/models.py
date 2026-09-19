@@ -2,6 +2,7 @@ from django.db import models
 
 
 class SiteContent(models.Model):
+    intro = models.TextField(blank=True, help_text='Short text in the home page sidebar.')
     statement = models.TextField(blank=True, help_text='Large statement on About page')
     biography = models.TextField(blank=True, help_text='About page content. Blank lines start new paragraphs.')
     contact_details = models.TextField(blank=True, help_text='Contact page. Line breaks are kept.')
