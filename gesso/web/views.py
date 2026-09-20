@@ -52,10 +52,12 @@ def contact(request: HttpRequest) -> HttpResponse:
         messages.success(request, 'Thanks, your message is on its way.')
         return redirect('contact')
 
+    slug = (data or request.GET).get('artwork')
+    artwork = Artwork.objects.published().filter(slug=slug).first()
     return render(
         request,
         'Contact',
-        {'contact': props.contact(SiteContent.load()), 'errors': props.form_errors(form)},
+        {'contact': props.contact(SiteContent.load(), artwork), 'errors': props.form_errors(form)},
         template_data={'title': 'Contact'},
     )
 

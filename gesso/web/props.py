@@ -58,9 +58,15 @@ class About(TypedDict):
     biography: list[str]
 
 
+class EnquiryArtwork(TypedDict):
+    title: str
+    slug: str
+
+
 class Contact(TypedDict):
     details: str
     action: str
+    artwork: EnquiryArtwork | None
 
 
 class Home(TypedDict):
@@ -82,8 +88,12 @@ def home(content: SiteContent, artworks: list[Artwork]) -> Home:
     }
 
 
-def contact(content: SiteContent) -> Contact:
-    return {'details': content.contact_details, 'action': reverse('contact')}
+def contact(content: SiteContent, artwork: Artwork | None) -> Contact:
+    return {
+        'details': content.contact_details,
+        'action': reverse('contact'),
+        'artwork': {'title': artwork.title, 'slug': artwork.slug} if artwork else None,
+    }
 
 
 def form_errors(form: BaseForm) -> dict[str, str]:

@@ -113,3 +113,20 @@ def test_home_features_published_works_in_order(client, make_artwork):
 
     assert [t['title'] for t in home['featured']] == ['First', 'Second']
     assert len(home['index']) == 2
+
+
+def test_contact_prefills_artwork_from_query(client, make_artwork):
+    make_artwork(title='Ferry Light', slug='ferry-light', is_published=True)
+
+    contact = client.get('/contact?artwork=ferry-light', headers=INERTIA).json()['props']['contact']
+
+    assert contact['artwork'] == {'title': 'Ferry Light', 'slug': 'ferry-light'}
+
+
+def test_contact_links_enquiry_to_artwork(client, make_artwork):
+    artwork = make_artwork(slug='ferry-light', is_published=True)
+    data = {'name': 'A', 'email': 'a@example.com', 'message': 'Hi', 'artwork': 'ferry-light'}
+
+    client.post('/contact', data, content_type='application/json', headers=INERTIA)
+
+    assert Enquiry.objects.get().artwork == artwork
