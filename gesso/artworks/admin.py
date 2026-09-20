@@ -22,13 +22,7 @@ class ArtworkImageInline(TabularInline):
 @admin.register(Artwork)
 class ArtworkAdmin(ModelAdmin):
     form = ArtworkAdminForm
-    list_display = (
-        'title',
-        'year',
-        'is_published',
-        'status',
-        'featured_order'
-    )
+    list_display = ('title', 'year', 'is_published', 'status', 'featured_order')
     list_filter = (
         'is_published',
         'status',

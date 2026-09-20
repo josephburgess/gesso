@@ -15,7 +15,8 @@ from gesso.web import props
 
 @require_GET
 def home(request: HttpRequest) -> HttpResponse:
-    return render(request, 'Home')
+    artworks = list(Artwork.objects.published().prefetch_related('images'))
+    return render(request, 'Home', {'home': props.home(SiteContent.load(), artworks)})
 
 
 @require_GET

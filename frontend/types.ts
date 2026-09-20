@@ -7,6 +7,8 @@ export type ArtworkTile = {
   cover: ImageProps | null;
   status: string;
   available: boolean;
+  medium: string;
+  size: string;
 };
 
 export type ArtworkDetail = {
@@ -30,6 +32,13 @@ export type ImageProps = {
   height: number;
 };
 
+export type Home = {
+  intro: string;
+  statement: string;
+  about_href: string;
+  featured: ArtworkTile[];
+  index: ArtworkTile[];
+};
 export type NavLink = { label: string; href: string; current: boolean };
 
 export type Site = { name: string; tagline: string; home_href: string; nav: NavLink[] };

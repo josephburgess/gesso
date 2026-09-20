@@ -22,6 +22,8 @@ class ArtworkTile(TypedDict):
     cover: ImageProps | None
     status: str
     available: bool
+    medium: str
+    size: str
 
 
 class ArtworkDetail(TypedDict):
@@ -57,6 +59,25 @@ class About(TypedDict):
 class Contact(TypedDict):
     details: str
     action: str
+
+
+class Home(TypedDict):
+    intro: str
+    statement: str
+    about_href: str
+    featured: list[ArtworkTile]
+    index: list[ArtworkTile]
+
+
+def home(content: SiteContent, artworks: list[Artwork]) -> Home:
+    featured = sorted((a for a in artworks if a.featured_order is not None), key=lambda a: a.featured_order or 0)
+    return {
+        'intro': content.intro,
+        'statement': content.statement,
+        'about_href': reverse('about'),
+        'featured': [artwork_tile(a) for a in featured],
+        'index': [artwork_tile(a) for a in artworks],
+    }
 
 
 def contact(content: SiteContent) -> Contact:
@@ -114,6 +135,8 @@ def artwork_tile(artwork: Artwork) -> ArtworkTile:
         'status': dict(Artwork.STATUS_CHOICES)[artwork.status],
         'available': artwork.status == Artwork.STATUS_AVAILABLE,
         'cover': _cover(artwork),
+        'medium': artwork.medium,
+        'size': dimensions(artwork.height_mm, artwork.width_mm),
     }
 
 

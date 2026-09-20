@@ -1,9 +1,9 @@
 import io
-from gesso.artworks.admin import ArtworkAdminForm
 
 from PIL import Image
 
 from gesso.artworks import processing
+from gesso.artworks.admin import ArtworkAdminForm
 from gesso.artworks.models import Artwork
 
 
@@ -28,8 +28,14 @@ def test_variants_never_upscale():
 
 
 FORM_DATA = {
-    'title': 'A', 'slug': 'a', 'year': 2024, 'medium': 'Oil', 'status': 'available',
-    'height_cm': '70.5', 'width_cm': '50', 'price': '3400.50',
+    'title': 'A',
+    'slug': 'a',
+    'year': 2024,
+    'medium': 'Oil',
+    'status': 'available',
+    'height_cm': '70.5',
+    'width_cm': '50',
+    'price': '3400.50',
 }
 
 
