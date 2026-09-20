@@ -3,7 +3,6 @@ import json
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
-from django.utils.text import Truncator
 from django.views.decorators.http import require_GET, require_http_methods
 from inertia import render
 
@@ -30,16 +29,7 @@ def work_index(request: HttpRequest) -> HttpResponse:
 def work_show(request: HttpRequest, slug: str) -> HttpResponse:
     artwork = get_object_or_404(Artwork.objects.published(), slug=slug)
     detail = props.artwork_detail(artwork)
-    return render(
-        request,
-        'Work/Show',
-        {'artwork': detail},
-        template_data={
-            'title': artwork.title,
-            'description': Truncator(detail['description'][0]).chars(155) if detail['description'] else '',
-            'image': request.build_absolute_uri(detail['cover']['src']) if detail['cover'] else '',
-        },
-    )
+    return render(request, 'Work/Show', {'artwork': detail}, template_data=props.artwork_meta(request, detail))
 
 
 @require_GET

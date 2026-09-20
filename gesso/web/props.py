@@ -1,7 +1,9 @@
 from typing import TypedDict
 
 from django.forms import BaseForm
+from django.http import HttpRequest
 from django.urls import reverse
+from django.utils.text import Truncator
 
 from gesso.artworks.models import Artwork, ArtworkImage
 from gesso.content.models import SiteContent
@@ -152,4 +154,13 @@ def artwork_detail(artwork: Artwork) -> ArtworkDetail:
         'price': price(artwork.price_pence) if available and artwork.price_pence else None,
         'cover': _cover(artwork),
         'description': paragraphs(artwork.description),
+    }
+
+
+def artwork_meta(request: HttpRequest, detail: ArtworkDetail) -> dict[str, str]:
+    description, cover = detail['description'], detail['cover']
+    return {
+        'title': detail['title'],
+        'description': Truncator(description[0]).chars(155) if description else '',
+        'image': request.build_absolute_uri(cover['src']) if cover else '',
     }
