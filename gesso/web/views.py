@@ -3,6 +3,7 @@ import json
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
+from django.utils.text import Truncator
 from django.views.decorators.http import require_GET, require_http_methods
 from inertia import render
 
@@ -22,18 +23,28 @@ def home(request: HttpRequest) -> HttpResponse:
 @require_GET
 def work_index(request: HttpRequest) -> HttpResponse:
     artworks = Artwork.objects.published().prefetch_related('images')
-    return render(request, 'Work/Index', {'artworks': [props.artwork_tile(a) for a in artworks]})
+    return render(request, 'Work/Index', {'artworks': [props.artwork_tile(a) for a in artworks]}, template_data={'title': 'Work'})
 
 
 @require_GET
 def work_show(request: HttpRequest, slug: str) -> HttpResponse:
     artwork = get_object_or_404(Artwork.objects.published(), slug=slug)
-    return render(request, 'Work/Show', {'artwork': props.artwork_detail(artwork)})
+    detail = props.artwork_detail(artwork)
+    return render(
+        request,
+        'Work/Show',
+        {'artwork': detail},
+        template_data={
+            'title': artwork.title,
+            'description': Truncator(detail['description'][0]).chars(155) if detail['description'] else '',
+            'image': request.build_absolute_uri(detail['cover']['src']) if detail['cover'] else '',
+        },
+    )
 
 
 @require_GET
 def about(request: HttpRequest) -> HttpResponse:
-    return render(request, 'About', {'about': props.about(SiteContent.load())})
+    return render(request, 'About', {'about': props.about(SiteContent.load())}, template_data={'title': 'About'})
 
 
 @require_http_methods(['GET', 'POST'])
@@ -51,7 +62,12 @@ def contact(request: HttpRequest) -> HttpResponse:
         messages.success(request, 'Thanks, your message is on its way.')
         return redirect('contact')
 
-    return render(request, 'Contact', {'contact': props.contact(SiteContent.load()), 'errors': props.form_errors(form)})
+    return render(
+        request,
+        'Contact',
+        {'contact': props.contact(SiteContent.load()), 'errors': props.form_errors(form)},
+        template_data={'title': 'Contact'},
+    )
 
 
 def _json_body(request: HttpRequest) -> dict | None:
