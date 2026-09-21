@@ -2,8 +2,9 @@ import pytest
 
 from gesso.artworks.models import ArtworkImage
 from gesso.enquiries.models import Enquiry
-from gesso.web import props
 from gesso.web.formatting import dimensions, paragraphs, price
+from gesso.web.middleware import site_props
+from gesso.web.views.work import responsive_image
 
 INERTIA = {'X-Inertia': 'true'}
 
@@ -32,7 +33,7 @@ def test_responsive_image():
         ]
     )
 
-    assert props.responsive_image(image) == {
+    assert responsive_image(image) == {
         'src': '/media/variants/1/960.webp',
         'srcset': '/media/variants/1/480.webp 480w, /media/variants/1/960.webp 960w',
         'width': 960,
@@ -45,7 +46,7 @@ def test_responsive_image():
     [('/work', True), ('/work/some-painting', True), ('/workshop', False), ('/', False)],
 )
 def test_work_nav_current(path, current):
-    assert props.site_props(path)['nav'][0]['current'] is current
+    assert site_props(path)['nav'][0]['current'] is current
 
 
 @pytest.mark.parametrize(

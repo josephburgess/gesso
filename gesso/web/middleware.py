@@ -1,6 +1,34 @@
+from typing import TypedDict
+
+from django.urls import reverse
 from inertia import share
 
-from gesso.web.props import site_props
+
+class NavLink(TypedDict):
+    label: str
+    href: str
+    current: bool
+
+
+class Site(TypedDict):
+    name: str
+    tagline: str
+    home_href: str
+    nav: list[NavLink]
+
+
+def site_props(path: str) -> Site:
+    nav = [('Work', reverse('work')), ('About', reverse('about')), ('Contact', reverse('contact'))]
+    return {
+        'name': 'Elise Beer',
+        'tagline': 'Painter',
+        'home_href': reverse('home'),
+        'nav': [{'label': label, 'href': href, 'current': _in_section(path, href)} for label, href in nav],
+    }
+
+
+def _in_section(path: str, href: str) -> bool:
+    return path == href or path.startswith(href + '/')
 
 
 def share_site(get_response):

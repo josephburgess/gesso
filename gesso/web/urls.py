@@ -1,11 +1,11 @@
 from django.urls import path
 
-from gesso.web import views
+from gesso.web.views import about, contact, home, work
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('work', views.work_index, name='work'),
-    path('work/<slug:slug>', views.work_show, name='work_show'),
-    path('about', views.about, name='about'),
-    path('contact', views.contact, name='contact'),
+    path('', home.page, name='home'),
+    path('work', work.index, name='work'),
+    path('work/<slug:slug>', work.show, name='work_show'),
+    path('about', about.page, name='about'),
+    path('contact', contact.page, name='contact'),
 ]
