@@ -4,7 +4,12 @@ from django.core.files.base import ContentFile
 from django.db import models
 
 from gesso.artworks import processing
-from gesso.artworks.constants import ArtworkConstants
+
+
+class ArtworkStatus(models.TextChoices):
+    AVAILABLE = 'available', 'Available'
+    SOLD = 'sold', 'Sold'
+    NOT_FOR_SALE = 'not_for_sale', 'Not for sale'
 
 
 class ArtworkQuerySet(models.QuerySet['Artwork']):
@@ -12,7 +17,7 @@ class ArtworkQuerySet(models.QuerySet['Artwork']):
         return self.filter(is_published=True)
 
 
-class Artwork(ArtworkConstants, models.Model):
+class Artwork(models.Model):
     images: models.Manager[ArtworkImage]
 
     title = models.CharField(max_length=200)
@@ -24,8 +29,8 @@ class Artwork(ArtworkConstants, models.Model):
     height_mm = models.PositiveIntegerField()
     status = models.CharField(
         max_length=20,
-        choices=ArtworkConstants.STATUS_CHOICES,
-        default=ArtworkConstants.STATUS_NOT_FOR_SALE,
+        choices=ArtworkStatus,
+        default=ArtworkStatus.NOT_FOR_SALE,
     )
     price_pence = models.PositiveIntegerField(null=True, blank=True)
     description = models.TextField(blank=True)
@@ -41,7 +46,7 @@ class Artwork(ArtworkConstants, models.Model):
         ordering = ('-year', 'title')
         constraints = (
             models.CheckConstraint(
-                condition=~models.Q(status=ArtworkConstants.STATUS_AVAILABLE, price_pence__isnull=True),
+                condition=~models.Q(status=ArtworkStatus.AVAILABLE, price_pence__isnull=True),
                 name='artwork_available_needs_price',
                 violation_error_message='An available work needs a price.',
             ),

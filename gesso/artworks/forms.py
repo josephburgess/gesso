@@ -3,7 +3,7 @@ from decimal import Decimal
 from django import forms
 from unfold.widgets import UnfoldAdminDecimalFieldWidget
 
-from gesso.artworks.models import Artwork
+from gesso.artworks.models import Artwork, ArtworkStatus
 
 
 class ArtworkAdminForm(forms.ModelForm):
@@ -28,7 +28,7 @@ class ArtworkAdminForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        if cleaned.get('status') == Artwork.STATUS_AVAILABLE and cleaned.get('price') is None:
+        if cleaned.get('status') == ArtworkStatus.AVAILABLE and cleaned.get('price') is None:
             self.add_error('price', 'An available work needs a price.')
         return cleaned
 

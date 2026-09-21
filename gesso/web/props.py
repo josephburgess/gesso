@@ -5,7 +5,7 @@ from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.text import Truncator
 
-from gesso.artworks.models import Artwork, ArtworkImage
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
 from gesso.content.models import SiteContent
 from gesso.web.formatting import dimensions, paragraphs, price
 
@@ -144,8 +144,8 @@ def artwork_tile(artwork: Artwork) -> ArtworkTile:
         'title': artwork.title,
         'year': artwork.year,
         'href': reverse('work_show', args=[artwork.slug]),
-        'status': dict(Artwork.STATUS_CHOICES)[artwork.status],
-        'available': artwork.status == Artwork.STATUS_AVAILABLE,
+        'status': ArtworkStatus(artwork.status).label,
+        'available': artwork.status == ArtworkStatus.AVAILABLE,
         'cover': _cover(artwork),
         'medium': artwork.medium,
         'size': dimensions(artwork.height_mm, artwork.width_mm),
@@ -153,13 +153,13 @@ def artwork_tile(artwork: Artwork) -> ArtworkTile:
 
 
 def artwork_detail(artwork: Artwork) -> ArtworkDetail:
-    available = artwork.status == Artwork.STATUS_AVAILABLE
+    available = artwork.status == ArtworkStatus.AVAILABLE
     return {
         'title': artwork.title,
         'year': artwork.year,
         'medium': artwork.medium,
         'size': dimensions(artwork.height_mm, artwork.width_mm),
-        'status': dict(Artwork.STATUS_CHOICES)[artwork.status],
+        'status': ArtworkStatus(artwork.status).label,
         'available': available,
         'price': price(artwork.price_pence) if available and artwork.price_pence else None,
         'cover': _cover(artwork),
