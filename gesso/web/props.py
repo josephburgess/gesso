@@ -10,36 +10,6 @@ from gesso.content.models import SiteContent
 from gesso.web.formatting import dimensions, paragraphs, price
 
 
-class ImageProps(TypedDict):
-    src: str
-    srcset: str
-    width: int
-    height: int
-
-
-class ArtworkTile(TypedDict):
-    title: str
-    year: int
-    href: str
-    cover: ImageProps | None
-    status: str
-    available: bool
-    medium: str
-    size: str
-
-
-class ArtworkDetail(TypedDict):
-    title: str
-    year: int
-    medium: str
-    size: str
-    cover: ImageProps | None
-    status: str
-    available: bool
-    price: str | None
-    description: list[str]
-
-
 class NavLink(TypedDict):
     label: str
     href: str
@@ -53,20 +23,71 @@ class Site(TypedDict):
     nav: list[NavLink]
 
 
-class About(TypedDict):
-    statement: str
-    biography: list[str]
+def site_props(path: str) -> Site:
+    nav = [('Work', reverse('work')), ('About', reverse('about')), ('Contact', reverse('contact'))]
+    return {
+        'name': 'Elise Beer',
+        'tagline': 'Painter',
+        'home_href': reverse('home'),
+        'nav': [{'label': label, 'href': href, 'current': _in_section(path, href)} for label, href in nav],
+    }
 
 
-class EnquiryArtwork(TypedDict):
+def _in_section(path: str, href: str) -> bool:
+    return path == href or path.startswith(href + '/')
+
+
+class ImageProps(TypedDict):
+    src: str
+    srcset: str
+    width: int
+    height: int
+
+
+def responsive_image(image: ArtworkImage) -> ImageProps | None:
+    if not image.variants:
+        return None
+    url = image.original.storage.url
+    largest = image.variants[-1]
+    return {
+        'src': url(largest['name']),
+        'srcset': ', '.join(f'{url(v["name"])} {v["width"]}w' for v in image.variants),
+        'width': largest['width'],
+        'height': largest['height'],
+    }
+
+
+def _cover(artwork: Artwork) -> ImageProps | None:
+    images = artwork.images.all()
+    return responsive_image(images[0]) if images else None
+
+
+class ArtworkTile(TypedDict):
     title: str
-    slug: str
+    year: int
+    href: str
+    cover: ImageProps | None
+    status: str
+    available: bool
+    medium: str
+    size: str
 
 
-class Contact(TypedDict):
-    details: str
-    action: str
-    artwork: EnquiryArtwork | None
+def artwork_tile(artwork: Artwork) -> ArtworkTile:
+    return {
+        'title': artwork.title,
+        'year': artwork.year,
+        'href': reverse('work_show', args=[artwork.slug]),
+        'status': ArtworkStatus(artwork.status).label,
+        'available': artwork.status == ArtworkStatus.AVAILABLE,
+        'cover': _cover(artwork),
+        'medium': artwork.medium,
+        'size': dimensions(artwork.height_mm, artwork.width_mm),
+    }
+
+
+def form_errors(form: BaseForm) -> dict[str, str]:
+    return {field: errors[0] for field, errors in form.errors.get_json_data().items()}
 
 
 class Home(TypedDict):
@@ -88,68 +109,16 @@ def home(content: SiteContent, artworks: list[Artwork]) -> Home:
     }
 
 
-def contact(content: SiteContent, artwork: Artwork | None) -> Contact:
-    return {
-        'details': content.contact_details,
-        'action': reverse('contact'),
-        'artwork': {'title': artwork.title, 'slug': artwork.slug} if artwork else None,
-    }
-
-
-def form_errors(form: BaseForm) -> dict[str, str]:
-    return {field: errors[0] for field, errors in form.errors.get_json_data().items()}
-
-
-def about(content: SiteContent) -> About:
-    return {
-        'statement': content.statement,
-        'biography': paragraphs(content.biography),
-    }
-
-
-def _in_section(path: str, href: str) -> bool:
-    return path == href or path.startswith(href + '/')
-
-
-def site_props(path: str) -> Site:
-    nav = [('Work', reverse('work')), ('About', reverse('about')), ('Contact', reverse('contact'))]
-    return {
-        'name': 'Elise Beer',
-        'tagline': 'Painter',
-        'home_href': reverse('home'),
-        'nav': [{'label': label, 'href': href, 'current': _in_section(path, href)} for label, href in nav],
-    }
-
-
-def responsive_image(image: ArtworkImage) -> ImageProps | None:
-    if not image.variants:
-        return None
-    url = image.original.storage.url
-    largest = image.variants[-1]
-    return {
-        'src': url(largest['name']),
-        'srcset': ', '.join(f'{url(v["name"])} {v["width"]}w' for v in image.variants),
-        'width': largest['width'],
-        'height': largest['height'],
-    }
-
-
-def _cover(artwork: Artwork) -> ImageProps | None:
-    images = artwork.images.all()
-    return responsive_image(images[0]) if images else None
-
-
-def artwork_tile(artwork: Artwork) -> ArtworkTile:
-    return {
-        'title': artwork.title,
-        'year': artwork.year,
-        'href': reverse('work_show', args=[artwork.slug]),
-        'status': ArtworkStatus(artwork.status).label,
-        'available': artwork.status == ArtworkStatus.AVAILABLE,
-        'cover': _cover(artwork),
-        'medium': artwork.medium,
-        'size': dimensions(artwork.height_mm, artwork.width_mm),
-    }
+class ArtworkDetail(TypedDict):
+    title: str
+    year: int
+    medium: str
+    size: str
+    cover: ImageProps | None
+    status: str
+    available: bool
+    price: str | None
+    description: list[str]
 
 
 def artwork_detail(artwork: Artwork) -> ArtworkDetail:
@@ -168,9 +137,41 @@ def artwork_detail(artwork: Artwork) -> ArtworkDetail:
 
 
 def artwork_meta(request: HttpRequest, detail: ArtworkDetail) -> dict[str, str]:
+    """Title, description and image for the server-rendered <head>, for link previews."""
     description, cover = detail['description'], detail['cover']
     return {
         'title': detail['title'],
         'description': Truncator(description[0]).chars(155) if description else '',
         'image': request.build_absolute_uri(cover['src']) if cover else '',
+    }
+
+
+class About(TypedDict):
+    statement: str
+    biography: list[str]
+
+
+def about(content: SiteContent) -> About:
+    return {
+        'statement': content.statement,
+        'biography': paragraphs(content.biography),
+    }
+
+
+class EnquiryArtwork(TypedDict):
+    title: str
+    slug: str
+
+
+class Contact(TypedDict):
+    details: str
+    action: str
+    artwork: EnquiryArtwork | None
+
+
+def contact(content: SiteContent, artwork: Artwork | None) -> Contact:
+    return {
+        'details': content.contact_details,
+        'action': reverse('contact'),
+        'artwork': {'title': artwork.title, 'slug': artwork.slug} if artwork else None,
     }
