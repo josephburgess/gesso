@@ -32,7 +32,7 @@ def responsive_image(image: ArtworkImage) -> ImageProps | None:
     }
 
 
-def cover(artwork: Artwork) -> ImageProps | None:
+def _cover(artwork: Artwork) -> ImageProps | None:
     images = artwork.images.all()
     return responsive_image(images[0]) if images else None
 
@@ -55,7 +55,7 @@ def artwork_tile(artwork: Artwork) -> ArtworkTile:
         'href': reverse('work_show', args=[artwork.slug]),
         'status': ArtworkStatus(artwork.status).label,
         'available': artwork.status == ArtworkStatus.AVAILABLE,
-        'cover': cover(artwork),
+        'cover': _cover(artwork),
         'medium': artwork.medium,
         'size': dimensions(artwork.height_mm, artwork.width_mm),
     }
@@ -73,7 +73,7 @@ class ArtworkDetail(TypedDict):
     description: list[str]
 
 
-def artwork_detail(artwork: Artwork) -> ArtworkDetail:
+def _artwork_detail(artwork: Artwork) -> ArtworkDetail:
     available = artwork.status == ArtworkStatus.AVAILABLE
     return {
         'title': artwork.title,
@@ -83,12 +83,12 @@ def artwork_detail(artwork: Artwork) -> ArtworkDetail:
         'status': ArtworkStatus(artwork.status).label,
         'available': available,
         'price': price(artwork.price_pence) if available and artwork.price_pence else None,
-        'cover': cover(artwork),
+        'cover': _cover(artwork),
         'description': paragraphs(artwork.description),
     }
 
 
-def artwork_meta(request: HttpRequest, detail: ArtworkDetail) -> dict[str, str]:
+def _artwork_meta(request: HttpRequest, detail: ArtworkDetail) -> dict[str, str]:
     description, image = detail['description'], detail['cover']
     return {
         'title': detail['title'],
@@ -102,7 +102,7 @@ class Purchase(TypedDict):
     enquire_label: str
 
 
-def purchase(artwork: Artwork) -> Purchase:
+def _purchase(artwork: Artwork) -> Purchase:
     sold = artwork.status == ArtworkStatus.SOLD
     return {
         'enquire_href': reverse('contact') + '?' + urlencode({'artwork': artwork.slug}),
@@ -119,5 +119,5 @@ def index(request: HttpRequest) -> HttpResponse:
 @require_GET
 def show(request: HttpRequest, slug: str) -> HttpResponse:
     artwork = get_object_or_404(Artwork.objects.published(), slug=slug)
-    detail = artwork_detail(artwork)
-    return render(request, 'Work/Show', {'artwork': detail, 'purchase': purchase(artwork)}, template_data=artwork_meta(request, detail))
+    detail = _artwork_detail(artwork)
+    return render(request, 'Work/Show', {'artwork': detail, 'purchase': _purchase(artwork)}, template_data=_artwork_meta(request, detail))

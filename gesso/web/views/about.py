@@ -13,13 +13,8 @@ class About(TypedDict):
     biography: list[str]
 
 
-def props(content: SiteContent) -> About:
-    return {
-        'statement': content.statement,
-        'biography': paragraphs(content.biography),
-    }
-
-
 @require_GET
 def page(request: HttpRequest) -> HttpResponse:
-    return render(request, 'About', {'about': props(SiteContent.load())}, template_data={'title': 'About'})
+    content = SiteContent.load()
+    about: About = {'statement': content.statement, 'biography': paragraphs(content.biography)}
+    return render(request, 'About', {'about': about}, template_data={'title': 'About'})

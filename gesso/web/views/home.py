@@ -18,18 +18,16 @@ class Home(TypedDict):
     index: list[ArtworkTile]
 
 
-def props(content: SiteContent, artworks: list[Artwork]) -> Home:
+@require_GET
+def page(request: HttpRequest) -> HttpResponse:
+    content = SiteContent.load()
+    artworks = list(Artwork.objects.published().prefetch_related('images'))
     featured = sorted((a for a in artworks if a.featured_order is not None), key=lambda a: a.featured_order or 0)
-    return {
+    home: Home = {
         'intro': content.intro,
         'statement': content.statement,
         'about_href': reverse('about'),
         'featured': [artwork_tile(a) for a in featured],
         'index': [artwork_tile(a) for a in artworks],
     }
-
-
-@require_GET
-def page(request: HttpRequest) -> HttpResponse:
-    artworks = list(Artwork.objects.published().prefetch_related('images'))
-    return render(request, 'Home', {'home': props(SiteContent.load(), artworks)})
+    return render(request, 'Home', {'home': home})

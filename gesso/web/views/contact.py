@@ -26,14 +26,6 @@ class Contact(TypedDict):
     artwork: EnquiryArtwork | None
 
 
-def props(content: SiteContent, artwork: Artwork | None) -> Contact:
-    return {
-        'details': content.contact_details,
-        'action': reverse('contact'),
-        'artwork': {'title': artwork.title, 'slug': artwork.slug} if artwork else None,
-    }
-
-
 @require_http_methods(['GET', 'POST'])
 def page(request: HttpRequest) -> HttpResponse:
     data = None
@@ -51,10 +43,15 @@ def page(request: HttpRequest) -> HttpResponse:
 
     slug = (data or request.GET).get('artwork')
     artwork = Artwork.objects.published().filter(slug=slug).first()
+    contact: Contact = {
+        'details': SiteContent.load().contact_details,
+        'action': reverse('contact'),
+        'artwork': {'title': artwork.title, 'slug': artwork.slug} if artwork else None,
+    }
     return render(
         request,
         'Contact',
-        {'contact': props(SiteContent.load(), artwork), 'errors': _form_errors(form)},
+        {'contact': contact, 'errors': _form_errors(form)},
         template_data={'title': 'Contact'},
     )
 
