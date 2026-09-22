@@ -1,6 +1,6 @@
 import pytest
 
-from gesso.artworks.models import ArtworkImage
+from gesso.artworks.models import ArtworkImage, ArtworkStatus
 from gesso.enquiries.models import Enquiry
 from gesso.web.formatting import dimensions, paragraphs, price
 from gesso.web.middleware import site_props
@@ -17,6 +17,22 @@ def test_published_artwork_renders(client, make_artwork):
     assert response.status_code == 200
     assert response.json()['component'] == 'Work/Show'
     assert response.json()['props']['artwork']['title'] == 'Live'
+
+
+def test_artwork_page_offers_an_enquiry(client, make_artwork):
+    make_artwork(slug='live', is_published=True)
+
+    purchase = client.get('/work/live', headers=INERTIA).json()['props']['purchase']
+
+    assert purchase == {'enquire_href': '/contact?artwork=live', 'enquire_label': 'Enquire about this work'}
+
+
+def test_sold_artwork_offers_similar_work(client, make_artwork):
+    make_artwork(slug='gone', is_published=True, status=ArtworkStatus.SOLD)
+
+    purchase = client.get('/work/gone', headers=INERTIA).json()['props']['purchase']
+
+    assert purchase['enquire_label'] == 'Enquire about similar work'
 
 
 def test_draft_artwork_404s(client, make_artwork):

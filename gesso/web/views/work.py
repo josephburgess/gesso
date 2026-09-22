@@ -1,4 +1,5 @@
 from typing import TypedDict
+from urllib.parse import urlencode
 
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
@@ -96,6 +97,19 @@ def artwork_meta(request: HttpRequest, detail: ArtworkDetail) -> dict[str, str]:
     }
 
 
+class Purchase(TypedDict):
+    enquire_href: str
+    enquire_label: str
+
+
+def purchase(artwork: Artwork) -> Purchase:
+    sold = artwork.status == ArtworkStatus.SOLD
+    return {
+        'enquire_href': reverse('contact') + '?' + urlencode({'artwork': artwork.slug}),
+        'enquire_label': 'Enquire about similar work' if sold else 'Enquire about this work',
+    }
+
+
 @require_GET
 def index(request: HttpRequest) -> HttpResponse:
     artworks = Artwork.objects.published().prefetch_related('images')
@@ -106,4 +120,4 @@ def index(request: HttpRequest) -> HttpResponse:
 def show(request: HttpRequest, slug: str) -> HttpResponse:
     artwork = get_object_or_404(Artwork.objects.published(), slug=slug)
     detail = artwork_detail(artwork)
-    return render(request, 'Work/Show', {'artwork': detail}, template_data=artwork_meta(request, detail))
+    return render(request, 'Work/Show', {'artwork': detail, 'purchase': purchase(artwork)}, template_data=artwork_meta(request, detail))

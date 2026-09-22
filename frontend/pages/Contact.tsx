@@ -9,7 +9,7 @@ const line =
 
 export default function Contact({ contact }: { contact: ContactProps }) {
   const { flash } = usePage();
-  const form = useForm({ name: '', email: '', message: '', website: '' });
+  const form = useForm({ name: '', email: '', message: '', website: '', artwork: contact.artwork?.slug ?? '' });
 
   function submit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -26,6 +26,11 @@ export default function Contact({ contact }: { contact: ContactProps }) {
           {m.message}
         </p>
       ))}
+      {contact.artwork && (
+        <p className="text-meta text-ink-meta">
+          About <span className="font-serif text-ink">{contact.artwork.title}</span>
+        </p>
+      )}
       <form onSubmit={submit} className="flex max-w-190 flex-col gap-5.5 pt-9.5">
         <div className="flex flex-wrap gap-5.5">
           <Field label="Name" error={form.errors.name} className="min-w-0 flex-[1_1_220px]">

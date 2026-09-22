@@ -1,9 +1,9 @@
 import ResponsiveImage from '@/components/ResponsiveImage';
-import { ArtworkDetail } from '@/types';
+import type { ArtworkDetail, Purchase } from '@/types';
 import SiteLayout from '@/layouts/SiteLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
-export default function Show({ artwork }: { artwork: ArtworkDetail }) {
+export default function Show({ artwork, purchase }: { artwork: ArtworkDetail; purchase: Purchase }) {
   const rail = (
     <>
       <Head title={artwork.title} />
@@ -28,6 +28,12 @@ export default function Show({ artwork }: { artwork: ArtworkDetail }) {
           <span className="font-serif text-price leading-none text-ink tabular-nums">{artwork.price}</span>
         )}
       </div>
+      <Link
+        href={purchase.enquire_href}
+        className="mt-6 block border border-line px-4.5 py-3 text-center text-body-sm transition-colors duration-(--d-state) hover:border-ink hover:bg-accent-tint"
+      >
+        {purchase.enquire_label}
+      </Link>
     </>
   );
 
