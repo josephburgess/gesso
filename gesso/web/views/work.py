@@ -8,7 +8,7 @@ from django.utils.text import Truncator
 from django.views.decorators.http import require_GET
 from inertia import render
 
-from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
+from gesso.artworks.models import FOR_SALE_STATUSES, Artwork, ArtworkImage, ArtworkStatus
 from gesso.web.formatting import dimensions, paragraphs, price
 
 
@@ -82,7 +82,7 @@ def _artwork_detail(artwork: Artwork) -> ArtworkDetail:
         'size': dimensions(artwork.height_mm, artwork.width_mm),
         'status': ArtworkStatus(artwork.status).label,
         'available': available,
-        'price': price(artwork.price_pence) if available and artwork.price_pence else None,
+        'price': price(artwork.price_pence) if artwork.status in FOR_SALE_STATUSES and artwork.price_pence else None,
         'cover': _cover(artwork),
         'description': paragraphs(artwork.description),
     }

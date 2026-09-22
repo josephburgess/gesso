@@ -27,6 +27,14 @@ def test_artwork_page_offers_an_enquiry(client, make_artwork):
     assert purchase == {'enquire_href': '/contact?artwork=live', 'enquire_label': 'Enquire about this work'}
 
 
+def test_reserved_artwork_keeps_its_price(client, make_artwork):
+    make_artwork(slug='held', is_published=True, status=ArtworkStatus.RESERVED, price_pence=340000)
+
+    artwork = client.get('/work/held', headers=INERTIA).json()['props']['artwork']
+
+    assert (artwork['status'], artwork['price']) == ('Reserved', '£3,400')
+
+
 def test_sold_artwork_offers_similar_work(client, make_artwork):
     make_artwork(slug='gone', is_published=True, status=ArtworkStatus.SOLD)
 

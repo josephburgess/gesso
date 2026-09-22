@@ -4,7 +4,7 @@ from PIL import Image
 
 from gesso.artworks import processing
 from gesso.artworks.admin import ArtworkAdminForm
-from gesso.artworks.models import Artwork
+from gesso.artworks.models import Artwork, ArtworkStatus
 
 
 def _png(width, height):
@@ -52,3 +52,17 @@ def test_admin_form_needs_price_when_available(db):
     form = ArtworkAdminForm(FORM_DATA | {'price': ''})
 
     assert 'price' in form.errors
+
+
+def test_admin_form_hides_reserved_status(make_artwork):
+    choices = ArtworkAdminForm(instance=make_artwork()).fields['status'].choices
+
+    assert ArtworkStatus.RESERVED not in dict(choices)
+
+
+def test_admin_form_can_move_a_work_off_reserved(make_artwork):
+    artwork = make_artwork(status=ArtworkStatus.RESERVED, price_pence=100)
+    form = ArtworkAdminForm(FORM_DATA | {'status': ArtworkStatus.SOLD}, instance=artwork)
+
+    assert ArtworkStatus.RESERVED in dict(form.fields['status'].choices)
+    assert form.is_valid(), form.errors

@@ -8,8 +8,12 @@ from gesso.artworks import processing
 
 class ArtworkStatus(models.TextChoices):
     AVAILABLE = 'available', 'Available'
+    RESERVED = 'reserved', 'Reserved'
     SOLD = 'sold', 'Sold'
     NOT_FOR_SALE = 'not_for_sale', 'Not for sale'
+
+
+FOR_SALE_STATUSES = (ArtworkStatus.AVAILABLE, ArtworkStatus.RESERVED)
 
 
 class ArtworkQuerySet(models.QuerySet['Artwork']):
@@ -33,6 +37,7 @@ class Artwork(models.Model):
         default=ArtworkStatus.NOT_FOR_SALE,
     )
     price_pence = models.PositiveIntegerField(null=True, blank=True)
+    reserved_until = models.DateTimeField(null=True, blank=True, editable=False)
     description = models.TextField(blank=True)
     featured_order = models.PositiveSmallIntegerField(
         null=True,
@@ -46,9 +51,9 @@ class Artwork(models.Model):
         ordering = ('-year', 'title')
         constraints = (
             models.CheckConstraint(
-                condition=~models.Q(status=ArtworkStatus.AVAILABLE, price_pence__isnull=True),
-                name='artwork_available_needs_price',
-                violation_error_message='An available work needs a price.',
+                condition=~models.Q(status__in=FOR_SALE_STATUSES, price_pence__isnull=True),
+                name='artwork_for_sale_needs_price',
+                violation_error_message='A work for sale needs a price.',
             ),
         )
 
