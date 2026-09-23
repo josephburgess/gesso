@@ -11,8 +11,17 @@ class OrderAdmin(ModelAdmin):
     list_display = ('artwork', 'status', 'buyer_name', 'total', 'created_at')
     list_filter = ('status',)
     fields = (
-        'artwork', 'status', 'total', 'buyer_name', 'buyer_email', 'shipping_address',
-        'created_at', 'expires_at', 'paid_at', 'shipped_at', 'stripe_session_id',
+        'artwork',
+        'status',
+        'total',
+        'buyer_name',
+        'buyer_email',
+        'shipping_address',
+        'created_at',
+        'expires_at',
+        'paid_at',
+        'shipped_at',
+        'stripe_session_id',
     )
     readonly_fields = fields
     actions = ('mark_shipped',)

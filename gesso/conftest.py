@@ -1,8 +1,10 @@
 from itertools import count
+from types import SimpleNamespace
 
 import pytest
 
 from gesso.artworks.models import Artwork
+from gesso.commerce import stripe_client
 
 _n = count(1)
 
@@ -22,3 +24,15 @@ def make_artwork(db):
         return Artwork.objects.create(**(defaults | fields))
 
     return make
+
+
+@pytest.fixture
+def stripe_sessions(monkeypatch):
+    created = []
+
+    def create_checkout_session(order, success_url, cancel_url):
+        created.append(order)
+        return SimpleNamespace(id=f'cs_test_{len(created)}', url='https://checkout.stripe.test/pay')
+
+    monkeypatch.setattr(stripe_client, 'create_checkout_session', create_checkout_session)
+    return created

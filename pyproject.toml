@@ -10,6 +10,7 @@ dependencies = [
     "inertia-django>=2.0.0",
     "pillow>=12.3.0",
     "psycopg[binary]>=3.3.6",
+    "stripe>=15.6.1",
 ]
 
 [tool.ruff]

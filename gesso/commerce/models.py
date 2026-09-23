@@ -37,3 +37,6 @@ class Order(models.Model):
 class StripeEvent(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
     received_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.id
