@@ -2,11 +2,14 @@ from django.contrib import admin
 from django.shortcuts import redirect
 from unfold.admin import ModelAdmin
 
+from gesso.content.forms import SiteContentAdminForm
 from gesso.content.models import SiteContent
 
 
 @admin.register(SiteContent)
 class SiteContentAdmin(ModelAdmin):
+    form = SiteContentAdminForm
+
     def has_add_permission(self, request):
         return False
 
