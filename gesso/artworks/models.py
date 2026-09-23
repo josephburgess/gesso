@@ -2,18 +2,15 @@ from typing import Self
 
 from django.core.files.base import ContentFile
 from django.db import models
+from django.utils import timezone
 
 from gesso.artworks import processing
 
 
 class ArtworkStatus(models.TextChoices):
     AVAILABLE = 'available', 'Available'
-    RESERVED = 'reserved', 'Reserved'
     SOLD = 'sold', 'Sold'
     NOT_FOR_SALE = 'not_for_sale', 'Not for sale'
-
-
-FOR_SALE_STATUSES = (ArtworkStatus.AVAILABLE, ArtworkStatus.RESERVED)
 
 
 class ArtworkQuerySet(models.QuerySet['Artwork']):
@@ -51,14 +48,28 @@ class Artwork(models.Model):
         ordering = ('-year', 'title')
         constraints = (
             models.CheckConstraint(
-                condition=~models.Q(status__in=FOR_SALE_STATUSES, price_pence__isnull=True),
-                name='artwork_for_sale_needs_price',
-                violation_error_message='A work for sale needs a price.',
+                condition=~models.Q(status=ArtworkStatus.AVAILABLE, price_pence__isnull=True),
+                name='artwork_available_needs_price',
+                violation_error_message='An available work needs a price.',
             ),
         )
 
     def __str__(self):
         return self.title
+
+    @property
+    def is_reserved(self) -> bool:
+        return self.reserved_until is not None and self.reserved_until > timezone.now()
+
+    @property
+    def is_purchasable(self) -> bool:
+        return self.status == ArtworkStatus.AVAILABLE and self.price_pence is not None and not self.is_reserved
+
+    @property
+    def display_status(self) -> str:
+        if self.status == ArtworkStatus.AVAILABLE and self.is_reserved:
+            return 'Reserved'
+        return ArtworkStatus(self.status).label
 
 
 class ArtworkImage(models.Model):

@@ -1,10 +1,9 @@
 from decimal import Decimal
-from typing import cast
 
 from django import forms
 from unfold.widgets import UnfoldAdminDecimalFieldWidget
 
-from gesso.artworks.models import FOR_SALE_STATUSES, Artwork, ArtworkStatus
+from gesso.artworks.models import Artwork, ArtworkStatus
 
 
 class ArtworkAdminForm(forms.ModelForm):
@@ -26,14 +25,11 @@ class ArtworkAdminForm(forms.ModelForm):
                 'width_cm': Decimal(self.instance.width_mm) / 10,
                 'price': Decimal(self.instance.price_pence) / 100 if self.instance.price_pence is not None else None,
             }
-        if self.instance.status != ArtworkStatus.RESERVED:
-            status = cast(forms.ChoiceField, self.fields['status'])
-            status.choices = [c for c in ArtworkStatus.choices if c[0] != ArtworkStatus.RESERVED]
 
     def clean(self):
         cleaned = super().clean()
-        if cleaned.get('status') in FOR_SALE_STATUSES and cleaned.get('price') is None:
-            self.add_error('price', 'A work for sale needs a price.')
+        if cleaned.get('status') == ArtworkStatus.AVAILABLE and cleaned.get('price') is None:
+            self.add_error('price', 'An available work needs a price.')
         return cleaned
 
     def save(self, commit=True):

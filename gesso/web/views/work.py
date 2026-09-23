@@ -8,7 +8,7 @@ from django.utils.text import Truncator
 from django.views.decorators.http import require_GET
 from inertia import render
 
-from gesso.artworks.models import FOR_SALE_STATUSES, Artwork, ArtworkImage, ArtworkStatus
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
 from gesso.web.formatting import dimensions, paragraphs, price
 
 
@@ -53,8 +53,8 @@ def artwork_tile(artwork: Artwork) -> ArtworkTile:
         'title': artwork.title,
         'year': artwork.year,
         'href': reverse('work_show', args=[artwork.slug]),
-        'status': ArtworkStatus(artwork.status).label,
-        'available': artwork.status == ArtworkStatus.AVAILABLE,
+        'status': artwork.display_status,
+        'available': artwork.is_purchasable,
         'cover': _cover(artwork),
         'medium': artwork.medium,
         'size': dimensions(artwork.height_mm, artwork.width_mm),
@@ -74,15 +74,14 @@ class ArtworkDetail(TypedDict):
 
 
 def _artwork_detail(artwork: Artwork) -> ArtworkDetail:
-    available = artwork.status == ArtworkStatus.AVAILABLE
     return {
         'title': artwork.title,
         'year': artwork.year,
         'medium': artwork.medium,
         'size': dimensions(artwork.height_mm, artwork.width_mm),
-        'status': ArtworkStatus(artwork.status).label,
-        'available': available,
-        'price': price(artwork.price_pence) if artwork.status in FOR_SALE_STATUSES and artwork.price_pence else None,
+        'status': artwork.display_status,
+        'available': artwork.is_purchasable,
+        'price': price(artwork.price_pence) if artwork.status == ArtworkStatus.AVAILABLE and artwork.price_pence else None,
         'cover': _cover(artwork),
         'description': paragraphs(artwork.description),
     }

@@ -26,7 +26,7 @@ def test_checkout_reserves_the_work(for_sale, stripe_sessions):
 
     for_sale.refresh_from_db()
     order = Order.objects.get()
-    assert for_sale.status == ArtworkStatus.RESERVED
+    assert for_sale.is_reserved
     assert for_sale.reserved_until == order.expires_at
     assert (order.amount_pence, order.delivery_pence, order.stripe_session_id) == (340000, 8500, 'cs_test_1')
 
@@ -41,7 +41,7 @@ def test_checkout_refuses_a_reserved_work(for_sale, stripe_sessions):
 
 
 def test_checkout_takes_over_a_lapsed_reservation(for_sale, stripe_sessions):
-    Artwork.objects.filter(pk=for_sale.pk).update(status=ArtworkStatus.RESERVED, reserved_until=timezone.now() - timedelta(minutes=1))
+    Artwork.objects.filter(pk=for_sale.pk).update(reserved_until=timezone.now() - timedelta(minutes=1))
 
     start_checkout(for_sale, SUCCESS_URL, CANCEL_URL)
 

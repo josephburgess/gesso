@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 import pytest
+from django.utils import timezone
 
 from gesso.artworks.models import ArtworkImage, ArtworkStatus
 from gesso.enquiries.models import Enquiry
@@ -28,7 +31,13 @@ def test_artwork_page_offers_an_enquiry(client, make_artwork):
 
 
 def test_reserved_artwork_keeps_its_price(client, make_artwork):
-    make_artwork(slug='held', is_published=True, status=ArtworkStatus.RESERVED, price_pence=340000)
+    make_artwork(
+        slug='held',
+        is_published=True,
+        status=ArtworkStatus.AVAILABLE,
+        price_pence=340000,
+        reserved_until=timezone.now() + timedelta(minutes=5),
+    )
 
     artwork = client.get('/work/held', headers=INERTIA).json()['props']['artwork']
 

@@ -1,5 +1,7 @@
 import io
+from datetime import timedelta
 
+from django.utils import timezone
 from PIL import Image
 
 from gesso.artworks import processing
@@ -54,15 +56,15 @@ def test_admin_form_needs_price_when_available(db):
     assert 'price' in form.errors
 
 
-def test_admin_form_hides_reserved_status(make_artwork):
-    choices = ArtworkAdminForm(instance=make_artwork()).fields['status'].choices
+def test_reservation_holds_until_it_lapses(make_artwork):
+    held = make_artwork(status=ArtworkStatus.AVAILABLE, price_pence=100, reserved_until=timezone.now() + timedelta(minutes=5))
+    lapsed = make_artwork(status=ArtworkStatus.AVAILABLE, price_pence=100, reserved_until=timezone.now() - timedelta(minutes=5))
 
-    assert ArtworkStatus.RESERVED not in dict(choices)
+    assert (held.is_purchasable, held.display_status) == (False, 'Reserved')
+    assert (lapsed.is_purchasable, lapsed.display_status) == (True, 'Available')
 
 
-def test_admin_form_can_move_a_work_off_reserved(make_artwork):
-    artwork = make_artwork(status=ArtworkStatus.RESERVED, price_pence=100)
-    form = ArtworkAdminForm(FORM_DATA | {'status': ArtworkStatus.SOLD}, instance=artwork)
+def test_sold_work_is_not_shown_as_reserved(make_artwork):
+    artwork = make_artwork(status=ArtworkStatus.SOLD, reserved_until=timezone.now() + timedelta(minutes=5))
 
-    assert ArtworkStatus.RESERVED in dict(form.fields['status'].choices)
-    assert form.is_valid(), form.errors
+    assert artwork.display_status == 'Sold'
