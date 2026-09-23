@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'inertia',
     'gesso.accounts',
     'gesso.artworks',
+    'gesso.commerce',
     'gesso.content',
     'gesso.enquiries',
 ]
