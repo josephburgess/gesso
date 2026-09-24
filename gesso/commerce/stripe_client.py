@@ -1,12 +1,19 @@
+from typing import NamedTuple
+
 import stripe
 from django.conf import settings
 
 from gesso.commerce.models import Order
 
 
-def create_checkout_session(order: Order, success_url: str, cancel_url: str) -> stripe.checkout.Session:
+class CheckoutSession(NamedTuple):
+    id: str
+    url: str
+
+
+def create_checkout_session(order: Order, success_url: str, cancel_url: str) -> CheckoutSession:
     client = stripe.StripeClient(settings.STRIPE_SECRET_KEY)
-    return client.v1.checkout.sessions.create(
+    session = client.v1.checkout.sessions.create(
         {
             'mode': 'payment',
             'line_items': [
@@ -36,6 +43,9 @@ def create_checkout_session(order: Order, success_url: str, cancel_url: str) -> 
         },
         {'idempotency_key': str(order.pk)},
     )
+    if session.url is None:
+        raise RuntimeError(f'Stripe returned checkout session {session.id} without a URL')
+    return CheckoutSession(session.id, session.url)
 
 
 def construct_event(payload: bytes, signature: str) -> stripe.Event | None:

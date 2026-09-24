@@ -22,6 +22,7 @@ def start_checkout(artwork: Artwork, success_url: str, cancel_url: str) -> str:
         raise NotAvailable
 
     expires = timezone.now() + RESERVATION
+    artwork.reserve(until=expires)
     order = Order.objects.create(
         artwork=artwork,
         amount_pence=artwork.price_pence,
@@ -29,10 +30,6 @@ def start_checkout(artwork: Artwork, success_url: str, cancel_url: str) -> str:
         expires_at=expires,
     )
     session = stripe_client.create_checkout_session(order, success_url, cancel_url)
-
     order.stripe_session_id = session.id
     order.save(update_fields=['stripe_session_id'])
-    artwork.reserved_until = expires
-    artwork.save(update_fields=['reserved_until'])
-    assert session.url
     return session.url

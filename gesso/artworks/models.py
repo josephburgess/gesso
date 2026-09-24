@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Self
 
 from django.core.files.base import ContentFile
@@ -56,6 +57,10 @@ class Artwork(models.Model):
 
     def __str__(self):
         return self.title
+
+    def reserve(self, until: datetime) -> None:
+        self.reserved_until = until
+        self.save(update_fields=['reserved_until'])
 
     @property
     def is_reserved(self) -> bool:

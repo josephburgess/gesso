@@ -1,5 +1,4 @@
 from itertools import count
-from types import SimpleNamespace
 
 import pytest
 
@@ -32,7 +31,7 @@ def stripe_sessions(monkeypatch):
 
     def create_checkout_session(order, success_url, cancel_url):
         created.append(order)
-        return SimpleNamespace(id=f'cs_test_{len(created)}', url='https://checkout.stripe.test/pay')
+        return stripe_client.CheckoutSession(f'cs_test_{len(created)}', 'https://checkout.stripe.test/pay')
 
     monkeypatch.setattr(stripe_client, 'create_checkout_session', create_checkout_session)
     return created

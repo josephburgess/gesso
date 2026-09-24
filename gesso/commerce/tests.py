@@ -4,6 +4,7 @@ import pytest
 from django.utils import timezone
 
 from gesso.artworks.models import Artwork, ArtworkStatus
+from gesso.commerce import stripe_client
 from gesso.commerce.models import Order
 from gesso.commerce.services import NotAvailable, start_checkout
 from gesso.content.models import SiteContent
@@ -46,3 +47,17 @@ def test_checkout_takes_over_a_lapsed_reservation(for_sale, stripe_sessions):
     start_checkout(for_sale, SUCCESS_URL, CANCEL_URL)
 
     assert len(stripe_sessions) == 1
+
+
+def test_stripe_failure_leaves_the_work_unreserved(for_sale, monkeypatch):
+    def fail(*args):
+        raise RuntimeError('Stripe is down')
+
+    monkeypatch.setattr(stripe_client, 'create_checkout_session', fail)
+
+    with pytest.raises(RuntimeError):
+        start_checkout(for_sale, SUCCESS_URL, CANCEL_URL)
+
+    for_sale.refresh_from_db()
+    assert for_sale.is_purchasable
+    assert not Order.objects.exists()
