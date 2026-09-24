@@ -151,3 +151,11 @@ def test_old_expiry_leaves_a_newer_reservation_alone(for_sale, stripe_sessions):
 
     for_sale.refresh_from_db()
     assert for_sale.is_reserved
+
+
+def test_stripe_webhook_rejects_bad_signature(client, settings):
+    settings.STRIPE_WEBHOOK_SECRET = 'whsec_test'
+
+    response = client.post('/webhooks/stripe', '{}', content_type='application/json', headers={'Stripe-Signature': 't=1,v1=bad'})
+
+    assert response.status_code == 400

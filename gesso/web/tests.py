@@ -164,3 +164,21 @@ def test_contact_links_enquiry_to_artwork(client, make_artwork):
     client.post('/contact', data, content_type='application/json', headers=INERTIA)
 
     assert Enquiry.objects.get().artwork == artwork
+
+
+def test_checkout_sends_the_browser_to_stripe(client, make_artwork, stripe_sessions):
+    make_artwork(slug='a', is_published=True, status=ArtworkStatus.AVAILABLE, price_pence=100)
+
+    response = client.post('/work/a/checkout', headers=INERTIA)
+
+    assert response.status_code == 409
+    assert response.headers['X-Inertia-Location'] == 'https://checkout.stripe.test/pay'
+
+
+def test_checkout_of_sold_work_goes_back_to_the_page(client, make_artwork, stripe_sessions):
+    make_artwork(slug='a', is_published=True, status=ArtworkStatus.SOLD, price_pence=100)
+
+    response = client.post('/work/a/checkout', headers=INERTIA)
+
+    assert response.status_code == 302
+    assert stripe_sessions == []

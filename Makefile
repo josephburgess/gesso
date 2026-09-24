@@ -1,4 +1,4 @@
-.PHONY: up down run migrate schema data test check fmt lint
+.PHONY: up down run migrate schema data test check fmt lint stripe
 
 up:
 	docker compose up -d
@@ -42,3 +42,6 @@ dev:
 
 vite:
 	npm run dev
+
+stripe:
+	stripe listen --api-key "$$(grep ^STRIPE_SECRET_KEY= .env | cut -d= -f2-)" --forward-to localhost:8000/webhooks/stripe
