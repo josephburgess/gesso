@@ -62,6 +62,14 @@ class Artwork(models.Model):
         self.reserved_until = until
         self.save(update_fields=['reserved_until'])
 
+    def release(self, until: datetime) -> None:
+        Artwork.objects.filter(pk=self.pk, reserved_until=until).update(reserved_until=None)
+
+    def mark_sold(self) -> None:
+        self.status = ArtworkStatus.SOLD
+        self.reserved_until = None
+        self.save(update_fields=['status', 'reserved_until'])
+
     @property
     def is_reserved(self) -> bool:
         return self.reserved_until is not None and self.reserved_until > timezone.now()

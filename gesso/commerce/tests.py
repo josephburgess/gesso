@@ -1,12 +1,13 @@
 from datetime import timedelta
+from itertools import count
 
 import pytest
 from django.utils import timezone
 
 from gesso.artworks.models import Artwork, ArtworkStatus
 from gesso.commerce import stripe_client
-from gesso.commerce.models import Order
-from gesso.commerce.services import NotAvailable, start_checkout
+from gesso.commerce.models import Order, OrderStatus
+from gesso.commerce.services import NotAvailable, handle_event, start_checkout
 from gesso.content.models import SiteContent
 
 SUCCESS_URL = 'http://testserver/checkout/success'
@@ -61,3 +62,92 @@ def test_stripe_failure_leaves_the_work_unreserved(for_sale, monkeypatch):
     for_sale.refresh_from_db()
     assert for_sale.is_purchasable
     assert not Order.objects.exists()
+
+
+_events = count(1)
+
+
+def _checkout(artwork) -> Order:
+    start_checkout(artwork, SUCCESS_URL, CANCEL_URL)
+    return Order.objects.latest('created_at')
+
+
+def _event(type, order, **session):
+    session = {
+        'id': order.stripe_session_id,
+        'payment_status': 'paid',
+        'customer_details': {'name': 'B', 'email': 'b@example.com'},
+        'collected_information': {
+            'shipping_details': {
+                'name': 'B',
+                'address': {
+                    'line1': '1 Quay St',
+                    'line2': None,
+                    'city': 'Dover',
+                    'state': None,
+                    'postal_code': 'CT16 1AA',
+                    'country': 'GB',
+                },
+            }
+        },
+    } | session
+    return {'id': f'evt_{next(_events)}', 'type': type, 'data': {'object': session}}
+
+
+def test_completed_sells_the_work_and_sends_emails(for_sale, stripe_sessions, mailoutbox, django_capture_on_commit_callbacks):
+    content = SiteContent.load()
+    content.notification_email = 'studio@example.com'
+    content.save()
+    order = _checkout(for_sale)
+
+    with django_capture_on_commit_callbacks(execute=True):
+        handle_event(_event('checkout.session.completed', order))
+
+    for_sale.refresh_from_db()
+    order.refresh_from_db()
+    assert (for_sale.status, for_sale.reserved_until) == (ArtworkStatus.SOLD, None)
+    assert order.status == OrderStatus.PAID
+    assert order.shipping_address == 'B\n1 Quay St\nDover\nCT16 1AA\nGB'
+    assert sorted(m.to[0] for m in mailoutbox) == ['b@example.com', 'studio@example.com']
+
+
+def test_replayed_event_is_a_no_op(for_sale, stripe_sessions, mailoutbox, django_capture_on_commit_callbacks):
+    event = _event('checkout.session.completed', _checkout(for_sale))
+
+    with django_capture_on_commit_callbacks(execute=True):
+        handle_event(event)
+        handle_event(event)
+
+    assert [m.to for m in mailoutbox] == [['b@example.com']]
+
+
+def test_expired_frees_the_work(for_sale, stripe_sessions):
+    order = _checkout(for_sale)
+
+    handle_event(_event('checkout.session.expired', order))
+
+    for_sale.refresh_from_db()
+    order.refresh_from_db()
+    assert for_sale.is_purchasable
+    assert order.status == OrderStatus.EXPIRED
+
+
+def test_manual_status_survives_expiry(for_sale, stripe_sessions):
+    order = _checkout(for_sale)
+    Artwork.objects.filter(pk=for_sale.pk).update(status=ArtworkStatus.NOT_FOR_SALE)
+
+    handle_event(_event('checkout.session.expired', order))
+
+    for_sale.refresh_from_db()
+    assert for_sale.status == ArtworkStatus.NOT_FOR_SALE
+
+
+def test_old_expiry_leaves_a_newer_reservation_alone(for_sale, stripe_sessions):
+    first = _checkout(for_sale)
+    Artwork.objects.filter(pk=for_sale.pk).update(reserved_until=timezone.now() - timedelta(minutes=1))
+    _checkout(for_sale)
+
+    handle_event(_event('checkout.session.expired', first))
+
+    for_sale.refresh_from_db()
+    assert for_sale.is_reserved

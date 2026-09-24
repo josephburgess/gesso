@@ -53,3 +53,17 @@ def construct_event(payload: bytes, signature: str) -> stripe.Event | None:
         return stripe.Webhook.construct_event(payload, signature, settings.STRIPE_WEBHOOK_SECRET)
     except ValueError, stripe.SignatureVerificationError:
         return None
+
+
+class Buyer(NamedTuple):
+    name: str
+    email: str
+    address: str
+
+
+def buyer(session) -> Buyer:
+    details = session['customer_details']
+    shipping = session['collected_information']['shipping_details']
+    a = shipping['address']
+    lines = (shipping['name'], a['line1'], a['line2'], a['city'], a['state'], a['postal_code'], a['country'])
+    return Buyer(details['name'] or '', details['email'], '\n'.join(line for line in lines if line))

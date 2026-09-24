@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.utils import timezone
 
 from gesso.artworks.models import Artwork
 
@@ -32,6 +33,22 @@ class Order(models.Model):
 
     def __str__(self):
         return f'{self.artwork} ({OrderStatus(self.status).label})'
+
+    def mark_paid(self, buyer_name: str, buyer_email: str, shipping_address: str) -> None:
+        self.status = OrderStatus.PAID
+        self.paid_at = timezone.now()
+        self.buyer_name = buyer_name
+        self.buyer_email = buyer_email
+        self.shipping_address = shipping_address
+        self.save()
+        self.artwork.mark_sold()
+
+    def mark_expired(self) -> None:
+        if self.status != OrderStatus.PENDING:
+            return
+        self.status = OrderStatus.EXPIRED
+        self.save(update_fields=['status'])
+        self.artwork.release(until=self.expires_at)
 
 
 class StripeEvent(models.Model):
