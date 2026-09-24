@@ -25,7 +25,7 @@ export type ArtworkDetail = {
 
 export type Contact = { details: string; action: string; artwork: { title: string; slug: string } | null };
 
-export type Purchase = { enquire_href: string; enquire_label: string };
+export type Purchase = { enquire_href: string; enquire_label: string; action: string | null; note: string };
 
 export type ImageProps = {
   src: string;

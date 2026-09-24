@@ -1,7 +1,39 @@
 import ResponsiveImage from '@/components/ResponsiveImage';
 import type { ArtworkDetail, Purchase } from '@/types';
 import SiteLayout from '@/layouts/SiteLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+
+function PurchasePanel({ purchase }: { purchase: Purchase }) {
+  const { flash } = usePage();
+  const checkout = useForm({});
+
+  return (
+    <div className="mt-6 flex flex-col gap-2.25">
+      {flash.messages?.map((m, i) => (
+        <p key={i} role="status" className="text-body-sm text-ink">
+          {m.message}
+        </p>
+      ))}
+      {purchase.action && (
+        <button
+          type="button"
+          disabled={checkout.processing}
+          onClick={() => checkout.post(purchase.action!)}
+          className="bg-ink px-4.5 py-3.25 text-center text-body-sm tracking-[0.03em] text-paper transition-colors duration-(--d-state) hover:bg-accent active:translate-y-px disabled:opacity-60"
+        >
+          Purchase
+        </button>
+      )}
+      <Link
+        href={purchase.enquire_href}
+        className="border border-line px-4.5 py-3 text-center text-body-sm transition-colors duration-(--d-state) hover:border-ink hover:bg-accent-tint"
+      >
+        {purchase.enquire_label}
+      </Link>
+      {purchase.note && <p className="pt-0.5 text-meta-sm text-ink-dim">{purchase.note}</p>}
+    </div>
+  );
+}
 
 export default function Show({ artwork, purchase }: { artwork: ArtworkDetail; purchase: Purchase }) {
   const rail = (
@@ -28,12 +60,7 @@ export default function Show({ artwork, purchase }: { artwork: ArtworkDetail; pu
           <span className="font-serif text-price leading-none text-ink tabular-nums">{artwork.price}</span>
         )}
       </div>
-      <Link
-        href={purchase.enquire_href}
-        className="mt-6 block border border-line px-4.5 py-3 text-center text-body-sm transition-colors duration-(--d-state) hover:border-ink hover:bg-accent-tint"
-      >
-        {purchase.enquire_label}
-      </Link>
+      <PurchasePanel purchase={purchase} />
     </>
   );
 

@@ -4,6 +4,7 @@ import pytest
 from django.utils import timezone
 
 from gesso.artworks.models import ArtworkImage, ArtworkStatus
+from gesso.content.models import SiteContent
 from gesso.enquiries.models import Enquiry
 from gesso.web.formatting import dimensions, paragraphs, price
 from gesso.web.middleware import site_props
@@ -27,7 +28,7 @@ def test_artwork_page_offers_an_enquiry(client, make_artwork):
 
     purchase = client.get('/work/live', headers=INERTIA).json()['props']['purchase']
 
-    assert purchase == {'enquire_href': '/contact?artwork=live', 'enquire_label': 'Enquire about this work'}
+    assert purchase == {'enquire_href': '/contact?artwork=live', 'enquire_label': 'Enquire about this work', 'action': None, 'note': ''}
 
 
 def test_reserved_artwork_keeps_its_price(client, make_artwork):
@@ -44,12 +45,24 @@ def test_reserved_artwork_keeps_its_price(client, make_artwork):
     assert (artwork['status'], artwork['price']) == ('Reserved', '£3,400')
 
 
+def test_available_artwork_can_be_purchased(client, make_artwork):
+    content = SiteContent.load()
+    content.delivery_pence = 8500
+    content.save()
+    make_artwork(slug='a', is_published=True, status=ArtworkStatus.AVAILABLE, price_pence=100)
+
+    purchase = client.get('/work/a', headers=INERTIA).json()['props']['purchase']
+
+    assert purchase['action'] == '/work/a/checkout'
+    assert 'Plus £85 UK delivery.' in purchase['note']
+
+
 def test_sold_artwork_offers_similar_work(client, make_artwork):
     make_artwork(slug='gone', is_published=True, status=ArtworkStatus.SOLD)
 
     purchase = client.get('/work/gone', headers=INERTIA).json()['props']['purchase']
 
-    assert purchase['enquire_label'] == 'Enquire about similar work'
+    assert (purchase['action'], purchase['enquire_label']) == (None, 'Enquire about similar work')
 
 
 def test_draft_artwork_404s(client, make_artwork):

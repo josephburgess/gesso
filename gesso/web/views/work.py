@@ -9,6 +9,7 @@ from django.views.decorators.http import require_GET
 from inertia import render
 
 from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
+from gesso.content.models import SiteContent
 from gesso.web.formatting import dimensions, paragraphs, price
 
 
@@ -97,15 +98,25 @@ def _artwork_meta(request: HttpRequest, detail: ArtworkDetail) -> dict[str, str]
 
 
 class Purchase(TypedDict):
+    action: str | None
+    note: str
     enquire_href: str
     enquire_label: str
 
 
-def _purchase(artwork: Artwork) -> Purchase:
-    sold = artwork.status == ArtworkStatus.SOLD
+def _purchase(artwork: Artwork, content: SiteContent) -> Purchase:
+    if artwork.is_purchasable:
+        delivery = f'Plus {price(content.delivery_pence)} UK delivery.' if content.delivery_pence else 'Includes UK delivery.'
+        note = f'{delivery} Outside the UK, please enquire. Payment is handled by Stripe.'
+    elif artwork.status == ArtworkStatus.AVAILABLE and artwork.is_reserved:
+        note = 'Reserved pending payment.'
+    else:
+        note = ''
     return {
+        'action': reverse('checkout', args=[artwork.slug]) if artwork.is_purchasable else None,
+        'note': note,
         'enquire_href': reverse('contact') + '?' + urlencode({'artwork': artwork.slug}),
-        'enquire_label': 'Enquire about similar work' if sold else 'Enquire about this work',
+        'enquire_label': 'Enquire about similar work' if artwork.status == ArtworkStatus.SOLD else 'Enquire about this work',
     }
 
 
@@ -119,4 +130,9 @@ def index(request: HttpRequest) -> HttpResponse:
 def show(request: HttpRequest, slug: str) -> HttpResponse:
     artwork = get_object_or_404(Artwork.objects.published(), slug=slug)
     detail = _artwork_detail(artwork)
-    return render(request, 'Work/Show', {'artwork': detail, 'purchase': _purchase(artwork)}, template_data=_artwork_meta(request, detail))
+    return render(
+        request,
+        'Work/Show',
+        {'artwork': detail, 'purchase': _purchase(artwork, SiteContent.load())},
+        template_data=_artwork_meta(request, detail),
+    )
