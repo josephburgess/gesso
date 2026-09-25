@@ -11,6 +11,7 @@ dependencies = [
     "pillow>=12.3.0",
     "psycopg[binary]>=3.3.6",
     "stripe>=15.6.1",
+    "whitenoise>=6.12.0",
 ]
 
 [tool.ruff]
@@ -43,3 +44,4 @@ dev = [
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["tests.py", "test_*.py"]
+filterwarnings = ["ignore:No directory at:UserWarning"]
