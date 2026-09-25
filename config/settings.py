@@ -158,10 +158,15 @@ WHITENOISE_IMMUTABLE_FILE_TEST = r'^.+-[0-9a-zA-Z_-]{8}\.[a-z0-9]+$'
 
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Joe Burgess <hello@joeburgess.dev>')
 
+EMAIL_VIA_SES = env.bool('EMAIL_VIA_SES', default=False)
+
 MAILERS = {
     'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
+        'BACKEND': 'anymail.backends.amazon_ses.EmailBackend',
+        'OPTIONS': {'client_params': {'region_name': 'eu-west-2'}},
+    }
+    if EMAIL_VIA_SES
+    else {'BACKEND': 'django.core.mail.backends.console.EmailBackend'},
 }
 
 MEDIA_URL = 'media/'
