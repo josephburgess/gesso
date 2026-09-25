@@ -13,6 +13,7 @@ class CheckoutSession(NamedTuple):
 
 def create_checkout_session(order: Order, success_url: str, cancel_url: str) -> CheckoutSession:
     client = stripe.StripeClient(settings.STRIPE_SECRET_KEY)
+    cover_url = order.artwork.cover_url
     session = client.v1.checkout.sessions.create(
         {
             'mode': 'payment',
@@ -22,7 +23,10 @@ def create_checkout_session(order: Order, success_url: str, cancel_url: str) -> 
                     'price_data': {
                         'currency': 'gbp',
                         'unit_amount': order.amount_pence,
-                        'product_data': {'name': order.artwork.title},
+                        'product_data': {
+                            'name': order.artwork.title,
+                            'images': [cover_url] if cover_url and cover_url.startswith('https://') else [],
+                        },
                     },
                 }
             ],

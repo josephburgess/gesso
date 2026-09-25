@@ -6,7 +6,7 @@ from PIL import Image
 
 from gesso.artworks import processing
 from gesso.artworks.admin import ArtworkAdminForm
-from gesso.artworks.models import Artwork, ArtworkStatus
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
 
 
 def _png(width, height):
@@ -68,3 +68,21 @@ def test_sold_work_is_not_shown_as_reserved(make_artwork):
     artwork = make_artwork(status=ArtworkStatus.SOLD, reserved_until=timezone.now() + timedelta(minutes=5))
 
     assert artwork.display_status == 'Sold'
+
+
+def test_cover_url_is_the_largest_variant_of_the_first_image(make_artwork):
+    artwork = make_artwork()
+    ArtworkImage.objects.create(
+        artwork=artwork,
+        original='originals/a.jpg',
+        variants=[
+            {'width': 480, 'height': 360, 'name': 'variants/1/480.webp'},
+            {'width': 960, 'height': 720, 'name': 'variants/1/960.webp'},
+        ],
+    )
+
+    assert artwork.cover_url == '/media/variants/1/960.webp'
+
+
+def test_cover_url_without_images_is_none(make_artwork):
+    assert make_artwork().cover_url is None

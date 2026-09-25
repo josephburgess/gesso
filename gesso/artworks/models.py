@@ -79,6 +79,13 @@ class Artwork(models.Model):
         return self.status == ArtworkStatus.AVAILABLE and self.price_pence is not None and not self.is_reserved
 
     @property
+    def cover_url(self) -> str | None:
+        image = self.images.first()
+        if image is None or not image.variants:
+            return None
+        return image.original.storage.url(image.variants[-1]['name'])
+
+    @property
     def display_status(self) -> str:
         if self.status == ArtworkStatus.AVAILABLE and self.is_reserved:
             return 'Reserved'

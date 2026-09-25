@@ -132,8 +132,21 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [] if DEBUG else [BASE_DIR / 'frontend/dist']
 
+AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME', default='')
+
 STORAGES = {
-    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'default': {
+        'BACKEND': 'storages.backends.s3.S3Storage',
+        'OPTIONS': {
+            'bucket_name': AWS_STORAGE_BUCKET_NAME,
+            'region_name': 'eu-west-2',
+            'querystring_auth': False,
+            'file_overwrite': False,
+            'object_parameters': {'CacheControl': 'public, max-age=86400'},
+        },
+    }
+    if AWS_STORAGE_BUCKET_NAME
+    else {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
 }
 
