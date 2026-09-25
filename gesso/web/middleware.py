@@ -1,5 +1,6 @@
 from typing import TypedDict
 
+from django.conf import settings
 from django.urls import reverse
 from inertia import share
 
@@ -35,5 +36,15 @@ def share_site(get_response):
     def middleware(request):
         share(request, site=site_props(request.path))
         return get_response(request)
+
+    return middleware
+
+
+def noindex(get_response):
+    def middleware(request):
+        response = get_response(request)
+        if settings.NOINDEX:
+            response['X-Robots-Tag'] = 'noindex, nofollow'
+        return response
 
     return middleware

@@ -68,7 +68,20 @@ def test_sold_artwork_offers_similar_work(client, make_artwork):
 def test_draft_artwork_404s(client, make_artwork):
     make_artwork(slug='draft')
 
-    assert client.get('/work/draft', headers=INERTIA).status_code == 404
+    response = client.get('/work/draft', headers=INERTIA)
+
+    assert response.status_code == 404
+    assert response.json()['component'] == 'NotFound'
+
+
+def test_noindex_header_when_enabled(client, db, settings):
+    settings.NOINDEX = True
+
+    assert client.get('/about', headers=INERTIA).headers['X-Robots-Tag'] == 'noindex, nofollow'
+
+
+def test_no_noindex_header_by_default(client, db):
+    assert 'X-Robots-Tag' not in client.get('/about', headers=INERTIA).headers
 
 
 def test_responsive_image():
