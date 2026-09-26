@@ -38,5 +38,5 @@ class OrderAdmin(ModelAdmin):
 
     @admin.action(description='Mark shipped')
     def mark_shipped(self, request, queryset):
-        count = queryset.filter(status=OrderStatus.PAID).update(status=OrderStatus.SHIPPED, shipped_at=timezone.now())
+        count = queryset.to_ship().update(status=OrderStatus.SHIPPED, shipped_at=timezone.now())
         self.message_user(request, f'{count} marked shipped.')

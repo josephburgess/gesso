@@ -1,4 +1,5 @@
 import uuid
+from typing import Self
 
 from django.db import models
 from django.utils import timezone
@@ -11,6 +12,11 @@ class OrderStatus(models.TextChoices):
     PAID = 'paid', 'Paid'
     SHIPPED = 'shipped', 'Shipped'
     EXPIRED = 'expired', 'Expired'
+
+
+class OrderQuerySet(models.QuerySet['Order']):
+    def to_ship(self) -> Self:
+        return self.filter(status=OrderStatus.PAID)
 
 
 class Order(models.Model):
@@ -27,6 +33,8 @@ class Order(models.Model):
     expires_at = models.DateTimeField()
     paid_at = models.DateTimeField(null=True, blank=True)
     shipped_at = models.DateTimeField(null=True, blank=True)
+
+    objects = OrderQuerySet.as_manager()
 
     class Meta:
         ordering = ('-created_at',)

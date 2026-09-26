@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 from pathlib import Path
 
 import environ
+from django.urls import reverse_lazy
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -89,6 +90,72 @@ TEMPLATES = [
 UNFOLD = {
     'SITE_TITLE': 'Elise Beer',
     'SITE_HEADER': 'Elise Beer',
+    'SITE_SUBHEADER': 'Studio',
+    'SITE_SYMBOL': 'palette',
+    'SITE_URL': '/',
+    'DASHBOARD_CALLBACK': 'config.dashboard.dashboard_callback',
+    'COLORS': {
+        'base': {
+            '50': 'oklch(98.8% .007 87)',
+            '100': 'oklch(96.5% .008 87)',
+            '200': 'oklch(92.5% .012 87)',
+            '300': 'oklch(86% .02 87)',
+            '400': 'oklch(70% .02 87)',
+            '500': 'oklch(55% .018 87)',
+            '600': 'oklch(44.5% .017 87)',
+            '700': 'oklch(36% .015 87)',
+            '800': 'oklch(27% .011 87)',
+            '900': 'oklch(21% .009 87)',
+            '950': 'oklch(13% .007 87)',
+        },
+        'primary': {
+            '50': 'oklch(97.5% .012 73.5)',
+            '100': 'oklch(94.5% .025 73.5)',
+            '200': 'oklch(89.5% .045 73.5)',
+            '300': 'oklch(82% .07 73.5)',
+            '400': 'oklch(71% .09 73.5)',
+            '500': 'oklch(61% .098 73.5)',
+            '600': 'oklch(51.9% .097 73.5)',
+            '700': 'oklch(45% .085 73.5)',
+            '800': 'oklch(38.5% .07 73.5)',
+            '900': 'oklch(32% .056 73.5)',
+            '950': 'oklch(23% .04 73.5)',
+        },
+    },
+    'SIDEBAR': {
+        'show_search': False,
+        'show_all_applications': False,
+        'navigation': [
+            {
+                'title': 'Studio',
+                'items': [
+                    {'title': 'Dashboard', 'icon': 'dashboard', 'link': reverse_lazy('admin:index')},
+                    {'title': 'Works', 'icon': 'palette', 'link': reverse_lazy('admin:artworks_artwork_changelist')},
+                    {
+                        'title': 'Orders',
+                        'icon': 'local_shipping',
+                        'link': reverse_lazy('admin:commerce_order_changelist'),
+                        'badge': 'config.dashboard.orders_to_ship',
+                    },
+                    {
+                        'title': 'Enquiries',
+                        'icon': 'mail',
+                        'link': reverse_lazy('admin:enquiries_enquiry_changelist'),
+                        'badge': 'config.dashboard.unread_enquiries',
+                    },
+                    {'title': 'Site text', 'icon': 'edit_note', 'link': reverse_lazy('admin:content_sitecontent_changelist')},
+                ],
+            },
+            {
+                'title': 'Accounts',
+                'collapsible': True,
+                'items': [
+                    {'title': 'Users', 'icon': 'person', 'link': reverse_lazy('admin:auth_user_changelist')},
+                    {'title': 'Groups', 'icon': 'group', 'link': reverse_lazy('admin:auth_group_changelist')},
+                ],
+            },
+        ],
+    },
 }
 
 INERTIA_LAYOUT = 'index.html'
