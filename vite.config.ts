@@ -9,6 +9,7 @@ export default defineConfig({
     alias: { '@': fileURLToPath(new URL('./frontend', import.meta.url)) },
   },
   base: '/static/',
+  server: { origin: 'http://localhost:5173' },
   build: {
     manifest: 'manifest.json',
     outDir: 'frontend/dist',
