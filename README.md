@@ -30,5 +30,6 @@ The site runs at http://localhost:8000, with the admin at `/admin`. Emails print
 | `make migrate`                      | Applies migrations                                      |
 | `make schema app=<app> name=<name>` | Makes a schema migration named `schema_<name>`          |
 | `make data app=<app> name=<name>`   | Makes an empty data migration named `data_<name>`       |
+| `make prod-manage cmd=<command>` | Runs a `manage.py` command on the production server |
 
 Before committing run `make fmt lint check test`.

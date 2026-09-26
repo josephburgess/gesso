@@ -1,4 +1,4 @@
-.PHONY: up down run migrate schema data test check fmt lint stripe
+.PHONY: up down run migrate schema data test check fmt lint stripe prod-manage
 
 up:
 	docker compose up -d
@@ -45,3 +45,7 @@ vite:
 
 stripe:
 	stripe listen --api-key "$$(grep ^STRIPE_SECRET_KEY= .env | cut -d= -f2-)" --forward-to localhost:8000/webhooks/stripe
+
+prod-manage:
+	@test -n "$(cmd)" || (echo "usage: make prod-manage cmd=<manage.py command>" && exit 1)
+	ssh -t deploy@elisebeer.art "cd /srv/gesso && docker compose -f compose.prod.yaml exec web python manage.py $(cmd)"

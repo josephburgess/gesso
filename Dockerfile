@@ -7,6 +7,7 @@ COPY frontend ./frontend
 RUN npm run build
 
 FROM python:3.14-slim
+LABEL org.opencontainers.image.source=https://github.com/josephburgess/gesso
 COPY --from=ghcr.io/astral-sh/uv:0.9 /uv /bin/uv
 ENV PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \

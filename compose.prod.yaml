@@ -1,5 +1,6 @@
 services:
   web:
+    image: ghcr.io/josephburgess/gesso:latest
     build: .
     env_file: .env
     restart: unless-stopped
