@@ -2,11 +2,19 @@ from django.conf import settings
 from django.http import HttpRequest
 
 from gesso.content.models import SiteContent
+from gesso.web.appearance import appearance
 
 
-def site(request: HttpRequest) -> dict[str, str]:
+def site(request: HttpRequest) -> dict[str, str | bool]:
     content = SiteContent.load()
-    return {'site_name': content.site_name, 'site_description': content.site_description}
+    look = appearance(request, content)
+    return {
+        'site_name': content.site_name,
+        'site_description': content.site_description,
+        'site_theme': look['theme'],
+        'site_headings': look['headings'],
+        'site_motion': look['motion'],
+    }
 
 
 def sentry(request: HttpRequest) -> dict[str, str]:

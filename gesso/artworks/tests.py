@@ -1,6 +1,7 @@
 import io
 from datetime import timedelta
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from PIL import Image
 
@@ -84,6 +85,24 @@ def test_cover_url_is_the_largest_variant_of_the_first_image(make_artwork):
     assert artwork.cover_url == '/media/variants/1/960.webp'
 
 
+def test_process_photos_are_never_the_cover(make_artwork):
+    artwork = make_artwork()
+    ArtworkImage.objects.create(
+        artwork=artwork,
+        original='originals/p.jpg',
+        is_process=True,
+        variants=[{'width': 480, 'height': 360, 'name': 'variants/p/480.webp'}],
+    )
+
+    assert (artwork.cover, artwork.cover_url, artwork.thumbnail_url) == (None, None, None)
+
+    ArtworkImage.objects.create(
+        artwork=artwork, original='originals/f.jpg', position=5, variants=[{'width': 480, 'height': 360, 'name': 'variants/f/480.webp'}]
+    )
+
+    assert artwork.cover_url == '/media/variants/f/480.webp'
+
+
 def test_cover_url_without_images_is_none(make_artwork):
     assert make_artwork().cover_url is None
 
@@ -112,6 +131,19 @@ def test_admin_blocks_publishing_without_an_image(admin_client):
     assert response.status_code == 200
     assert 'A published work needs at least one image' in response.content.decode()
     assert not Artwork.objects.exists()
+
+
+def test_admin_blocks_publishing_with_only_a_process_photo(admin_client, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    upload = SimpleUploadedFile('yard.png', _png(600, 400).getvalue(), content_type='image/png')
+
+    response = admin_client.post(
+        '/admin/artworks/artwork/add/',
+        ADMIN_ADD | {'is_published': 'on', 'images-0-original': upload, 'images-0-is_process': 'on'},
+    )
+
+    assert response.status_code == 200
+    assert 'at least one image of the finished work' in response.content.decode()
 
 
 def test_admin_saves_an_unpublished_work_without_an_image(admin_client):

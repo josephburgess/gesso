@@ -34,6 +34,7 @@ export type ImageProps = {
   srcset: string;
   width: number;
   height: number;
+  thumb: string;
 };
 
 export type Home = {
@@ -42,10 +43,23 @@ export type Home = {
   about_href: string;
   featured: ArtworkTile[];
   index: ArtworkTile[];
+  process: ProcessPhoto[];
 };
+
+export type ProcessPhoto = { image: ImageProps; caption: string };
+
+export type Neighbour = { title: string; href: string };
 export type NavLink = { label: string; href: string; current: boolean };
 
-export type Site = { name: string; tagline: string; home_href: string; nav: NavLink[] };
+export type Appearance = {
+  theme: 'paper' | 'gallery' | 'charcoal' | 'slate';
+  layout: 'rail' | 'top';
+  work_layout: 'grid' | 'salon' | 'stack';
+  headings: 'serif' | 'sans';
+  motion: boolean;
+};
+
+export type Site = { name: string; tagline: string; home_href: string; nav: NavLink[]; appearance: Appearance };
 
 export type FlashMessage = { message: string };
 

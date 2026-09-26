@@ -3,6 +3,29 @@ from django.db import models
 from gesso.artworks.models import ProcessedImage
 
 
+class Theme(models.TextChoices):
+    PAPER = 'paper', 'Paper'
+    GALLERY = 'gallery', 'Gallery'
+    CHARCOAL = 'charcoal', 'Charcoal'
+    SLATE = 'slate', 'Slate'
+
+
+class SiteLayout(models.TextChoices):
+    RAIL = 'rail', 'Side rail'
+    TOP = 'top', 'Top bar'
+
+
+class WorkLayout(models.TextChoices):
+    GRID = 'grid', 'Grid'
+    SALON = 'salon', 'Salon'
+    STACK = 'stack', 'Exhibition'
+
+
+class Headings(models.TextChoices):
+    SERIF = 'serif', 'Classic serif'
+    SANS = 'sans', 'Modern sans'
+
+
 class SiteContent(models.Model):
     about_images: models.Manager[AboutImage]
 
@@ -15,6 +38,19 @@ class SiteContent(models.Model):
     contact_details = models.TextField(blank=True, help_text='Contact page. Line breaks are kept.')
     notification_email = models.EmailField(blank=True, help_text='Where contact form enquiries are sent.')
     delivery_pence = models.PositiveIntegerField(default=0, help_text='Flat UK delivery charge added at checkout.')
+    theme = models.CharField(
+        max_length=20, choices=Theme, default=Theme.PAPER, help_text='Colours for the whole site. Artwork is never tinted.'
+    )
+    layout = models.CharField(max_length=20, choices=SiteLayout, default=SiteLayout.RAIL, help_text='Where the name and menu sit.')
+    work_layout = models.CharField(
+        max_length=20, choices=WorkLayout, default=WorkLayout.GRID, help_text='How the full list of works is arranged.'
+    )
+    headings = models.CharField(max_length=20, choices=Headings, default=Headings.SERIF)
+    motion = models.BooleanField(
+        'gentle motion',
+        default=True,
+        help_text='Images fade in and pages ease in. Always off for visitors who ask for reduced motion.',
+    )
 
     class Meta:
         verbose_name = verbose_name_plural = 'site content'

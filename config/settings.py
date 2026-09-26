@@ -80,6 +80,7 @@ MIDDLEWARE = [
     'inertia.middleware.InertiaMiddleware',
     'gesso.web.middleware.share_site',
     'gesso.web.middleware.noindex',
+    'gesso.web.middleware.preview',
 ]
 
 ROOT_URLCONF = 'config.urls'

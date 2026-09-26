@@ -18,7 +18,7 @@ class SiteContentAdminForm(forms.ModelForm):
 
     class Meta:
         model = SiteContent
-        exclude = ('delivery_pence',)  # noqa: DJ006
+        exclude = ('delivery_pence', 'theme', 'layout', 'work_layout', 'headings', 'motion')  # noqa: DJ006
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
