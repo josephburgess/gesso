@@ -11,6 +11,7 @@ export type ArtworkTile = {
   available: boolean;
   medium: string;
   size: string;
+  price: string | null;
 };
 
 export type ArtworkDetail = {

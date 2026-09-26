@@ -51,6 +51,11 @@ class ArtworkTile(TypedDict):
     available: bool
     medium: str
     size: str
+    price: str | None
+
+
+def _price(artwork: Artwork) -> str | None:
+    return price(artwork.price_pence) if artwork.status == ArtworkStatus.AVAILABLE and artwork.price_pence else None
 
 
 def artwork_tile(artwork: Artwork) -> ArtworkTile:
@@ -63,6 +68,7 @@ def artwork_tile(artwork: Artwork) -> ArtworkTile:
         'cover': _cover(artwork),
         'medium': artwork.medium,
         'size': dimensions(artwork.height_mm, artwork.width_mm),
+        'price': _price(artwork),
     }
 
 
@@ -86,7 +92,7 @@ def _artwork_detail(artwork: Artwork) -> ArtworkDetail:
         'size': dimensions(artwork.height_mm, artwork.width_mm),
         'status': artwork.display_status,
         'available': artwork.is_purchasable,
-        'price': price(artwork.price_pence) if artwork.status == ArtworkStatus.AVAILABLE and artwork.price_pence else None,
+        'price': _price(artwork),
         'images': [image for image in map(responsive_image, artwork.images.all()) if image],
         'description': paragraphs(artwork.description),
     }
