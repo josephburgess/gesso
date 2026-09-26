@@ -10,7 +10,7 @@ from unfold.decorators import display
 from gesso.artworks.forms import PositionedForm
 from gesso.artworks.models import Artwork
 from gesso.content.forms import AppearanceForm, SiteContentAdminForm
-from gesso.content.models import AboutImage, SiteContent
+from gesso.content.models import AboutImage, SiteContent, SocialLink
 
 NOTES = {
     'rail': 'Name, menu and details in a column',
@@ -40,10 +40,20 @@ class AboutImageInline(TabularInline):
         return format_html('<img src="{}" alt="" style="height:120px">', obj.thumbnail_url)
 
 
+class SocialLinkInline(TabularInline):
+    model = SocialLink
+    form = PositionedForm
+    extra = 1
+    fields = ('label', 'url', 'position')
+    ordering_field = 'position'
+    hide_ordering_field = True
+    verbose_name_plural = 'Social links'
+
+
 @admin.register(SiteContent)
 class SiteContentAdmin(ModelAdmin):
     form = SiteContentAdminForm
-    inlines = (AboutImageInline,)
+    inlines = (AboutImageInline, SocialLinkInline)
 
     def has_add_permission(self, request):
         return False

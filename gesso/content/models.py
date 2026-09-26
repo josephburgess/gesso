@@ -26,6 +26,7 @@ class Headings(models.TextChoices):
 
 class SiteContent(models.Model):
     about_images: models.Manager[AboutImage]
+    social_links: models.Manager[SocialLink]
 
     site_name = models.CharField(max_length=100, default='Gesso', help_text='Shown in the header, browser tabs and the admin.')
     tagline = models.CharField(max_length=100, blank=True, help_text='Shown under the name in the header.')
@@ -80,3 +81,16 @@ class AboutImage(ProcessedImage):
 
     class Meta:
         ordering = ('position', 'pk')
+
+
+class SocialLink(models.Model):
+    site_content = models.ForeignKey(SiteContent, on_delete=models.CASCADE, related_name='social_links')
+    label = models.CharField(max_length=50, help_text='For example Instagram.')
+    url = models.URLField('link')
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ('position', 'pk')
+
+    def __str__(self):
+        return self.label

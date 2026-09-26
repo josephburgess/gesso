@@ -125,11 +125,11 @@ def test_responsive_image():
     ('path', 'current'),
     [('/work', True), ('/work/some-painting', True), ('/workshop', False), ('/', False)],
 )
-def test_work_nav_current(rf, path, current):
+def test_work_nav_current(rf, db, path, current):
     request = rf.get(path)
     request.user = AnonymousUser()
 
-    assert site_props(request, SiteContent())['nav'][0]['current'] is current
+    assert site_props(request, SiteContent.load())['nav'][0]['current'] is current
 
 
 @pytest.mark.parametrize(
@@ -491,3 +491,15 @@ def test_pages_link_the_favicon(client, db):
 
     assert '<link rel="icon" href="/static/web/favicon.ico" sizes="48x48">' in html
     assert client.get('/favicon.ico')['Location'] == '/static/web/favicon.ico'
+
+
+def test_social_links_are_shared_and_in_structured_data(client, make_artwork):
+    content = SiteContent.load()
+    content.social_links.create(label='Instagram', url='https://instagram.com/elise', position=0)
+    make_artwork(slug='a', is_published=True)
+
+    site = client.get('/about', headers=INERTIA).json()['props']['site']
+    html = client.get('/work/a').content.decode()
+
+    assert site['social'] == [{'label': 'Instagram', 'href': 'https://instagram.com/elise'}]
+    assert '"sameAs": ["https://instagram.com/elise"]' in html

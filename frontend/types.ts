@@ -67,7 +67,16 @@ export type Appearance = {
   about_layout: 'beside' | 'above';
 };
 
-export type Site = { name: string; tagline: string; home_href: string; nav: NavLink[]; appearance: Appearance };
+export type SocialLink = { label: string; href: string };
+
+export type Site = {
+  name: string;
+  tagline: string;
+  home_href: string;
+  nav: NavLink[];
+  appearance: Appearance;
+  social: SocialLink[];
+};
 
 export type FlashMessage = { message: string };
 
