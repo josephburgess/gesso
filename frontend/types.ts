@@ -1,4 +1,6 @@
-export type About = { statement: string; biography: string[] };
+export type Photo = { image: ImageProps; alt: string; caption: string };
+
+export type About = { statement: string; biography: string[]; photos: Photo[] };
 
 export type ArtworkTile = {
   title: string;

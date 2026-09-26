@@ -104,14 +104,14 @@ class Artwork(models.Model):
         return ArtworkStatus(self.status).label
 
 
-class ArtworkImage(models.Model):
-    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE, related_name='images')
+class ProcessedImage(models.Model):
     original = models.ImageField(upload_to='originals/')
-    position = models.PositiveSmallIntegerField(default=0)
     variants = models.JSONField(default=list, editable=False)
 
+    variants_dir = 'variants'
+
     class Meta:
-        ordering = ('position', 'pk')
+        abstract = True
 
     def __str__(self):
         return self.original.name
@@ -139,8 +139,16 @@ class ArtworkImage(models.Model):
             {
                 'width': v.width,
                 'height': v.height,
-                'name': storage.save(f'variants/{self.pk}/{v.width}.webp', ContentFile(v.data)),
+                'name': storage.save(f'{self.variants_dir}/{self.pk}/{v.width}.webp', ContentFile(v.data)),
             }
             for v in rendered
         ]
         self.save(update_fields=['variants'])
+
+
+class ArtworkImage(ProcessedImage):
+    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE, related_name='images')
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ('position', 'pk')

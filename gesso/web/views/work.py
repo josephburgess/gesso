@@ -8,7 +8,7 @@ from django.utils.text import Truncator
 from django.views.decorators.http import require_GET
 from inertia import render
 
-from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
+from gesso.artworks.models import Artwork, ArtworkStatus, ProcessedImage
 from gesso.content.models import SiteContent
 from gesso.web.formatting import dimensions, paragraphs, price
 
@@ -20,7 +20,7 @@ class ImageProps(TypedDict):
     height: int
 
 
-def responsive_image(image: ArtworkImage) -> ImageProps | None:
+def responsive_image(image: ProcessedImage) -> ImageProps | None:
     if not image.variants:
         return None
     url = image.original.storage.url

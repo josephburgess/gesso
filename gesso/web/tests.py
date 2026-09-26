@@ -5,7 +5,7 @@ from django.contrib.messages import get_messages
 from django.utils import timezone
 
 from gesso.artworks.models import ArtworkImage, ArtworkStatus
-from gesso.content.models import SiteContent
+from gesso.content.models import AboutImage, SiteContent
 from gesso.enquiries.models import Enquiry
 from gesso.web.formatting import dimensions, paragraphs, price
 from gesso.web.middleware import site_props
@@ -271,3 +271,24 @@ def test_frontend_sentry_is_configured_from_settings(client, db, settings):
 
 def test_frontend_sentry_is_off_without_a_dsn(client, db):
     assert 'sentry-dsn' not in client.get('/about').content.decode()
+
+
+def test_about_page_shows_processed_photos_in_order(client, db):
+    content = SiteContent.load()
+    for name, position in (('second', 1), ('first', 0)):
+        AboutImage.objects.create(
+            site_content=content,
+            original=f'about/originals/{name}.png',
+            alt=f'{name} photo',
+            caption=f'{name} caption',
+            position=position,
+            variants=[{'width': 480, 'height': 320, 'name': f'about/variants/{name}/480.webp'}],
+        )
+    AboutImage.objects.create(site_content=content, original='about/originals/processing.png', alt='x', position=2)
+
+    photos = client.get('/about', headers=INERTIA).json()['props']['about']['photos']
+
+    assert [(p['alt'], p['caption'], p['image']['src']) for p in photos] == [
+        ('first photo', 'first caption', '/media/about/variants/first/480.webp'),
+        ('second photo', 'second caption', '/media/about/variants/second/480.webp'),
+    ]
