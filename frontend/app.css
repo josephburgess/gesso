@@ -162,6 +162,18 @@ body {
   color: var(--color-ink);
 }
 
+@utility transition-reveal {
+  transition:
+    opacity var(--d-enter) var(--ease-out),
+    translate calc(var(--d-enter) * 1.6) var(--ease-out);
+}
+
+@utility transition-image-reveal {
+  transition:
+    opacity var(--d-image) var(--ease-out),
+    scale calc(var(--d-image) * 1.4) var(--ease-out);
+}
+
 @keyframes page-enter {
   from {
     opacity: 0;
