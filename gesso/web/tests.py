@@ -1,3 +1,5 @@
+import json
+import re
 from datetime import timedelta
 
 import pytest
@@ -292,3 +294,56 @@ def test_about_page_shows_processed_photos_in_order(client, db):
         ('first photo', 'first caption', '/media/about/variants/first/480.webp'),
         ('second photo', 'second caption', '/media/about/variants/second/480.webp'),
     ]
+
+
+def _structured_data(client, slug):
+    html = client.get(f'/work/{slug}').content.decode()
+    match = re.search(r'<script type="application/ld\+json">(.*?)</script>', html)
+    return json.loads(match.group(1)) if match else None
+
+
+def test_sitemap_lists_pages_and_published_works(client, make_artwork):
+    make_artwork(slug='live', is_published=True)
+    make_artwork(slug='draft')
+
+    xml = client.get('/sitemap.xml').content.decode()
+
+    assert '/work/live</loc>' in xml
+    assert '/about</loc>' in xml
+    assert '/work/draft' not in xml
+
+
+def test_robots_leaves_out_the_sitemap_until_launch(client, db, settings):
+    settings.NOINDEX = True
+    assert 'Sitemap:' not in client.get('/robots.txt').content.decode()
+
+    settings.NOINDEX = False
+    assert 'Sitemap: http://testserver/sitemap.xml' in client.get('/robots.txt').content.decode()
+
+
+def test_available_work_has_structured_data_with_an_offer(client, make_artwork):
+    make_artwork(slug='a', title='Ferry Light', is_published=True, status=ArtworkStatus.AVAILABLE, price_pence=340000)
+
+    data = _structured_data(client, 'a')
+
+    assert data['@type'] == 'VisualArtwork'
+    assert data['name'] == 'Ferry Light'
+    assert data['height'] == {'@type': 'QuantitativeValue', 'value': 70.0, 'unitCode': 'CMT'}
+    assert (data['offers']['price'], data['offers']['availability']) == ('3400', 'https://schema.org/InStock')
+
+
+def test_sold_and_not_for_sale_works_offers(client, make_artwork):
+    make_artwork(slug='sold', is_published=True, status=ArtworkStatus.SOLD, price_pence=100)
+    make_artwork(slug='nfs', is_published=True, status=ArtworkStatus.NOT_FOR_SALE)
+
+    assert _structured_data(client, 'sold')['offers']['availability'] == 'https://schema.org/SoldOut'
+    assert 'offers' not in _structured_data(client, 'nfs')
+
+
+def test_structured_data_cannot_break_out_of_its_script_tag(client, make_artwork):
+    make_artwork(slug='x', is_published=True, description='Nice </script><script>alert(1)</script>')
+
+    html = client.get('/work/x').content.decode()
+
+    assert '<script>alert(1)' not in html
+    assert _structured_data(client, 'x')['description'] == 'Nice </script><script>alert(1)</script>'

@@ -10,6 +10,7 @@
     <meta name="sentry-environment" content="{{ sentry_environment }}">
     {% endif %}
     {% if image %}<meta property="og:image" content="{{ image }}">{% endif %}
+    {% if structured_data %}<script type="application/ld+json">{{ structured_data }}</script>{% endif %}
     {% vite_hmr_client %}
     {% vite_react_refresh %}
     {% vite_asset "frontend/app.tsx" %}

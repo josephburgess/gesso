@@ -1,8 +1,12 @@
+from django.contrib.sitemaps.views import sitemap
 from django.urls import path
 
-from gesso.web.views import about, checkout, contact, home, work
+from gesso.web.sitemaps import ArtworkSitemap, PageSitemap
+from gesso.web.views import about, checkout, contact, home, seo, work
 
 urlpatterns = [
+    path('robots.txt', seo.robots, name='robots'),
+    path('sitemap.xml', sitemap, {'sitemaps': {'pages': PageSitemap, 'works': ArtworkSitemap}}, name='sitemap'),
     path('', home.page, name='home'),
     path('work', work.index, name='work'),
     path('work/<slug:slug>', work.show, name='work_show'),

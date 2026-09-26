@@ -1,9 +1,12 @@
+import json
+from decimal import Decimal
 from typing import TypedDict
 from urllib.parse import urlencode
 
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.safestring import SafeString, mark_safe
 from django.utils.text import Truncator
 from django.views.decorators.http import require_GET
 from inertia import render
@@ -126,13 +129,42 @@ def index(request: HttpRequest) -> HttpResponse:
     return render(request, 'Work/Index', {'artworks': [artwork_tile(a) for a in artworks]}, template_data={'title': 'Work'})
 
 
+def _structured_data(request: HttpRequest, artwork: Artwork, detail: ArtworkDetail, artist: str) -> SafeString:
+    data = {
+        '@context': 'https://schema.org',
+        '@type': 'VisualArtwork',
+        'name': artwork.title,
+        'url': request.build_absolute_uri(artwork.get_absolute_url()),
+        'dateCreated': str(artwork.year),
+        'artMedium': artwork.medium,
+        'creator': {'@type': 'Person', 'name': artist},
+        'height': {'@type': 'QuantitativeValue', 'value': artwork.height_mm / 10, 'unitCode': 'CMT'},
+        'width': {'@type': 'QuantitativeValue', 'value': artwork.width_mm / 10, 'unitCode': 'CMT'},
+    }
+    if detail['description']:
+        data['description'] = ' '.join(detail['description'])
+    if detail['images']:
+        data['image'] = [request.build_absolute_uri(image['src']) for image in detail['images']]
+    if artwork.status in (ArtworkStatus.AVAILABLE, ArtworkStatus.SOLD) and artwork.price_pence:
+        data['offers'] = {
+            '@type': 'Offer',
+            'price': str(Decimal(artwork.price_pence) / 100),
+            'priceCurrency': 'GBP',
+            'availability': 'https://schema.org/SoldOut' if artwork.status == ArtworkStatus.SOLD else 'https://schema.org/InStock',
+            'url': data['url'],
+        }
+    escaped = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
+    return mark_safe(escaped)
+
+
 @require_GET
 def show(request: HttpRequest, slug: str) -> HttpResponse:
     artwork = get_object_or_404(Artwork.objects.published(), slug=slug)
+    content = SiteContent.load()
     detail = _artwork_detail(artwork)
     return render(
         request,
         'Work/Show',
-        {'artwork': detail, 'purchase': _purchase(artwork, SiteContent.load())},
-        template_data=_artwork_meta(request, detail),
+        {'artwork': detail, 'purchase': _purchase(artwork, content)},
+        template_data=_artwork_meta(request, detail) | {'structured_data': _structured_data(request, artwork, detail, content.site_name)},
     )
