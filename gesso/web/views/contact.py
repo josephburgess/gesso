@@ -7,6 +7,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
+from django_ratelimit.decorators import ratelimit
 from inertia import render
 
 from gesso.artworks.models import Artwork
@@ -27,7 +28,12 @@ class Contact(TypedDict):
 
 
 @require_http_methods(['GET', 'POST'])
+@ratelimit(key='ip', rate='5/h', method='POST', block=False)
 def page(request: HttpRequest) -> HttpResponse:
+    if getattr(request, 'limited', False):
+        messages.error(request, "You've sent a few messages already. Please try again in an hour.")
+        return redirect('contact')
+
     data = None
 
     if request.method == 'POST' and (data := _json_body(request)) is None:

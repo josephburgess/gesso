@@ -37,6 +37,16 @@ CSRF_COOKIE_SECURE = not DEBUG
 
 NOINDEX = env.bool('NOINDEX', default=False)
 
+REDIS_URL = env('REDIS_URL', default='')
+
+CACHES = {
+    'default': {'BACKEND': 'django.core.cache.backends.redis.RedisCache', 'LOCATION': REDIS_URL}
+    if REDIS_URL
+    else {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
+}
+
+RATELIMIT_IP_META_KEY = None if DEBUG else 'HTTP_X_FORWARDED_FOR'
+
 
 # Application definition
 

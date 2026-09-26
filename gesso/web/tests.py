@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import pytest
+from django.contrib.messages import get_messages
 from django.utils import timezone
 
 from gesso.artworks.models import ArtworkImage, ArtworkStatus
@@ -224,3 +225,22 @@ def test_checkout_of_sold_work_goes_back_to_the_page(client, make_artwork, strip
 
     assert response.status_code == 302
     assert stripe_sessions == []
+
+
+def test_contact_form_is_rate_limited(client, db):
+    data = {'name': 'A', 'email': 'a@example.com', 'message': 'Hi'}
+
+    for _ in range(6):
+        response = client.post('/contact', data, content_type='application/json', headers=INERTIA)
+
+    assert Enquiry.objects.count() == 5
+    assert list(get_messages(response.wsgi_request))[-1].message == "You've sent a few messages already. Please try again in an hour."
+
+
+def test_checkout_is_rate_limited(client, make_artwork, stripe_sessions):
+    make_artwork(slug='a', is_published=True, status=ArtworkStatus.SOLD, price_pence=100)
+
+    for _ in range(11):
+        response = client.post('/work/a/checkout', headers=INERTIA)
+
+    assert list(get_messages(response.wsgi_request))[-1].message == 'Too many checkout attempts. Please try again in an hour.'

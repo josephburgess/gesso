@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_GET, require_POST
+from django_ratelimit.decorators import ratelimit
 from inertia import location, render
 
 from gesso.artworks.models import Artwork
@@ -12,7 +13,11 @@ from gesso.commerce.services import NotAvailable, cancel_checkout, start_checkou
 
 
 @require_POST
+@ratelimit(key='ip', rate='10/h', block=False)
 def start(request: HttpRequest, slug: str) -> HttpResponse:
+    if getattr(request, 'limited', False):
+        messages.error(request, 'Too many checkout attempts. Please try again in an hour.')
+        return redirect('work_show', slug)
     artwork = get_object_or_404(Artwork.objects.published(), slug=slug)
     try:
         url = start_checkout(artwork, site_url=request.build_absolute_uri('/'))

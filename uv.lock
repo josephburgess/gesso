@@ -331,6 +331,15 @@ wheels = [
 ]
 
 [[package]]
+name = "django-ratelimit"
+version = "4.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6f/8f/94038fe739b095aca3e4708ecc8a4e77f1fcfd87bed5d6baff43d4c80bc4/django-ratelimit-4.1.0.tar.gz", hash = "sha256:555943b283045b917ad59f196829530d63be2a39adb72788d985b90c81ba808b", size = 11551 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fb/78/2c59b30cd8bc8068d02349acb6aeed5c4e05eb01cdf2107ccd76f2e81487/django_ratelimit-4.1.0-py2.py3-none-any.whl", hash = "sha256:d047a31cf94d83ef1465d7543ca66c6fc16695559b5f8d814d1b51df15110b92", size = 11608 },
+]
+
+[[package]]
 name = "django-storages"
 version = "1.14.6"
 source = { registry = "https://pypi.org/simple" }
@@ -391,6 +400,7 @@ dependencies = [
     { name = "django" },
     { name = "django-anymail", extra = ["amazon-ses"] },
     { name = "django-environ" },
+    { name = "django-ratelimit" },
     { name = "django-storages", extra = ["s3"] },
     { name = "django-unfold" },
     { name = "django-vite" },
@@ -398,6 +408,7 @@ dependencies = [
     { name = "inertia-django" },
     { name = "pillow" },
     { name = "psycopg", extra = ["binary"] },
+    { name = "redis" },
     { name = "sentry-sdk" },
     { name = "stripe" },
     { name = "whitenoise" },
@@ -417,6 +428,7 @@ requires-dist = [
     { name = "django", specifier = ">=6.1,<6.2" },
     { name = "django-anymail", extras = ["amazon-ses"], specifier = ">=15.2" },
     { name = "django-environ", specifier = ">=0.14.0" },
+    { name = "django-ratelimit", specifier = ">=4.1.0" },
     { name = "django-storages", extras = ["s3"], specifier = ">=1.14.6" },
     { name = "django-unfold", specifier = ">=0.108.0" },
     { name = "django-vite", specifier = ">=3.2.0" },
@@ -424,6 +436,7 @@ requires-dist = [
     { name = "inertia-django", specifier = ">=2.0.0" },
     { name = "pillow", specifier = ">=12.3.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.6" },
+    { name = "redis", specifier = ">=8.1.0" },
     { name = "sentry-sdk", specifier = ">=2.70.0" },
     { name = "stripe", specifier = ">=15.6.1" },
     { name = "whitenoise", specifier = ">=6.12.0" },
@@ -656,6 +669,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427", size = 229892 },
+]
+
+[[package]]
+name = "redis"
+version = "8.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a8/99/604f0b666d4c616d891cf77ebb9db6bb21601344c051aebf1b72b9ff915f/redis-8.1.0.tar.gz", hash = "sha256:6e1a19beef9225c83efd689c7e6b7da2d5215b1f42cd13b7fc3714d0a09c7b25", size = 5254356 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/66/9d/c5731f6e3608663d4d3656fd8d3aecee8b509c3082818f5a13eae925baea/redis-8.1.0-py3-none-any.whl", hash = "sha256:a4fe1aac3d3b3cc791d4b3d5931c5a956045dc951ee74d1c913ee3ac4d2ee9fb", size = 560618 },
 ]
 
 [[package]]

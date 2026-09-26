@@ -1,6 +1,7 @@
 from itertools import count
 
 import pytest
+from django.core.cache import cache
 
 from gesso.artworks.models import Artwork
 from gesso.commerce import stripe_client
@@ -35,3 +36,8 @@ def stripe_sessions(monkeypatch):
 
     monkeypatch.setattr(stripe_client, 'create_checkout_session', create_checkout_session)
     return created
+
+
+@pytest.fixture(autouse=True)
+def clear_cache():
+    cache.clear()
