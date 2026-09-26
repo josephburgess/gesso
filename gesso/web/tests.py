@@ -453,7 +453,7 @@ def test_single_artwork_has_no_neighbours(client, make_artwork):
 
 def test_process_photos_follow_the_finished_views(client, make_artwork):
     artwork = make_artwork(title='Harbour', slug='a', is_published=True, featured_order=1)
-    _image(artwork, 'yard', position=0, is_process=True, caption='Drying in the yard')
+    _image(artwork, 'yard', position=0, is_process=True, caption='Drying in the yard', home_position=0)
     _image(artwork, 'front', position=1)
 
     images = client.get('/work/a', headers=INERTIA).json()['props']['artwork']['images']
@@ -476,18 +476,17 @@ def test_process_photos_follow_the_finished_views(client, make_artwork):
     ]
 
 
-def test_home_shows_two_studio_photos_lead_work_first(client, make_artwork):
-    other = make_artwork(title='Other', year=2025, is_published=True)
-    lead = make_artwork(title='Lead', year=2020, is_published=True, featured_order=1)
-    draft = make_artwork(title='Draft', year=2026)
-    _image(other, 'other-1', is_process=True)
-    _image(other, 'other-2', is_process=True, position=1)
-    _image(lead, 'lead', is_process=True)
-    _image(draft, 'draft', is_process=True)
+def test_home_shows_the_chosen_studio_photos_in_order(client, make_artwork):
+    work = make_artwork(title='Work', is_published=True)
+    draft = make_artwork(title='Draft')
+    _image(work, 'unchosen', is_process=True)
+    _image(work, 'second', is_process=True, home_position=1)
+    _image(work, 'first', is_process=True, home_position=0)
+    _image(draft, 'draft', is_process=True, home_position=2)
 
     process = client.get('/', headers=INERTIA).json()['props']['home']['process']
 
-    assert [p['title'] for p in process] == ['Lead', 'Other']
+    assert [p['image']['src'] for p in process] == ['/media/variants/first/480.webp', '/media/variants/second/480.webp']
 
 
 def test_pages_link_the_favicon(client, db):

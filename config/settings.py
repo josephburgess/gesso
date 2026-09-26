@@ -151,7 +151,13 @@ UNFOLD = {
                 'title': 'Studio',
                 'items': [
                     {'title': 'Dashboard', 'icon': 'dashboard', 'link': reverse_lazy('admin:index')},
-                    {'title': 'Works', 'icon': 'palette', 'link': reverse_lazy('admin:artworks_artwork_changelist')},
+                    {
+                        'title': 'Works',
+                        'icon': 'palette',
+                        'link': reverse_lazy('admin:artworks_artwork_changelist'),
+                        'active': 'config.dashboard.works_active',
+                    },
+                    {'title': 'Home page', 'icon': 'home', 'link': reverse_lazy('admin:artworks_homepage')},
                     {
                         'title': 'Orders',
                         'icon': 'local_shipping',

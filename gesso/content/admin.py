@@ -3,11 +3,11 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
-from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
 from gesso.artworks.forms import PositionedForm
+from gesso.artworks.image_manager import ImageManager
 from gesso.artworks.models import Artwork
 from gesso.content.forms import AppearanceForm, SiteContentAdminForm
 from gesso.content.models import AboutImage, SiteContent, SocialLink
@@ -23,21 +23,14 @@ NOTES = {
 }
 
 
-class AboutImageInline(TabularInline):
+class AboutImages(ImageManager):
     model = AboutImage
-    form = PositionedForm
-    extra = 1
-    fields = ('preview', 'original', 'alt', 'caption', 'position')
-    readonly_fields = ('preview',)
-    ordering_field = 'position'
-    hide_ordering_field = True
-    verbose_name_plural = 'About page photos'
+    fields = (('alt', 'Alt text'), ('caption', 'Caption'))
+    name = 'content_aboutimage'
+    prefix = 'about-images/'
 
-    @display(description='Preview')
-    def preview(self, obj):
-        if not obj.thumbnail_url:
-            return ''
-        return format_html('<img src="{}" alt="" style="height:120px">', obj.thumbnail_url)
+    def owner(self, key):
+        return {'site_content': SiteContent.load()}
 
 
 class SocialLinkInline(TabularInline):
@@ -53,7 +46,8 @@ class SocialLinkInline(TabularInline):
 @admin.register(SiteContent)
 class SiteContentAdmin(ModelAdmin):
     form = SiteContentAdminForm
-    inlines = (AboutImageInline, SocialLinkInline)
+    inlines = (SocialLinkInline,)
+    readonly_fields = ('about_photos',)
 
     def has_add_permission(self, request):
         return False
@@ -64,9 +58,14 @@ class SiteContentAdmin(ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         return redirect('admin:content_sitecontent_change', SiteContent.load().pk)
 
+    @display(description='About page photos')
+    def about_photos(self, obj):
+        return AboutImages(self).render()
+
     def get_urls(self):
         return [
             path('appearance/', self.admin_site.admin_view(self.appearance_view), name='content_appearance'),
+            *AboutImages(self).urls(),
             *super().get_urls(),
         ]
 
