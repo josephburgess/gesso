@@ -27,3 +27,10 @@ class SiteContentAdminForm(forms.ModelForm):
     def save(self, commit=True):
         self.instance.delivery_pence = int(self.cleaned_data['delivery'] * 100)
         return super().save(commit)
+
+
+class AppearanceForm(forms.ModelForm):
+    class Meta:
+        model = SiteContent
+        fields = ('theme', 'layout', 'work_layout', 'headings', 'motion')
+        widgets = dict.fromkeys(('theme', 'layout', 'work_layout', 'headings'), forms.RadioSelect)

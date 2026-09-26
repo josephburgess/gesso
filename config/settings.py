@@ -158,7 +158,13 @@ UNFOLD = {
                         'link': reverse_lazy('admin:enquiries_enquiry_changelist'),
                         'badge': 'config.dashboard.unread_enquiries',
                     },
-                    {'title': 'Site text', 'icon': 'edit_note', 'link': reverse_lazy('admin:content_sitecontent_changelist')},
+                    {
+                        'title': 'Site text',
+                        'icon': 'edit_note',
+                        'link': reverse_lazy('admin:content_sitecontent_changelist'),
+                        'active': 'config.dashboard.site_text_active',
+                    },
+                    {'title': 'Appearance', 'icon': 'brush', 'link': reverse_lazy('admin:content_appearance')},
                 ],
             },
             {

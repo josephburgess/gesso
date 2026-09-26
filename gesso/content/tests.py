@@ -1,4 +1,5 @@
 import io
+import re
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -54,3 +55,39 @@ def test_about_photos_need_alt_text(db):
         photo.full_clean()
 
     assert 'alt' in error.value.message_dict
+
+
+def test_appearance_page_shows_the_current_choices(admin_client):
+    content = SiteContent.load()
+    content.theme = 'slate'
+    content.save()
+
+    html = admin_client.get('/admin/content/sitecontent/appearance/').content.decode()
+
+    assert 'Cool grey, blue accent from the paintings' in html
+    assert re.search(r'value="slate"[^>]*checked', html)
+
+
+def test_appearance_page_saves_the_settings(admin_client):
+    response = admin_client.post(
+        '/admin/content/sitecontent/appearance/',
+        {'theme': 'charcoal', 'layout': 'top', 'work_layout': 'stack', 'headings': 'sans'},
+        follow=True,
+    )
+
+    content = SiteContent.load()
+    assert (content.theme, content.layout, content.work_layout, content.headings, content.motion) == (
+        'charcoal',
+        'top',
+        'stack',
+        'sans',
+        False,
+    )
+    assert 'Appearance saved. The live site now uses these settings.' in response.content.decode()
+
+
+def test_appearance_page_needs_a_staff_login(client, db):
+    response = client.get('/admin/content/sitecontent/appearance/')
+
+    assert response.status_code == 302
+    assert response['Location'].startswith('/admin/login/')

@@ -15,6 +15,10 @@ def site_name(request: HttpRequest) -> str:
     return SiteContent.load().site_name
 
 
+def site_text_active(request: HttpRequest) -> bool:
+    return request.path.startswith(reverse('admin:content_sitecontent_changelist')) and request.path != reverse('admin:content_appearance')
+
+
 def orders_to_ship(request: HttpRequest) -> int | None:
     return Order.objects.to_ship().count() or None
 
@@ -87,6 +91,7 @@ def dashboard_callback(request: HttpRequest, context: dict) -> dict:
     context['actions'] = [
         {'label': 'Add a work', 'href': reverse('admin:artworks_artwork_add')},
         {'label': 'Edit site text', 'href': reverse('admin:content_sitecontent_changelist')},
+        {'label': 'Change appearance', 'href': reverse('admin:content_appearance')},
         {'label': 'View site', 'href': '/'},
     ]
     return context
