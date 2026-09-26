@@ -65,6 +65,22 @@ def test_sold_artwork_offers_similar_work(client, make_artwork):
     assert (purchase['action'], purchase['enquire_label']) == (None, 'Enquire about similar work')
 
 
+def test_artwork_page_shows_every_processed_image_in_order(client, make_artwork):
+    artwork = make_artwork(slug='multi', is_published=True)
+    for name, position in (('second', 1), ('first', 0)):
+        ArtworkImage.objects.create(
+            artwork=artwork,
+            original=f'originals/{name}.jpg',
+            position=position,
+            variants=[{'width': 480, 'height': 360, 'name': f'variants/{name}/480.webp'}],
+        )
+    ArtworkImage.objects.create(artwork=artwork, original='originals/processing.jpg', position=2)
+
+    images = client.get('/work/multi', headers=INERTIA).json()['props']['artwork']['images']
+
+    assert [image['src'] for image in images] == ['/media/variants/first/480.webp', '/media/variants/second/480.webp']
+
+
 def test_draft_artwork_404s(client, make_artwork):
     make_artwork(slug='draft')
 

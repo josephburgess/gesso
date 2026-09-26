@@ -1,7 +1,9 @@
+import Lightbox from '@/components/Lightbox';
 import ResponsiveImage from '@/components/ResponsiveImage';
 import type { ArtworkDetail, Purchase } from '@/types';
 import SiteLayout from '@/layouts/SiteLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 function PurchasePanel({ purchase }: { purchase: Purchase }) {
   const { flash } = usePage();
@@ -36,6 +38,11 @@ function PurchasePanel({ purchase }: { purchase: Purchase }) {
 }
 
 export default function Show({ artwork, purchase }: { artwork: ArtworkDetail; purchase: Purchase }) {
+  const [open, setOpen] = useState<number | null>(null);
+  const [first, ...rest] = artwork.images;
+  const alt = (index: number) =>
+    artwork.images.length > 1 ? `${artwork.title}, image ${index + 1} of ${artwork.images.length}` : artwork.title;
+
   const rail = (
     <>
       <Head title={artwork.title} />
@@ -66,15 +73,33 @@ export default function Show({ artwork, purchase }: { artwork: ArtworkDetail; pu
 
   return (
     <SiteLayout rail={rail}>
-      {artwork.cover && (
-        <ResponsiveImage
-          image={artwork.cover}
-          alt={artwork.title}
-          sizes="(min-width: 1000px) 62vw, 100vw"
-          eager
-          className="max-h-[85vh] w-auto"
-        />
+      {first && (
+        <button type="button" aria-label="View larger" onClick={() => setOpen(0)} className="block cursor-zoom-in">
+          <ResponsiveImage
+            image={first}
+            alt={alt(0)}
+            sizes="(min-width: 1000px) 62vw, 100vw"
+            eager
+            className="max-h-[85vh] w-auto"
+          />
+        </button>
       )}
+      {rest.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-3">
+          {rest.map((image, i) => (
+            <button
+              key={image.src}
+              type="button"
+              aria-label="View larger"
+              onClick={() => setOpen(i + 1)}
+              className="cursor-zoom-in"
+            >
+              <ResponsiveImage image={image} alt={alt(i + 1)} sizes="160px" className="h-28 w-auto" />
+            </button>
+          ))}
+        </div>
+      )}
+      <Lightbox images={artwork.images} index={open} alt={alt} onChange={setOpen} />
       {artwork.description.length > 0 && (
         <div className="mt-block">
           {artwork.description.map((p, i) => (

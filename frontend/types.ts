@@ -16,7 +16,7 @@ export type ArtworkDetail = {
   year: number;
   medium: string;
   size: string;
-  cover: ImageProps | null;
+  images: ImageProps[];
   status: string;
   available: boolean;
   price: string | null;

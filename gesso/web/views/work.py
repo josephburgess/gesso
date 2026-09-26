@@ -67,7 +67,7 @@ class ArtworkDetail(TypedDict):
     year: int
     medium: str
     size: str
-    cover: ImageProps | None
+    images: list[ImageProps]
     status: str
     available: bool
     price: str | None
@@ -83,17 +83,17 @@ def _artwork_detail(artwork: Artwork) -> ArtworkDetail:
         'status': artwork.display_status,
         'available': artwork.is_purchasable,
         'price': price(artwork.price_pence) if artwork.status == ArtworkStatus.AVAILABLE and artwork.price_pence else None,
-        'cover': _cover(artwork),
+        'images': [image for image in map(responsive_image, artwork.images.all()) if image],
         'description': paragraphs(artwork.description),
     }
 
 
 def _artwork_meta(request: HttpRequest, detail: ArtworkDetail) -> dict[str, str]:
-    description, image = detail['description'], detail['cover']
+    description, images = detail['description'], detail['images']
     return {
         'title': detail['title'],
         'description': Truncator(description[0]).chars(155) if description else '',
-        'image': request.build_absolute_uri(image['src']) if image else '',
+        'image': request.build_absolute_uri(images[0]['src']) if images else '',
     }
 
 
