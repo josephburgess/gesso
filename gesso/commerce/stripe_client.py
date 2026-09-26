@@ -52,6 +52,15 @@ def create_checkout_session(order: Order, success_url: str, cancel_url: str) -> 
     return CheckoutSession(session.id, session.url)
 
 
+def expire_session(session_id: str) -> bool:
+    client = stripe.StripeClient(settings.STRIPE_SECRET_KEY)
+    try:
+        client.v1.checkout.sessions.expire(session_id)
+    except stripe.InvalidRequestError:
+        return False
+    return True
+
+
 def construct_event(payload: bytes, signature: str) -> stripe.Event | None:
     try:
         return stripe.Webhook.construct_event(payload, signature, settings.STRIPE_WEBHOOK_SECRET)

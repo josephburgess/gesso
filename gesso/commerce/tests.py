@@ -6,12 +6,11 @@ from django.utils import timezone
 
 from gesso.artworks.models import Artwork, ArtworkStatus
 from gesso.commerce import stripe_client
-from gesso.commerce.models import Order, OrderStatus
-from gesso.commerce.services import NotAvailable, handle_event, start_checkout
+from gesso.commerce.models import Order, OrderStatus, StripeEvent
+from gesso.commerce.services import NotAvailable, cancel_checkout, handle_event, start_checkout
 from gesso.content.models import SiteContent
 
-SUCCESS_URL = 'http://testserver/checkout/success'
-CANCEL_URL = 'http://testserver/work/a'
+SITE_URL = 'http://testserver/'
 
 
 @pytest.fixture
@@ -24,7 +23,7 @@ def test_checkout_reserves_the_work(for_sale, stripe_sessions):
     content.delivery_pence = 8500
     content.save()
 
-    assert start_checkout(for_sale, SUCCESS_URL, CANCEL_URL) == 'https://checkout.stripe.test/pay'
+    assert start_checkout(for_sale, SITE_URL) == 'https://checkout.stripe.test/pay'
 
     for_sale.refresh_from_db()
     order = Order.objects.get()
@@ -34,10 +33,10 @@ def test_checkout_reserves_the_work(for_sale, stripe_sessions):
 
 
 def test_checkout_refuses_a_reserved_work(for_sale, stripe_sessions):
-    start_checkout(for_sale, SUCCESS_URL, CANCEL_URL)
+    start_checkout(for_sale, SITE_URL)
 
     with pytest.raises(NotAvailable):
-        start_checkout(for_sale, SUCCESS_URL, CANCEL_URL)
+        start_checkout(for_sale, SITE_URL)
 
     assert Order.objects.count() == 1
 
@@ -45,19 +44,19 @@ def test_checkout_refuses_a_reserved_work(for_sale, stripe_sessions):
 def test_checkout_takes_over_a_lapsed_reservation(for_sale, stripe_sessions):
     Artwork.objects.filter(pk=for_sale.pk).update(reserved_until=timezone.now() - timedelta(minutes=1))
 
-    start_checkout(for_sale, SUCCESS_URL, CANCEL_URL)
+    start_checkout(for_sale, SITE_URL)
 
     assert len(stripe_sessions) == 1
 
 
 def test_stripe_failure_leaves_the_work_unreserved(for_sale, monkeypatch):
-    def fail(*args):
+    def fail(*args, **kwargs):
         raise RuntimeError('Stripe is down')
 
     monkeypatch.setattr(stripe_client, 'create_checkout_session', fail)
 
     with pytest.raises(RuntimeError):
-        start_checkout(for_sale, SUCCESS_URL, CANCEL_URL)
+        start_checkout(for_sale, SITE_URL)
 
     for_sale.refresh_from_db()
     assert for_sale.is_purchasable
@@ -68,7 +67,7 @@ _events = count(1)
 
 
 def _checkout(artwork) -> Order:
-    start_checkout(artwork, SUCCESS_URL, CANCEL_URL)
+    start_checkout(artwork, SITE_URL)
     return Order.objects.latest('created_at')
 
 
@@ -190,3 +189,57 @@ def test_admin_ship_button_is_refused_for_an_unpaid_order(admin_client, for_sale
     order.refresh_from_db()
     assert response.status_code == 403
     assert order.status == OrderStatus.PENDING
+
+
+def test_checkout_sends_stripe_our_success_and_cancel_urls(for_sale, stripe_sessions):
+    start_checkout(for_sale, SITE_URL)
+
+    order = Order.objects.get()
+    assert stripe_sessions[0]['success_url'] == 'http://testserver/checkout/success'
+    assert stripe_sessions[0]['cancel_url'] == f'http://testserver/checkout/cancel/{order.pk}'
+
+
+def test_cancel_frees_the_work_at_once(for_sale, stripe_sessions, monkeypatch):
+    monkeypatch.setattr(stripe_client, 'expire_session', lambda session_id: True)
+    order = _checkout(for_sale)
+
+    assert cancel_checkout(order.pk) == for_sale
+
+    for_sale.refresh_from_db()
+    order.refresh_from_db()
+    assert for_sale.is_purchasable
+    assert order.status == OrderStatus.EXPIRED
+
+
+def test_cancel_after_payment_changes_nothing(for_sale, stripe_sessions, monkeypatch):
+    monkeypatch.setattr(stripe_client, 'expire_session', lambda session_id: False)
+    order = _checkout(for_sale)
+
+    cancel_checkout(order.pk)
+
+    for_sale.refresh_from_db()
+    order.refresh_from_db()
+    assert for_sale.is_reserved
+    assert order.status == OrderStatus.PENDING
+
+
+def test_cancel_view_returns_the_buyer_to_the_work(client, for_sale, stripe_sessions, monkeypatch):
+    monkeypatch.setattr(stripe_client, 'expire_session', lambda session_id: True)
+    order = _checkout(for_sale)
+
+    response = client.get(f'/checkout/cancel/{order.pk}')
+
+    assert response.status_code == 302
+    assert response['Location'] == f'/work/{for_sale.slug}'
+
+
+def test_events_for_sessions_from_elsewhere_are_ignored(db):
+    event = {
+        'id': 'evt_elsewhere',
+        'type': 'checkout.session.expired',
+        'data': {'object': {'id': 'cs_test_not_ours', 'payment_status': 'unpaid'}},
+    }
+
+    handle_event(event)
+
+    assert StripeEvent.objects.filter(id='evt_elsewhere').exists()

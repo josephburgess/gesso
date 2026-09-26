@@ -1,12 +1,14 @@
 from datetime import timedelta
+from urllib.parse import urljoin
 
 from django.core.mail import EmailMessage
 from django.db import transaction
+from django.urls import reverse
 from django.utils import timezone
 
 from gesso.artworks.models import Artwork
 from gesso.commerce import stripe_client
-from gesso.commerce.models import Order, StripeEvent
+from gesso.commerce.models import Order, OrderStatus, StripeEvent
 from gesso.content.models import SiteContent
 from gesso.web.formatting import price
 
@@ -18,7 +20,7 @@ class NotAvailable(Exception):
 
 
 @transaction.atomic
-def start_checkout(artwork: Artwork, success_url: str, cancel_url: str) -> str:
+def start_checkout(artwork: Artwork, site_url: str) -> str:
     artwork.refresh_from_db(from_queryset=Artwork.objects.select_for_update())
     if not artwork.is_purchasable:
         raise NotAvailable
@@ -31,10 +33,24 @@ def start_checkout(artwork: Artwork, success_url: str, cancel_url: str) -> str:
         delivery_pence=SiteContent.load().delivery_pence,
         expires_at=expires,
     )
-    session = stripe_client.create_checkout_session(order, success_url, cancel_url)
+    session = stripe_client.create_checkout_session(
+        order,
+        success_url=urljoin(site_url, reverse('checkout_success')),
+        cancel_url=urljoin(site_url, reverse('checkout_cancel', args=[order.pk])),
+    )
     order.stripe_session_id = session.id
     order.save(update_fields=['stripe_session_id'])
     return session.url
+
+
+@transaction.atomic
+def cancel_checkout(order_id) -> Artwork | None:
+    order = Order.objects.select_for_update().select_related('artwork').filter(pk=order_id).first()
+    if order is None:
+        return None
+    if order.status == OrderStatus.PENDING and order.stripe_session_id and stripe_client.expire_session(order.stripe_session_id):
+        order.mark_expired()
+    return order.artwork
 
 
 @transaction.atomic
@@ -45,16 +61,18 @@ def handle_event(event) -> None:
         return
 
     session = event['data']['object']
-    orders = Order.objects.select_for_update().select_related('artwork')
+    order = Order.objects.select_for_update().select_related('artwork').filter(stripe_session_id=session['id']).first()
+    if order is None:
+        return
+
     match event['type']:
         case 'checkout.session.completed' if session['payment_status'] == 'paid':
-            order = orders.get(stripe_session_id=session['id'])
             buyer = stripe_client.buyer(session)
             order.mark_paid(buyer.name, buyer.email, buyer.address)
             transaction.on_commit(lambda: notify_sale(order), robust=True)
             transaction.on_commit(lambda: confirm_to_buyer(order), robust=True)
         case 'checkout.session.expired':
-            orders.get(stripe_session_id=session['id']).mark_expired()
+            order.mark_expired()
 
 
 def notify_sale(order: Order) -> None:

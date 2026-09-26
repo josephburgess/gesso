@@ -10,4 +10,5 @@ urlpatterns = [
     path('contact', contact.page, name='contact'),
     path('work/<slug:slug>/checkout', checkout.start, name='checkout'),
     path('checkout/success', checkout.success, name='checkout_success'),
+    path('checkout/cancel/<uuid:order_id>', checkout.cancel, name='checkout_cancel'),
 ]

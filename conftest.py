@@ -30,7 +30,7 @@ def stripe_sessions(monkeypatch):
     created = []
 
     def create_checkout_session(order, success_url, cancel_url):
-        created.append(order)
+        created.append({'order': order, 'success_url': success_url, 'cancel_url': cancel_url})
         return stripe_client.CheckoutSession(f'cs_test_{len(created)}', 'https://checkout.stripe.test/pay')
 
     monkeypatch.setattr(stripe_client, 'create_checkout_session', create_checkout_session)
