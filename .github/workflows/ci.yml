@@ -74,7 +74,7 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
       - name: Copy Compose and Caddy config
-        run: scp compose.prod.yaml Caddyfile "$HOST:/srv/gesso/"
+        run: scp -p compose.prod.yaml Caddyfile deploy/backup.sh "$HOST:/srv/gesso/"
       - name: Pull, migrate and restart
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
