@@ -476,3 +476,10 @@ def test_home_shows_two_studio_photos_lead_work_first(client, make_artwork):
     process = client.get('/', headers=INERTIA).json()['props']['home']['process']
 
     assert [p['title'] for p in process] == ['Lead', 'Other']
+
+
+def test_pages_link_the_favicon(client, db):
+    html = client.get('/about').content.decode()
+
+    assert '<link rel="icon" href="/static/web/favicon.ico" sizes="48x48">' in html
+    assert client.get('/favicon.ico')['Location'] == '/static/web/favicon.ico'

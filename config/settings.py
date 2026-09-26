@@ -14,6 +14,7 @@ from pathlib import Path
 
 import environ
 import sentry_sdk
+from django.templatetags.static import static
 from django.urls import reverse_lazy
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -66,6 +67,7 @@ INSTALLED_APPS = [
     'gesso.commerce',
     'gesso.content',
     'gesso.enquiries',
+    'gesso.web',
 ]
 
 MIDDLEWARE = [
@@ -107,6 +109,10 @@ UNFOLD = {
     'SITE_HEADER': 'config.dashboard.site_name',
     'SITE_SUBHEADER': 'Studio',
     'SITE_SYMBOL': 'palette',
+    'SITE_FAVICONS': [
+        {'rel': 'icon', 'sizes': '48x48', 'href': lambda request: static('web/favicon.ico')},
+        {'rel': 'apple-touch-icon', 'href': lambda request: static('web/apple-touch-icon.png')},
+    ],
     'SITE_URL': '/',
     'DASHBOARD_CALLBACK': 'config.dashboard.dashboard_callback',
     'COLORS': {
