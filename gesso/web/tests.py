@@ -259,3 +259,15 @@ def test_site_identity_comes_from_site_content(client, db):
     assert (site['name'], site['tagline']) == ('Studio Name', 'Painter')
     assert 'About · Studio Name</title>' in html
     assert '<meta name="description" content="Paintings of the sea.">' in html
+
+
+def test_frontend_sentry_is_configured_from_settings(client, db, settings):
+    settings.SENTRY_FRONTEND_DSN = 'https://public@example.ingest.sentry.io/1'
+
+    html = client.get('/about').content.decode()
+
+    assert '<meta name="sentry-dsn" content="https://public@example.ingest.sentry.io/1">' in html
+
+
+def test_frontend_sentry_is_off_without_a_dsn(client, db):
+    assert 'sentry-dsn' not in client.get('/about').content.decode()

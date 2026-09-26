@@ -94,6 +94,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'gesso.web.context_processors.site',
+                'gesso.web.context_processors.sentry',
             ],
         },
     },
@@ -275,11 +276,13 @@ LOGGING = {
 }
 
 SENTRY_DSN = env('SENTRY_DSN', default='')
+SENTRY_FRONTEND_DSN = env('SENTRY_FRONTEND_DSN', default='')
+SENTRY_ENVIRONMENT = env('SENTRY_ENVIRONMENT', default='production')
 
 if SENTRY_DSN:
     sentry_sdk.init(
         dsn=SENTRY_DSN,
-        environment=env('SENTRY_ENVIRONMENT', default='production'),
+        environment=SENTRY_ENVIRONMENT,
         send_default_pii=False,
         traces_sample_rate=0.1,
     )

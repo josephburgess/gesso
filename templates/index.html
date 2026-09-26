@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title inertia>{% if title %}{{ title }} · {% endif %}{{ site_name }}</title>
     <meta name="description" content="{{ description|default:site_description }}">
+    {% if sentry_frontend_dsn %}
+    <meta name="sentry-dsn" content="{{ sentry_frontend_dsn }}">
+    <meta name="sentry-environment" content="{{ sentry_environment }}">
+    {% endif %}
     {% if image %}<meta property="og:image" content="{{ image }}">{% endif %}
     {% vite_hmr_client %}
     {% vite_react_refresh %}
