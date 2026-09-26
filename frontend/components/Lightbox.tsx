@@ -9,7 +9,7 @@ type Props = {
 };
 
 const control =
-  'absolute flex size-11 items-center justify-center text-paper/80 transition-colors duration-(--d-state) hover:text-paper';
+  'absolute flex size-11 items-center justify-center text-on-overlay/80 transition-colors duration-(--d-state) hover:text-on-overlay';
 
 export default function Lightbox({ images, index, alt, onChange }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -44,7 +44,7 @@ export default function Lightbox({ images, index, alt, onChange }: Props) {
     <dialog
       ref={dialog}
       onClose={() => onChange(null)}
-      className="m-0 h-dvh max-h-none w-dvw max-w-none bg-transparent p-0 backdrop:bg-ink/90"
+      className="m-0 h-dvh max-h-none w-dvw max-w-none bg-transparent p-0 backdrop:bg-overlay/90"
     >
       <div
         className="flex h-full w-full items-center justify-center p-4 wide:p-12"
@@ -94,7 +94,7 @@ export default function Lightbox({ images, index, alt, onChange }: Props) {
             >
               ›
             </button>
-            <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-meta-sm text-paper/70 tabular-nums">
+            <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-meta-sm text-on-overlay/70 tabular-nums">
               {index !== null && `${index + 1} / ${count}`}
             </p>
           </>

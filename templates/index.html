@@ -1,5 +1,5 @@
 {% load django_vite %}<!doctype html>
-<html lang="en-GB">
+<html lang="en-GB" data-theme="{{ theme|default:'paper' }}" data-type="{{ headings|default:'serif' }}" data-motion="{% if motion is False %}off{% else %}on{% endif %}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
