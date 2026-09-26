@@ -164,6 +164,7 @@ UNFOLD = {
                         'link': reverse_lazy('admin:enquiries_enquiry_changelist'),
                         'badge': 'config.dashboard.unread_enquiries',
                     },
+                    {'title': 'Mailing list', 'icon': 'contact_mail', 'link': reverse_lazy('admin:enquiries_subscriber_changelist')},
                     {
                         'title': 'Site text',
                         'icon': 'edit_note',

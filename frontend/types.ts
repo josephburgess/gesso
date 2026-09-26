@@ -76,6 +76,7 @@ export type Site = {
   nav: NavLink[];
   appearance: Appearance;
   social: SocialLink[];
+  subscribe_href: string;
 };
 
 export type FlashMessage = { message: string };

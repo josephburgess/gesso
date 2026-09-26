@@ -34,3 +34,14 @@ class Enquiry(models.Model):
 
     def __str__(self):
         return f'{self.name} <{self.email}>'
+
+
+class Subscriber(models.Model):
+    email = models.EmailField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at',)
+
+    def __str__(self):
+        return self.email

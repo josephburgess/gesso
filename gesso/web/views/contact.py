@@ -1,8 +1,6 @@
-import json
 from typing import TypedDict
 
 from django.contrib import messages
-from django.forms import BaseForm
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -15,6 +13,7 @@ from gesso.content.models import SiteContent
 from gesso.enquiries.forms import EnquiryForm
 from gesso.enquiries.models import Topic
 from gesso.enquiries.services import submit_enquiry
+from gesso.web.views.forms import form_errors, json_body
 
 
 class EnquiryArtwork(TypedDict):
@@ -44,7 +43,7 @@ def page(request: HttpRequest) -> HttpResponse:
 
     data = None
 
-    if request.method == 'POST' and (data := _json_body(request)) is None:
+    if request.method == 'POST' and (data := json_body(request)) is None:
         return HttpResponseBadRequest()
 
     form = EnquiryForm(data)
@@ -67,18 +66,6 @@ def page(request: HttpRequest) -> HttpResponse:
     return render(
         request,
         'Contact',
-        {'contact': contact, 'errors': _form_errors(form)},
+        {'contact': contact, 'errors': form_errors(form)},
         template_data={'title': 'Contact'},
     )
-
-
-def _json_body(request: HttpRequest) -> dict | None:
-    try:
-        data = json.loads(request.body)
-    except ValueError, UnicodeDecodeError:
-        return None
-    return data if isinstance(data, dict) else None
-
-
-def _form_errors(form: BaseForm) -> dict[str, str]:
-    return {field: errors[0] for field, errors in form.errors.get_json_data().items()}

@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from gesso.content.models import SiteContent
 from gesso.enquiries.forms import EnquiryForm
-from gesso.enquiries.models import Enquiry
+from gesso.enquiries.models import Enquiry, Subscriber
 from gesso.enquiries.services import submit_enquiry
 
 
@@ -82,3 +82,12 @@ def test_admin_offers_a_reply_by_email(admin_client, make_artwork):
 
     assert 'mailto:ann@example.com?subject=Re%3A%20Ferry%20Light' in html
     assert 'Is%20it%20still%20available' in html
+
+
+def test_admin_exports_subscribers_as_csv(admin_client):
+    Subscriber.objects.create(email='a@example.com')
+
+    response = admin_client.get(reverse('admin:enquiries_subscriber_export_csv'))
+
+    assert response['Content-Type'] == 'text/csv'
+    assert response.content.decode().splitlines()[1].startswith('a@example.com,')

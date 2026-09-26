@@ -3,6 +3,7 @@ import SiteLayout from '@/layouts/SiteLayout';
 import type { Contact as ContactProps } from '@/types';
 import type { SubmitEvent } from 'react';
 import Field from '@/components/Field';
+import Signup from '@/components/Signup';
 
 const line =
   'bg-transparent text-body-sm text-ink outline-none transition-colors duration-(--d-state) focus:border-accent';
@@ -101,6 +102,7 @@ export default function Contact({ contact }: { contact: ContactProps }) {
           Send message
         </button>
       </form>
+      <Signup className="mt-section" />
     </SiteLayout>
   );
 }

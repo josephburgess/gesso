@@ -1,13 +1,15 @@
+import csv
 from urllib.parse import quote, urlencode
 
 from django.contrib import admin
 from django.db.models import F
+from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin
-from unfold.decorators import display
+from unfold.decorators import action, display
 
-from gesso.enquiries.models import Enquiry
+from gesso.enquiries.models import Enquiry, Subscriber
 
 
 @admin.register(Enquiry)
@@ -49,3 +51,23 @@ class EnquiryAdmin(ModelAdmin):
     def change_view(self, request, object_id, form_url='', extra_context=None):
         Enquiry.objects.unread().filter(pk=object_id).update(read_at=timezone.now())
         return super().change_view(request, object_id, form_url, extra_context)
+
+
+@admin.register(Subscriber)
+class SubscriberAdmin(ModelAdmin):
+    list_display = ('email', 'created_at')
+    search_fields = ('email',)
+    readonly_fields = ('email', 'created_at')
+    actions_list = ('export_csv',)
+
+    def has_add_permission(self, request):
+        return False
+
+    @action(description='Export CSV', url_path='export-csv', icon='download')
+    def export_csv(self, request):
+        response = HttpResponse(content_type='text/csv', headers={'Content-Disposition': 'attachment; filename="subscribers.csv"'})
+        writer = csv.writer(response)
+        writer.writerow(['email', 'signed_up'])
+        for subscriber in Subscriber.objects.order_by('created_at'):
+            writer.writerow([subscriber.email, subscriber.created_at.date().isoformat()])
+        return response

@@ -20,3 +20,14 @@ class EnquiryForm(forms.ModelForm):
 
     def is_spam(self) -> bool:
         return bool(self.cleaned_data.get('website'))
+
+
+class SubscribeForm(forms.Form):
+    email = forms.EmailField()
+    website = forms.CharField(required=False)
+
+    def clean_email(self):
+        return self.cleaned_data['email'].lower()
+
+    def is_spam(self) -> bool:
+        return bool(self.cleaned_data.get('website'))

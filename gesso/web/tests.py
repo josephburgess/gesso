@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from gesso.artworks.models import ArtworkImage, ArtworkStatus
 from gesso.content.models import AboutImage, SiteContent
-from gesso.enquiries.models import Enquiry
+from gesso.enquiries.models import Enquiry, Subscriber
 from gesso.web.formatting import dimensions, paragraphs, price
 from gesso.web.middleware import site_props
 from gesso.web.views.work import responsive_image
@@ -171,7 +171,11 @@ def test_contact_post_returns_errors(client, db):
     response = client.post('/contact', data, content_type='application/json', headers=INERTIA)
 
     assert response.status_code == 200
-    assert response.json()['props']['errors'].keys() == {'name', 'email', 'message'}
+    assert response.json()['props']['errors'] == {
+        'name': 'This field is required.',
+        'email': 'Enter a valid email address.',
+        'message': 'This field is required.',
+    }
     assert not Enquiry.objects.exists()
 
 
@@ -503,3 +507,36 @@ def test_social_links_are_shared_and_in_structured_data(client, make_artwork):
 
     assert site['social'] == [{'label': 'Instagram', 'href': 'https://instagram.com/elise'}]
     assert '"sameAs": ["https://instagram.com/elise"]' in html
+
+
+def _subscribe(client, **data):
+    return client.post('/subscribe', {'email': 'Reader@Example.com'} | data, content_type='application/json')
+
+
+def test_subscribe_adds_the_email_once(client, db):
+    first = _subscribe(client)
+    again = _subscribe(client, email='reader@example.com')
+
+    assert first.json() == again.json() == {'message': "Thanks, you're on the list."}
+    assert list(Subscriber.objects.values_list('email', flat=True)) == ['reader@example.com']
+
+
+def test_subscribe_rejects_a_bad_email(client, db):
+    response = _subscribe(client, email='nope')
+
+    assert response.status_code == 400
+    assert response.json()['errors'] == {'email': 'Enter a valid email address.'}
+    assert not Subscriber.objects.exists()
+
+
+def test_subscribe_spam_catcher_pretends_success(client, db):
+    assert _subscribe(client, website='spam.example').status_code == 200
+    assert not Subscriber.objects.exists()
+
+
+def test_subscribe_is_rate_limited(client, db):
+    for i in range(6):
+        response = _subscribe(client, email=f'r{i}@example.com')
+
+    assert response.status_code == 429
+    assert Subscriber.objects.count() == 5
