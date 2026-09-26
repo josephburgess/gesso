@@ -3,12 +3,13 @@ from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
-from gesso.artworks.forms import ArtworkAdminForm, ArtworkImageFormSet
+from gesso.artworks.forms import ArtworkAdminForm, ArtworkImageFormSet, PositionedForm
 from gesso.artworks.models import Artwork, ArtworkImage
 
 
 class ArtworkImageInline(TabularInline):
     model = ArtworkImage
+    form = PositionedForm
     formset = ArtworkImageFormSet
     extra = 1
     fields = ('preview', 'original', 'caption', 'is_process', 'position')

@@ -8,6 +8,13 @@ from unfold.widgets import UnfoldAdminDecimalFieldWidget
 from gesso.artworks.models import Artwork, ArtworkStatus
 
 
+class PositionedForm(forms.ModelForm):
+    def has_changed(self) -> bool:
+        if self.instance.pk:
+            return super().has_changed()
+        return bool(set(self.changed_data) - {'position'})
+
+
 class ArtworkAdminForm(forms.ModelForm):
     height_cm = forms.DecimalField(max_digits=6, decimal_places=1, min_value=0, widget=UnfoldAdminDecimalFieldWidget)
     width_cm = forms.DecimalField(max_digits=6, decimal_places=1, min_value=0, widget=UnfoldAdminDecimalFieldWidget)

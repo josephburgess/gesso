@@ -7,6 +7,7 @@ from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
+from gesso.artworks.forms import PositionedForm
 from gesso.artworks.models import Artwork
 from gesso.content.forms import AppearanceForm, SiteContentAdminForm
 from gesso.content.models import AboutImage, SiteContent
@@ -22,6 +23,7 @@ NOTES = {
 
 class AboutImageInline(TabularInline):
     model = AboutImage
+    form = PositionedForm
     extra = 1
     fields = ('preview', 'original', 'alt', 'caption', 'position')
     readonly_fields = ('preview',)
