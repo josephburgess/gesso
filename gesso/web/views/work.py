@@ -153,7 +153,10 @@ def index(request: HttpRequest) -> HttpResponse:
     return render(request, 'Work/Index', {'artworks': [artwork_tile(a) for a in artworks]}, template_data={'title': 'Work'})
 
 
-def _structured_data(request: HttpRequest, artwork: Artwork, detail: ArtworkDetail, artist: str) -> SafeString:
+def _structured_data(request: HttpRequest, artwork: Artwork, detail: ArtworkDetail, content: SiteContent) -> SafeString:
+    creator: dict[str, str | list[str]] = {'@type': 'Person', 'name': content.site_name}
+    if same_as := [link.url for link in content.social_links.all()]:
+        creator['sameAs'] = same_as
     data = {
         '@context': 'https://schema.org',
         '@type': 'VisualArtwork',
@@ -161,7 +164,7 @@ def _structured_data(request: HttpRequest, artwork: Artwork, detail: ArtworkDeta
         'url': request.build_absolute_uri(artwork.get_absolute_url()),
         'dateCreated': str(artwork.year),
         'artMedium': artwork.medium,
-        'creator': {'@type': 'Person', 'name': artist},
+        'creator': creator,
         'height': {'@type': 'QuantitativeValue', 'value': artwork.height_mm / 10, 'unitCode': 'CMT'},
         'width': {'@type': 'QuantitativeValue', 'value': artwork.width_mm / 10, 'unitCode': 'CMT'},
     }
@@ -191,5 +194,5 @@ def show(request: HttpRequest, slug: str) -> HttpResponse:
         request,
         'Work/Show',
         {'artwork': detail, 'purchase': _purchase(artwork, content), 'prev': prev, 'next': next_},
-        template_data=_artwork_meta(request, detail) | {'structured_data': _structured_data(request, artwork, detail, content.site_name)},
+        template_data=_artwork_meta(request, detail) | {'structured_data': _structured_data(request, artwork, detail, content)},
     )

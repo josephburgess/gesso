@@ -46,7 +46,15 @@ export default function IndexOfWorks({ works }: { works: ArtworkTile[] }) {
           style={{ left, top, width: PREVIEW_WIDTH }}
           className={`pointer-events-none fixed z-2 transition-opacity duration-(--d-state) ease-out ${cover ? 'opacity-100' : 'opacity-0'}`}
         >
-          {cover && <img src={cover.thumb} alt="" width={cover.width} height={cover.height} className="w-full" />}
+          {cover && (
+            <img
+              src={cover.thumb}
+              alt=""
+              width={cover.width}
+              height={cover.height}
+              className="w-full border-4 border-[#fff]"
+            />
+          )}
         </div>,
         document.body,
       )}

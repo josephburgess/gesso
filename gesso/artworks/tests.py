@@ -153,6 +153,19 @@ def test_admin_saves_an_unpublished_work_without_an_image(admin_client):
     assert Artwork.objects.get().title == 'A'
 
 
+def test_admin_ignores_a_blank_image_row_renumbered_by_reordering(admin_client):
+    response = admin_client.post('/admin/artworks/artwork/add/', ADMIN_ADD | {'images-0-position': '3'})
+
+    assert response.status_code == 302
+
+
+def test_admin_still_needs_a_file_for_a_new_image_row_with_details(admin_client):
+    response = admin_client.post('/admin/artworks/artwork/add/', ADMIN_ADD | {'images-0-position': '3', 'images-0-caption': 'Yard'})
+
+    assert response.status_code == 200
+    assert not Artwork.objects.exists()
+
+
 def test_admin_form_keeps_unpublished_works_off_the_home_page(db):
     form = ArtworkAdminForm(FORM_DATA | {'featured_order': '1'})
 

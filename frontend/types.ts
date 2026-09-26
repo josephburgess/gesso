@@ -26,7 +26,13 @@ export type ArtworkDetail = {
   description: string[];
 };
 
-export type Contact = { details: string; action: string; artwork: { title: string; slug: string } | null };
+export type Contact = {
+  details: string;
+  action: string;
+  artwork: { title: string; slug: string } | null;
+  topics: { value: string; label: string }[];
+  topic: string;
+};
 
 export type Purchase = { enquire_href: string; enquire_label: string; action: string | null; note: string };
 
@@ -57,9 +63,21 @@ export type Appearance = {
   work_layout: 'grid' | 'salon' | 'stack';
   headings: 'serif' | 'sans';
   motion: boolean;
+  show_index: boolean;
+  about_layout: 'beside' | 'above';
 };
 
-export type Site = { name: string; tagline: string; home_href: string; nav: NavLink[]; appearance: Appearance };
+export type SocialLink = { label: string; href: string };
+
+export type Site = {
+  name: string;
+  tagline: string;
+  home_href: string;
+  nav: NavLink[];
+  appearance: Appearance;
+  social: SocialLink[];
+  subscribe_href: string;
+};
 
 export type FlashMessage = { message: string };
 

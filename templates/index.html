@@ -1,16 +1,16 @@
-{% load django_vite %}<!doctype html>
+{% load django_vite static %}<!doctype html>
 <html lang="en-GB" data-theme="paper" data-type="{{ site_headings }}" data-motion="{{ site_motion|yesno:'on,off' }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script>
-      (function () {
-        var stored = null;
-        try { stored = localStorage.getItem('theme'); } catch (e) {}
-        var dark = stored ? stored === 'charcoal' : matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.dataset.theme = dark ? 'charcoal' : 'paper';
-      })();
+      try {
+        if (localStorage.getItem('theme') === 'charcoal') document.documentElement.dataset.theme = 'charcoal';
+      } catch (e) {}
     </script>
+    <link rel="icon" href="{% static 'web/favicon.ico' %}" sizes="48x48">
+    <link rel="icon" href="{% static 'web/icon-192.png' %}" type="image/png" sizes="192x192">
+    <link rel="apple-touch-icon" href="{% static 'web/apple-touch-icon.png' %}">
     <title inertia>{% if title %}{{ title }} · {% endif %}{{ site_name }}</title>
     <meta name="description" content="{{ description|default:site_description }}">
     {% if sentry_frontend_dsn %}

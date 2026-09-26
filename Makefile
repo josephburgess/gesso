@@ -26,6 +26,8 @@ test:
 check:
 	uv run ty check
 	uv run manage.py makemigrations --check --dry-run
+	npx tsc --noEmit
+	npx tsc --noEmit -p tsconfig.node.json
 
 fmt:
 	uv run ruff check --fix

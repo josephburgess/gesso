@@ -16,12 +16,19 @@ class NavLink(TypedDict):
     current: bool
 
 
+class SocialLink(TypedDict):
+    label: str
+    href: str
+
+
 class Site(TypedDict):
     name: str
     tagline: str
     home_href: str
     nav: list[NavLink]
     appearance: Appearance
+    social: list[SocialLink]
+    subscribe_href: str
 
 
 def site_props(request: HttpRequest, content: SiteContent) -> Site:
@@ -32,6 +39,8 @@ def site_props(request: HttpRequest, content: SiteContent) -> Site:
         'home_href': reverse('home'),
         'nav': [{'label': label, 'href': href, 'current': _in_section(request.path, href)} for label, href in nav],
         'appearance': appearance(request, content),
+        'social': [{'label': link.label, 'href': link.url} for link in content.social_links.all()],
+        'subscribe_href': reverse('subscribe'),
     }
 
 

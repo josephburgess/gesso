@@ -7,9 +7,10 @@ from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
+from gesso.artworks.forms import PositionedForm
 from gesso.artworks.models import Artwork
 from gesso.content.forms import AppearanceForm, SiteContentAdminForm
-from gesso.content.models import AboutImage, SiteContent
+from gesso.content.models import AboutImage, SiteContent, SocialLink
 
 NOTES = {
     'rail': 'Name, menu and details in a column',
@@ -17,11 +18,14 @@ NOTES = {
     'grid': 'Even rows',
     'salon': 'Staggered columns',
     'stack': 'One work at a time',
+    'beside': 'Photo and statement side by side',
+    'above': 'Large photo, words underneath',
 }
 
 
 class AboutImageInline(TabularInline):
     model = AboutImage
+    form = PositionedForm
     extra = 1
     fields = ('preview', 'original', 'alt', 'caption', 'position')
     readonly_fields = ('preview',)
@@ -36,10 +40,20 @@ class AboutImageInline(TabularInline):
         return format_html('<img src="{}" alt="" style="height:120px">', obj.thumbnail_url)
 
 
+class SocialLinkInline(TabularInline):
+    model = SocialLink
+    form = PositionedForm
+    extra = 1
+    fields = ('label', 'url', 'position')
+    ordering_field = 'position'
+    hide_ordering_field = True
+    verbose_name_plural = 'Social links'
+
+
 @admin.register(SiteContent)
 class SiteContentAdmin(ModelAdmin):
     form = SiteContentAdminForm
-    inlines = (AboutImageInline,)
+    inlines = (AboutImageInline, SocialLinkInline)
 
     def has_add_permission(self, request):
         return False
@@ -75,6 +89,7 @@ class SiteContentAdmin(ModelAdmin):
             'form': form,
             'layouts': [(choice, NOTES[choice.data['value']]) for choice in form['layout'].subwidgets],
             'work_layouts': [(choice, NOTES[choice.data['value']]) for choice in form['work_layout'].subwidgets],
+            'about_layouts': [(choice, NOTES[choice.data['value']]) for choice in form['about_layout'].subwidgets],
             'pages': pages,
         }
         return TemplateResponse(request, 'admin/content/appearance.html', context)

@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import Nav from '@/components/Nav';
+import SocialLinks from '@/components/SocialLinks';
 import ThemeToggle from '@/components/ThemeToggle';
 
 type Props = { title?: string; rail?: ReactNode; children: ReactNode };
@@ -33,6 +34,11 @@ export default function SiteLayout({ title, rail, children }: Props) {
             </aside>
           )}
         </main>
+        {site.social.length > 0 && (
+          <footer className="mx-auto max-w-[1400px] px-gutter pb-block">
+            <SocialLinks links={site.social} className="border-t border-hair pt-slot" />
+          </footer>
+        )}
       </div>
     );
   }
@@ -47,7 +53,10 @@ export default function SiteLayout({ title, rail, children }: Props) {
         </Link>
         <div className="flex items-baseline gap-4.5 wide:contents">
           <Nav links={site.nav} />
-          <ThemeToggle className="wide:order-last wide:mt-auto" />
+          <div className="wide:order-last wide:mt-auto wide:flex wide:flex-col wide:gap-2">
+            <SocialLinks links={site.social} className="hidden wide:flex wide:flex-col" />
+            <ThemeToggle className="self-start" />
+          </div>
         </div>
         {rail && (
           <div className="basis-full border-t border-hair pt-slot text-meta text-ink-muted wide:basis-auto wide:self-stretch">
@@ -55,7 +64,10 @@ export default function SiteLayout({ title, rail, children }: Props) {
           </div>
         )}
       </header>
-      <main className="min-w-0 flex-1 animate-page-enter px-gutter pt-block pb-section">{children}</main>
+      <main className="min-w-0 flex-1 animate-page-enter px-gutter pt-block pb-section">
+        {children}
+        <SocialLinks links={site.social} className="mt-section border-t border-hair pt-slot wide:hidden" />
+      </main>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import IndexOfWorks from '@/components/IndexOfWorks';
 import ResponsiveImage from '@/components/ResponsiveImage';
 import Reveal from '@/components/Reveal';
 import SectionLabel from '@/components/SectionLabel';
+import Signup from '@/components/Signup';
 import Statement from '@/components/Statement';
 import Status from '@/components/Status';
 import Zoom from '@/components/Zoom';
@@ -139,11 +140,14 @@ export default function Home({ home }: { home: HomeProps }) {
         </section>
       )}
 
-      {home.index.length > 0 && (
+      {site.appearance.show_index && home.index.length > 0 && (
         <Reveal className="mt-section">
           <IndexOfWorks works={home.index} />
         </Reveal>
       )}
+      <Reveal className="mt-section">
+        <Signup />
+      </Reveal>
     </SiteLayout>
   );
 }

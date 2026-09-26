@@ -3,7 +3,7 @@ from django.db import transaction
 
 from gesso.content.models import SiteContent
 from gesso.enquiries.forms import EnquiryForm
-from gesso.enquiries.models import Enquiry
+from gesso.enquiries.models import Enquiry, Topic
 
 
 def submit_enquiry(form: EnquiryForm) -> Enquiry:
@@ -18,7 +18,7 @@ def notify(enquiry: Enquiry) -> None:
         return
     about = f' about {enquiry.artwork.title}' if enquiry.artwork else ''
     EmailMessage(
-        subject=f'New enquiry from {enquiry.name}{about}',
+        subject=f'New enquiry from {enquiry.name}{about} ({Topic(enquiry.topic).label})',
         body=f'{enquiry.message}\n\n{enquiry.name} <{enquiry.email}>',
         to=[recipient],
         reply_to=[enquiry.email],

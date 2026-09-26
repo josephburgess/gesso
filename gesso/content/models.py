@@ -14,6 +14,11 @@ class WorkLayout(models.TextChoices):
     STACK = 'stack', 'Exhibition'
 
 
+class AboutLayout(models.TextChoices):
+    BESIDE = 'beside', 'Portrait beside statement'
+    ABOVE = 'above', 'Portrait above'
+
+
 class Headings(models.TextChoices):
     SERIF = 'serif', 'Classic serif'
     SANS = 'sans', 'Modern sans'
@@ -21,6 +26,7 @@ class Headings(models.TextChoices):
 
 class SiteContent(models.Model):
     about_images: models.Manager[AboutImage]
+    social_links: models.Manager[SocialLink]
 
     site_name = models.CharField(max_length=100, default='Gesso', help_text='Shown in the header, browser tabs and the admin.')
     tagline = models.CharField(max_length=100, blank=True, help_text='Shown under the name in the header.')
@@ -36,6 +42,12 @@ class SiteContent(models.Model):
         max_length=20, choices=WorkLayout, default=WorkLayout.GRID, help_text='How the full list of works is arranged.'
     )
     headings = models.CharField(max_length=20, choices=Headings, default=Headings.SERIF)
+    show_index = models.BooleanField(
+        'index of works on the home page', default=True, help_text='A list of every work under the featured ones.'
+    )
+    about_layout = models.CharField(
+        max_length=20, choices=AboutLayout, default=AboutLayout.BESIDE, help_text='How the About page is arranged.'
+    )
     motion = models.BooleanField(
         'gentle motion',
         default=True,
@@ -69,3 +81,16 @@ class AboutImage(ProcessedImage):
 
     class Meta:
         ordering = ('position', 'pk')
+
+
+class SocialLink(models.Model):
+    site_content = models.ForeignKey(SiteContent, on_delete=models.CASCADE, related_name='social_links')
+    label = models.CharField(max_length=50, help_text='For example Instagram.')
+    url = models.URLField('link')
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ('position', 'pk')
+
+    def __str__(self):
+        return self.label

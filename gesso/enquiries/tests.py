@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from gesso.content.models import SiteContent
 from gesso.enquiries.forms import EnquiryForm
-from gesso.enquiries.models import Enquiry
+from gesso.enquiries.models import Enquiry, Subscriber
 from gesso.enquiries.services import submit_enquiry
 
 
@@ -24,6 +24,23 @@ def test_submit_enquiry_emails_the_studio(db, mailoutbox, django_capture_on_comm
     [mail] = mailoutbox
     assert mail.to == ['studio@example.com']
     assert mail.reply_to == ['a@example.com']
+    assert mail.subject == 'New enquiry from A (General)'
+
+
+def test_enquiry_topic_is_saved_and_in_the_subject(db, mailoutbox, django_capture_on_commit_callbacks):
+    content = SiteContent.load()
+    content.notification_email = 'studio@example.com'
+    content.save()
+
+    with django_capture_on_commit_callbacks(execute=True):
+        enquiry = submit_enquiry(_form(topic='commission'))
+
+    assert enquiry.topic == 'commission'
+    assert mailoutbox[0].subject == 'New enquiry from A (Commission)'
+
+
+def test_enquiry_without_a_topic_is_general(db):
+    assert _form(topic='').save().topic == 'general'
 
 
 def test_submit_enquiry_without_recipient_sends_nothing(db, mailoutbox, django_capture_on_commit_callbacks):
@@ -65,3 +82,12 @@ def test_admin_offers_a_reply_by_email(admin_client, make_artwork):
 
     assert 'mailto:ann@example.com?subject=Re%3A%20Ferry%20Light' in html
     assert 'Is%20it%20still%20available' in html
+
+
+def test_admin_exports_subscribers_as_csv(admin_client):
+    Subscriber.objects.create(email='a@example.com')
+
+    response = admin_client.get(reverse('admin:enquiries_subscriber_export_csv'))
+
+    assert response['Content-Type'] == 'text/csv'
+    assert response.content.decode().splitlines()[1].startswith('a@example.com,')

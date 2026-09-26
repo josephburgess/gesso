@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from gesso.artworks.models import ArtworkImage, ArtworkStatus
 from gesso.content.models import AboutImage, SiteContent
-from gesso.enquiries.models import Enquiry
+from gesso.enquiries.models import Enquiry, Subscriber
 from gesso.web.formatting import dimensions, paragraphs, price
 from gesso.web.middleware import site_props
 from gesso.web.views.work import responsive_image
@@ -125,11 +125,11 @@ def test_responsive_image():
     ('path', 'current'),
     [('/work', True), ('/work/some-painting', True), ('/workshop', False), ('/', False)],
 )
-def test_work_nav_current(rf, path, current):
+def test_work_nav_current(rf, db, path, current):
     request = rf.get(path)
     request.user = AnonymousUser()
 
-    assert site_props(request, SiteContent())['nav'][0]['current'] is current
+    assert site_props(request, SiteContent.load())['nav'][0]['current'] is current
 
 
 @pytest.mark.parametrize(
@@ -171,7 +171,11 @@ def test_contact_post_returns_errors(client, db):
     response = client.post('/contact', data, content_type='application/json', headers=INERTIA)
 
     assert response.status_code == 200
-    assert response.json()['props']['errors'].keys() == {'name', 'email', 'message'}
+    assert response.json()['props']['errors'] == {
+        'name': 'This field is required.',
+        'email': 'Enter a valid email address.',
+        'message': 'This field is required.',
+    }
     assert not Enquiry.objects.exists()
 
 
@@ -205,6 +209,14 @@ def test_contact_prefills_artwork_from_query(client, make_artwork):
     contact = client.get('/contact?artwork=ferry-light', headers=INERTIA).json()['props']['contact']
 
     assert contact['artwork'] == {'title': 'Ferry Light', 'slug': 'ferry-light'}
+    assert contact['topic'] == 'buying'
+
+
+def test_contact_offers_topics_starting_on_general(client, db):
+    contact = client.get('/contact', headers=INERTIA).json()['props']['contact']
+
+    assert contact['topic'] == 'general'
+    assert [t['label'] for t in contact['topics']] == ['General', 'Buying a work', 'Commission', 'Exhibitions & press']
 
 
 def test_contact_links_enquiry_to_artwork(client, make_artwork):
@@ -367,16 +379,24 @@ def _image(artwork, name, position=0, **fields):
 def test_appearance_is_shared_and_rendered_on_the_html_element(client, db):
     content = SiteContent.load()
     content.layout, content.work_layout, content.headings, content.motion = 'top', 'salon', 'sans', False
+    content.show_index, content.about_layout = False, 'above'
     content.save()
 
     site = client.get('/about', headers=INERTIA).json()['props']['site']
     html = client.get('/about').content.decode()
 
-    assert site['appearance'] == {'layout': 'top', 'work_layout': 'salon', 'headings': 'sans', 'motion': False}
+    assert site['appearance'] == {
+        'layout': 'top',
+        'work_layout': 'salon',
+        'headings': 'sans',
+        'motion': False,
+        'show_index': False,
+        'about_layout': 'above',
+    }
     assert '<html lang="en-GB" data-theme="paper" data-type="sans" data-motion="off">' in html
 
 
-PREVIEW = '/about?preview=1&layout=top&work_layout=stack&headings=sans&motion=off'
+PREVIEW = '/about?preview=1&layout=top&work_layout=stack&headings=sans&motion=off&index=off&about_layout=above'
 
 
 def test_staff_can_preview_appearance(admin_client):
@@ -387,6 +407,8 @@ def test_staff_can_preview_appearance(admin_client):
         'work_layout': 'stack',
         'headings': 'sans',
         'motion': False,
+        'show_index': False,
+        'about_layout': 'above',
     }
     assert response.headers['X-Robots-Tag'] == 'noindex'
     assert response.headers['X-Frame-Options'] == 'SAMEORIGIN'
@@ -466,3 +488,55 @@ def test_home_shows_two_studio_photos_lead_work_first(client, make_artwork):
     process = client.get('/', headers=INERTIA).json()['props']['home']['process']
 
     assert [p['title'] for p in process] == ['Lead', 'Other']
+
+
+def test_pages_link_the_favicon(client, db):
+    html = client.get('/about').content.decode()
+
+    assert '<link rel="icon" href="/static/web/favicon.ico" sizes="48x48">' in html
+    assert client.get('/favicon.ico')['Location'] == '/static/web/favicon.ico'
+
+
+def test_social_links_are_shared_and_in_structured_data(client, make_artwork):
+    content = SiteContent.load()
+    content.social_links.create(label='Instagram', url='https://instagram.com/elise', position=0)
+    make_artwork(slug='a', is_published=True)
+
+    site = client.get('/about', headers=INERTIA).json()['props']['site']
+    html = client.get('/work/a').content.decode()
+
+    assert site['social'] == [{'label': 'Instagram', 'href': 'https://instagram.com/elise'}]
+    assert '"sameAs": ["https://instagram.com/elise"]' in html
+
+
+def _subscribe(client, **data):
+    return client.post('/subscribe', {'email': 'Reader@Example.com'} | data, content_type='application/json')
+
+
+def test_subscribe_adds_the_email_once(client, db):
+    first = _subscribe(client)
+    again = _subscribe(client, email='reader@example.com')
+
+    assert first.json() == again.json() == {'message': "Thanks, you're on the list."}
+    assert list(Subscriber.objects.values_list('email', flat=True)) == ['reader@example.com']
+
+
+def test_subscribe_rejects_a_bad_email(client, db):
+    response = _subscribe(client, email='nope')
+
+    assert response.status_code == 400
+    assert response.json()['errors'] == {'email': 'Enter a valid email address.'}
+    assert not Subscriber.objects.exists()
+
+
+def test_subscribe_spam_catcher_pretends_success(client, db):
+    assert _subscribe(client, website='spam.example').status_code == 200
+    assert not Subscriber.objects.exists()
+
+
+def test_subscribe_is_rate_limited(client, db):
+    for i in range(6):
+        response = _subscribe(client, email=f'r{i}@example.com')
+
+    assert response.status_code == 429
+    assert Subscriber.objects.count() == 5
