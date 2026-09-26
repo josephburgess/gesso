@@ -11,12 +11,6 @@ from gesso.artworks.models import Artwork
 from gesso.content.forms import AppearanceForm, SiteContentAdminForm
 from gesso.content.models import AboutImage, SiteContent
 
-THEMES = {
-    'paper': {'note': 'Warm unbleached page, ochre accent', 'colours': ('#fdfbf6', '#f2eee4', '#26241f', '#8a5f1d')},
-    'gallery': {'note': 'Bright white wall, rust accent', 'colours': ('#ffffff', '#f5f5f3', '#141414', '#9c3f1a')},
-    'charcoal': {'note': 'Dark room — the work glows', 'colours': ('#151412', '#1c1b18', '#f2ede3', '#d9a066')},
-    'slate': {'note': 'Cool grey, blue accent from the paintings', 'colours': ('#f4f5f3', '#e8ebea', '#1c2830', '#3d6582')},
-}
 NOTES = {
     'rail': 'Name, menu and details in a column',
     'top': 'Slim bar, wider pages',
@@ -79,7 +73,6 @@ class SiteContentAdmin(ModelAdmin):
             **self.admin_site.each_context(request),
             'title': 'Appearance',
             'form': form,
-            'themes': [(choice, THEMES[choice.data['value']]) for choice in form['theme'].subwidgets],
             'layouts': [(choice, NOTES[choice.data['value']]) for choice in form['layout'].subwidgets],
             'work_layouts': [(choice, NOTES[choice.data['value']]) for choice in form['work_layout'].subwidgets],
             'pages': pages,

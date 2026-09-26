@@ -20,8 +20,8 @@ if (sentryDsn) {
 if (new URLSearchParams(location.search).get('preview') === '1') {
   window.addEventListener('message', (event: MessageEvent<{ type: string; value: Appearance }>) => {
     if (event.origin !== location.origin || event.data?.type !== 'appearance') return;
-    const { theme, headings, motion } = event.data.value;
-    Object.assign(document.documentElement.dataset, { theme, type: headings, motion: motion ? 'on' : 'off' });
+    const { headings, motion } = event.data.value;
+    Object.assign(document.documentElement.dataset, { type: headings, motion: motion ? 'on' : 'off' });
   });
 }
 

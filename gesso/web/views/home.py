@@ -13,6 +13,7 @@ from gesso.web.views.work import ArtworkTile, ImageProps, artwork_tile, responsi
 class ProcessPhoto(TypedDict):
     image: ImageProps
     caption: str
+    title: str
 
 
 class Home(TypedDict):
@@ -24,12 +25,14 @@ class Home(TypedDict):
     process: list[ProcessPhoto]
 
 
-def _process(artwork: Artwork) -> list[ProcessPhoto]:
-    return [
-        {'image': image, 'caption': photo.caption}
+def _process(artworks: list[Artwork]) -> list[ProcessPhoto]:
+    photos: list[ProcessPhoto] = [
+        {'image': image, 'caption': photo.caption, 'title': artwork.title}
+        for artwork in artworks
         for photo in artwork.images.all()
         if photo.is_process and (image := responsive_image(photo))
     ]
+    return photos[:2]
 
 
 @require_GET
@@ -43,6 +46,6 @@ def page(request: HttpRequest) -> HttpResponse:
         'about_href': reverse('about'),
         'featured': [artwork_tile(a) for a in featured],
         'index': [artwork_tile(a) for a in artworks],
-        'process': _process(featured[0]) if featured else [],
+        'process': _process(featured + [a for a in artworks if a.featured_order is None]),
     }
     return render(request, 'Home', {'home': home})

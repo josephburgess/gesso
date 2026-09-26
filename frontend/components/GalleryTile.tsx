@@ -8,7 +8,7 @@ export default function GalleryTile({ tile }: { tile: ArtworkTile }) {
       <figure>
         <div className="overflow-hidden bg-image-bg">
           {tile.cover ? (
-            <div className="transition-transform duration-(--d-image) ease-out group-hover:scale-103">
+            <div className="transition-transform duration-(--d-image) ease-out group-hover:scale-(--zoom-tile)">
               <ResponsiveImage image={tile.cover} alt={tile.title} sizes="(min-width: 1000px) 30vw, 92vw" reveal />
             </div>
           ) : (

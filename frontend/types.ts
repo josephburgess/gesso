@@ -47,13 +47,12 @@ export type Home = {
   process: ProcessPhoto[];
 };
 
-export type ProcessPhoto = { image: ImageProps; caption: string };
+export type ProcessPhoto = { image: ImageProps; caption: string; title: string };
 
 export type Neighbour = { title: string; href: string };
 export type NavLink = { label: string; href: string; current: boolean };
 
 export type Appearance = {
-  theme: 'paper' | 'gallery' | 'charcoal' | 'slate';
   layout: 'rail' | 'top';
   work_layout: 'grid' | 'salon' | 'stack';
   headings: 'serif' | 'sans';

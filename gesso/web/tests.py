@@ -366,24 +366,23 @@ def _image(artwork, name, position=0, **fields):
 
 def test_appearance_is_shared_and_rendered_on_the_html_element(client, db):
     content = SiteContent.load()
-    content.theme, content.layout, content.work_layout, content.headings, content.motion = 'charcoal', 'top', 'salon', 'sans', False
+    content.layout, content.work_layout, content.headings, content.motion = 'top', 'salon', 'sans', False
     content.save()
 
     site = client.get('/about', headers=INERTIA).json()['props']['site']
     html = client.get('/about').content.decode()
 
-    assert site['appearance'] == {'theme': 'charcoal', 'layout': 'top', 'work_layout': 'salon', 'headings': 'sans', 'motion': False}
-    assert '<html lang="en-GB" data-theme="charcoal" data-type="sans" data-motion="off">' in html
+    assert site['appearance'] == {'layout': 'top', 'work_layout': 'salon', 'headings': 'sans', 'motion': False}
+    assert '<html lang="en-GB" data-theme="paper" data-type="sans" data-motion="off">' in html
 
 
-PREVIEW = '/about?preview=1&theme=slate&layout=top&work_layout=stack&headings=sans&motion=off'
+PREVIEW = '/about?preview=1&layout=top&work_layout=stack&headings=sans&motion=off'
 
 
 def test_staff_can_preview_appearance(admin_client):
     response = admin_client.get(PREVIEW, headers=INERTIA)
 
     assert response.json()['props']['site']['appearance'] == {
-        'theme': 'slate',
         'layout': 'top',
         'work_layout': 'stack',
         'headings': 'sans',
@@ -392,21 +391,21 @@ def test_staff_can_preview_appearance(admin_client):
     assert response.headers['X-Robots-Tag'] == 'noindex'
     assert response.headers['X-Frame-Options'] == 'SAMEORIGIN'
     assert 'no-store' in response.headers['Cache-Control']
-    assert 'data-theme="slate"' in admin_client.get(PREVIEW).content.decode()
+    assert 'data-type="sans" data-motion="off"' in admin_client.get(PREVIEW).content.decode()
 
 
 def test_preview_ignores_unknown_values(admin_client):
-    appearance = admin_client.get('/about?preview=1&theme=neon&motion=maybe', headers=INERTIA).json()['props']['site']['appearance']
+    appearance = admin_client.get('/about?preview=1&layout=sideways&motion=maybe', headers=INERTIA).json()['props']['site']['appearance']
 
-    assert (appearance['theme'], appearance['motion']) == ('paper', True)
+    assert (appearance['layout'], appearance['motion']) == ('rail', True)
 
 
 def test_visitors_cannot_preview_appearance(client, db):
     response = client.get(PREVIEW, headers=INERTIA)
 
-    assert response.json()['props']['site']['appearance']['theme'] == 'paper'
+    assert response.json()['props']['site']['appearance']['layout'] == 'rail'
     assert response.headers['X-Frame-Options'] == 'DENY'
-    assert 'data-theme="paper"' in client.get(PREVIEW).content.decode()
+    assert 'data-type="serif" data-motion="on"' in client.get(PREVIEW).content.decode()
 
 
 def test_artwork_page_links_neighbours_and_wraps_around(client, make_artwork):
@@ -431,7 +430,7 @@ def test_single_artwork_has_no_neighbours(client, make_artwork):
 
 
 def test_process_photos_follow_the_finished_views(client, make_artwork):
-    artwork = make_artwork(slug='a', is_published=True, featured_order=1)
+    artwork = make_artwork(title='Harbour', slug='a', is_published=True, featured_order=1)
     _image(artwork, 'yard', position=0, is_process=True, caption='Drying in the yard')
     _image(artwork, 'front', position=1)
 
@@ -450,11 +449,20 @@ def test_process_photos_follow_the_finished_views(client, make_artwork):
                 'thumb': '/media/variants/yard/480.webp',
             },
             'caption': 'Drying in the yard',
+            'title': 'Harbour',
         }
     ]
 
 
-def test_home_has_no_process_photos_without_a_lead_work(client, make_artwork):
-    _image(make_artwork(is_published=True), 'yard', is_process=True)
+def test_home_shows_two_studio_photos_lead_work_first(client, make_artwork):
+    other = make_artwork(title='Other', year=2025, is_published=True)
+    lead = make_artwork(title='Lead', year=2020, is_published=True, featured_order=1)
+    draft = make_artwork(title='Draft', year=2026)
+    _image(other, 'other-1', is_process=True)
+    _image(other, 'other-2', is_process=True, position=1)
+    _image(lead, 'lead', is_process=True)
+    _image(draft, 'draft', is_process=True)
 
-    assert client.get('/', headers=INERTIA).json()['props']['home']['process'] == []
+    process = client.get('/', headers=INERTIA).json()['props']['home']['process']
+
+    assert [p['title'] for p in process] == ['Lead', 'Other']

@@ -3,11 +3,10 @@ from typing import TypedDict
 from django.db import models
 from django.http import HttpRequest, QueryDict
 
-from gesso.content.models import Headings, SiteContent, SiteLayout, Theme, WorkLayout
+from gesso.content.models import Headings, SiteContent, SiteLayout, WorkLayout
 
 
 class Appearance(TypedDict):
-    theme: str
     layout: str
     work_layout: str
     headings: str
@@ -31,7 +30,6 @@ def appearance(request: HttpRequest, content: SiteContent) -> Appearance:
 
     motion = query.get('motion')
     return {
-        'theme': pick('theme', Theme),
         'layout': pick('layout', SiteLayout),
         'work_layout': pick('work_layout', WorkLayout),
         'headings': pick('headings', Headings),

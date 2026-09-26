@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import Nav from '@/components/Nav';
+import ThemeToggle from '@/components/ThemeToggle';
 
 type Props = { title?: string; rail?: ReactNode; children: ReactNode };
 
@@ -17,7 +18,10 @@ export default function SiteLayout({ title, rail, children }: Props) {
             <span className="font-serif text-wordmark-sm leading-[1.15]">{site.name}</span>
             <span className="hidden text-tagline tracking-[0.04em] text-ink-meta wide:inline">{site.tagline}</span>
           </Link>
-          <Nav links={site.nav} inline />
+          <div className="flex items-baseline gap-6">
+            <Nav links={site.nav} inline />
+            <ThemeToggle />
+          </div>
         </header>
         <main
           className={`mx-auto max-w-[1400px] animate-page-enter px-gutter pt-block pb-section ${rail ? 'wide:grid wide:grid-cols-[minmax(0,1fr)_300px] wide:items-start wide:gap-x-section' : ''}`}
@@ -41,7 +45,10 @@ export default function SiteLayout({ title, rail, children }: Props) {
           <span className="block font-serif text-wordmark-sm wide:text-wordmark">{site.name}</span>
           <span className="hidden text-tagline tracking-[0.04em] text-ink-meta wide:block">{site.tagline}</span>
         </Link>
-        <Nav links={site.nav} />
+        <div className="flex items-baseline gap-4.5 wide:contents">
+          <Nav links={site.nav} />
+          <ThemeToggle className="wide:order-last wide:mt-auto" />
+        </div>
         {rail && (
           <div className="basis-full border-t border-hair pt-slot text-meta text-ink-muted wide:basis-auto wide:self-stretch">
             {rail}

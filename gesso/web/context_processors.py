@@ -11,7 +11,6 @@ def site(request: HttpRequest) -> dict[str, str | bool]:
     return {
         'site_name': content.site_name,
         'site_description': content.site_description,
-        'site_theme': look['theme'],
         'site_headings': look['headings'],
         'site_motion': look['motion'],
     }

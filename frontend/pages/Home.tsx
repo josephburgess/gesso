@@ -115,7 +115,7 @@ export default function Home({ home }: { home: HomeProps }) {
         </div>
       )}
 
-      {lead && home.process.length > 0 && (
+      {home.process.length > 0 && (
         <section className="mt-section">
           <Reveal>
             <SectionLabel>In the studio</SectionLabel>
@@ -129,8 +129,8 @@ export default function Home({ home }: { home: HomeProps }) {
               >
                 <Figure
                   image={photo.image}
-                  alt={photo.caption || `${lead.title} in the studio`}
-                  caption={[photo.caption, lead.title].filter(Boolean).join(' · ')}
+                  alt={photo.caption || `${photo.title} in the studio`}
+                  caption={[photo.caption, photo.title].filter(Boolean).join(' · ')}
                   sizes="(min-width: 861px) 35vw, 92vw"
                 />
               </Reveal>
