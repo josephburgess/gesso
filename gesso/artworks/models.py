@@ -38,9 +38,12 @@ class Artwork(models.Model):
     reserved_until = models.DateTimeField(null=True, blank=True, editable=False)
     description = models.TextField(blank=True)
     featured_order = models.PositiveSmallIntegerField(
+        'home page spot',
         null=True,
         blank=True,
-        help_text='Show on the home page. Lower numbers come first.',
+        unique=True,
+        choices=((1, '1 (large hero)'), (2, '2'), (3, '3')),
+        help_text='Leave empty to keep this work off the home page.',
     )
 
     objects = ArtworkQuerySet.as_manager()

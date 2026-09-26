@@ -11,6 +11,8 @@ class ArtworkImageInline(TabularInline):
     extra = 1
     fields = ('preview', 'original', 'position')
     readonly_fields = ('preview',)
+    ordering_field = 'position'
+    hide_ordering_field = True
 
     @admin.display(description='Preview')
     def preview(self, obj):
@@ -28,4 +30,9 @@ class ArtworkAdmin(ModelAdmin):
         'status',
     )
     prepopulated_fields = {'slug': ('title',)}
+    fieldsets = (
+        (None, {'fields': ('title', 'slug', 'year', 'medium', 'height_cm', 'width_cm', 'description')}),
+        ('Sale', {'fields': ('status', 'price')}),
+        ('On the site', {'fields': ('is_published', 'featured_order')}),
+    )
     inlines = (ArtworkImageInline,)

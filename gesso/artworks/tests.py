@@ -86,3 +86,11 @@ def test_cover_url_is_the_largest_variant_of_the_first_image(make_artwork):
 
 def test_cover_url_without_images_is_none(make_artwork):
     assert make_artwork().cover_url is None
+
+
+def test_admin_form_rejects_a_taken_home_page_spot(make_artwork):
+    make_artwork(featured_order=1)
+
+    form = ArtworkAdminForm(FORM_DATA | {'featured_order': '1'})
+
+    assert 'featured_order' in form.errors
