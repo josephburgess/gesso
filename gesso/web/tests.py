@@ -205,6 +205,14 @@ def test_contact_prefills_artwork_from_query(client, make_artwork):
     contact = client.get('/contact?artwork=ferry-light', headers=INERTIA).json()['props']['contact']
 
     assert contact['artwork'] == {'title': 'Ferry Light', 'slug': 'ferry-light'}
+    assert contact['topic'] == 'buying'
+
+
+def test_contact_offers_topics_starting_on_general(client, db):
+    contact = client.get('/contact', headers=INERTIA).json()['props']['contact']
+
+    assert contact['topic'] == 'general'
+    assert [t['label'] for t in contact['topics']] == ['General', 'Buying a work', 'Commission', 'Exhibitions & press']
 
 
 def test_contact_links_enquiry_to_artwork(client, make_artwork):

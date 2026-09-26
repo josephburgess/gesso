@@ -24,6 +24,23 @@ def test_submit_enquiry_emails_the_studio(db, mailoutbox, django_capture_on_comm
     [mail] = mailoutbox
     assert mail.to == ['studio@example.com']
     assert mail.reply_to == ['a@example.com']
+    assert mail.subject == 'New enquiry from A (General)'
+
+
+def test_enquiry_topic_is_saved_and_in_the_subject(db, mailoutbox, django_capture_on_commit_callbacks):
+    content = SiteContent.load()
+    content.notification_email = 'studio@example.com'
+    content.save()
+
+    with django_capture_on_commit_callbacks(execute=True):
+        enquiry = submit_enquiry(_form(topic='commission'))
+
+    assert enquiry.topic == 'commission'
+    assert mailoutbox[0].subject == 'New enquiry from A (Commission)'
+
+
+def test_enquiry_without_a_topic_is_general(db):
+    assert _form(topic='').save().topic == 'general'
 
 
 def test_submit_enquiry_without_recipient_sends_nothing(db, mailoutbox, django_capture_on_commit_callbacks):

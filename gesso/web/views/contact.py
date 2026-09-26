@@ -13,6 +13,7 @@ from inertia import render
 from gesso.artworks.models import Artwork
 from gesso.content.models import SiteContent
 from gesso.enquiries.forms import EnquiryForm
+from gesso.enquiries.models import Topic
 from gesso.enquiries.services import submit_enquiry
 
 
@@ -21,10 +22,17 @@ class EnquiryArtwork(TypedDict):
     slug: str
 
 
+class Choice(TypedDict):
+    value: str
+    label: str
+
+
 class Contact(TypedDict):
     details: str
     action: str
     artwork: EnquiryArtwork | None
+    topics: list[Choice]
+    topic: str
 
 
 @require_http_methods(['GET', 'POST'])
@@ -53,6 +61,8 @@ def page(request: HttpRequest) -> HttpResponse:
         'details': SiteContent.load().contact_details,
         'action': reverse('contact'),
         'artwork': {'title': artwork.title, 'slug': artwork.slug} if artwork else None,
+        'topics': [{'value': value, 'label': label} for value, label in Topic.choices],
+        'topic': Topic.BUYING if artwork else Topic.GENERAL,
     }
     return render(
         request,

@@ -12,11 +12,12 @@ from gesso.enquiries.models import Enquiry
 
 @admin.register(Enquiry)
 class EnquiryAdmin(ModelAdmin):
-    list_display = ('thumbnail', 'name', 'artwork', 'created_at', 'is_read')
+    list_display = ('thumbnail', 'name', 'topic', 'artwork', 'created_at', 'is_read')
+    list_filter = ('topic',)
     list_display_links = ('thumbnail', 'name')
     search_fields = ('name', 'email', 'message')
     ordering = (F('read_at').asc(nulls_first=True), '-created_at')
-    fields = ('name', 'email', 'reply', 'artwork', 'message', 'created_at', 'read_at')
+    fields = ('name', 'email', 'reply', 'topic', 'artwork', 'message', 'created_at', 'read_at')
     readonly_fields = ('reply', 'created_at', 'read_at')
 
     def get_queryset(self, request):

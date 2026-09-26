@@ -9,7 +9,14 @@ const line =
 
 export default function Contact({ contact }: { contact: ContactProps }) {
   const { flash } = usePage();
-  const form = useForm({ name: '', email: '', message: '', website: '', artwork: contact.artwork?.slug ?? '' });
+  const form = useForm({
+    name: '',
+    email: '',
+    topic: contact.topic,
+    message: '',
+    website: '',
+    artwork: contact.artwork?.slug ?? '',
+  });
 
   function submit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,6 +60,19 @@ export default function Contact({ contact }: { contact: ContactProps }) {
             />
           </Field>
         </div>
+        <Field label="Topic" error={form.errors.topic} className="max-w-[320px]">
+          <select
+            value={form.data.topic}
+            onChange={(e) => form.setData('topic', e.target.value)}
+            className={`cursor-pointer border-b border-line py-2 ${line}`}
+          >
+            {contact.topics.map((topic) => (
+              <option key={topic.value} value={topic.value}>
+                {topic.label}
+              </option>
+            ))}
+          </select>
+        </Field>
         <Field label="Message" error={form.errors.message}>
           <textarea
             rows={5}

@@ -26,7 +26,13 @@ export type ArtworkDetail = {
   description: string[];
 };
 
-export type Contact = { details: string; action: string; artwork: { title: string; slug: string } | null };
+export type Contact = {
+  details: string;
+  action: string;
+  artwork: { title: string; slug: string } | null;
+  topics: { value: string; label: string }[];
+  topic: string;
+};
 
 export type Purchase = { enquire_href: string; enquire_label: string; action: string | null; note: string };
 
