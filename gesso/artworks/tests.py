@@ -196,13 +196,15 @@ def test_image_manager_replaces_in_place(admin_client, make_artwork, settings, t
     first = admin_client.post(f'{base}upload/', {'file': _upload('a.png')}).json()
     admin_client.post(f'{base}upload/', {'file': _upload('b.png')})
     admin_client.post(f'{base}{first["id"]}/', {'caption': 'Yard'})
-    old_original = ArtworkImage.objects.get(pk=first['id']).original.name
+    old = ArtworkImage.objects.get(pk=first['id'])
+    old_files = [old.original.name, *(variant['name'] for variant in old.variants)]
 
-    admin_client.post(f'{base}{first["id"]}/replace/', {'file': _upload('c.png', (500, 500))})
+    replaced = admin_client.post(f'{base}{first["id"]}/replace/', {'file': _upload('c.png', (500, 500))}).json()
 
     image = ArtworkImage.objects.get(pk=first['id'])
     assert (image.position, image.caption, image.variants[0]['height']) == (0, 'Yard', 480)
-    assert not (tmp_path / old_original).exists()
+    assert replaced['thumb'] != first['thumb']
+    assert not any((tmp_path / name).exists() for name in old_files)
     assert all((tmp_path / variant['name']).exists() for variant in image.variants)
 
 

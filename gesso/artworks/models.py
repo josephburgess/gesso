@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import Self
 
@@ -150,11 +151,12 @@ class ProcessedImage(models.Model):
         with self.original.open('rb') as f:
             rendered = processing.webp_variants(f)
 
+        version = uuid.uuid4().hex[:8]
         self.variants = [
             {
                 'width': v.width,
                 'height': v.height,
-                'name': storage.save(f'{self.variants_dir}/{self.pk}/{v.width}.webp', ContentFile(v.data)),
+                'name': storage.save(f'{self.variants_dir}/{self.pk}/{version}-{v.width}.webp', ContentFile(v.data)),
             }
             for v in rendered
         ]
