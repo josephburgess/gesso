@@ -191,7 +191,7 @@ def test_contact_rejects_non_json(client, db):
 def test_home_features_published_works_in_order(client, make_artwork):
     make_artwork(title='Second', is_published=True, featured_order=2)
     make_artwork(title='First', is_published=True, featured_order=1)
-    make_artwork(title='Draft', featured_order=3)
+    make_artwork(title='Draft')
 
     home = client.get('/', headers=INERTIA).json()['props']['home']
 

@@ -43,7 +43,7 @@ class Artwork(models.Model):
         null=True,
         blank=True,
         unique=True,
-        choices=((1, '1 (large hero)'), (2, '2'), (3, '3')),
+        choices=((1, '1 (large hero)'), (2, '2')),
         help_text='Leave empty to keep this work off the home page.',
     )
 

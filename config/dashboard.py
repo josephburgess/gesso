@@ -80,8 +80,7 @@ def dashboard_callback(request: HttpRequest, context: dict) -> dict:
     context['home_page_table'] = {
         'headers': ['Spot', 'Work'],
         'rows': [
-            [label, _artwork_link(featured[spot]) if spot in featured else 'Empty']
-            for spot, label in ((1, '1 (large hero)'), (2, '2'), (3, '3'))
+            [label, _artwork_link(featured[spot]) if spot in featured else 'Empty'] for spot, label in ((1, '1 (large hero)'), (2, '2'))
         ],
     }
     context['without_images'] = [_artwork_link(a) for a in Artwork.objects.filter(images__isnull=True)]
