@@ -11,6 +11,5 @@ createInertiaApp({
   setup: ({ el, App, props }) => {
     createRoot(el).render(<App {...props} />);
   },
-  title: (title) => (title ? `${title} · Elise Beer` : 'Elise Beer'),
   http: { xsrfCookieName: 'csrftoken', xsrfHeaderName: 'X-CSRFToken' },
 });

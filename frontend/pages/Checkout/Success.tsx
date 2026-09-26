@@ -1,10 +1,8 @@
-import { Head } from '@inertiajs/react';
 import SiteLayout from '@/layouts/SiteLayout';
 
 export default function Success({ title }: { title: string | null }) {
   return (
-    <SiteLayout>
-      <Head title="Thank you" />
+    <SiteLayout title="Thank you">
       <h1>Thank you</h1>
       <p>
         {title ? (

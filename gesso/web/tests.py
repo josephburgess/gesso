@@ -122,7 +122,7 @@ def test_responsive_image():
     [('/work', True), ('/work/some-painting', True), ('/workshop', False), ('/', False)],
 )
 def test_work_nav_current(path, current):
-    assert site_props(path)['nav'][0]['current'] is current
+    assert site_props(path, SiteContent())['nav'][0]['current'] is current
 
 
 @pytest.mark.parametrize(
@@ -244,3 +244,18 @@ def test_checkout_is_rate_limited(client, make_artwork, stripe_sessions):
         response = client.post('/work/a/checkout', headers=INERTIA)
 
     assert list(get_messages(response.wsgi_request))[-1].message == 'Too many checkout attempts. Please try again in an hour.'
+
+
+def test_site_identity_comes_from_site_content(client, db):
+    content = SiteContent.load()
+    content.site_name = 'Studio Name'
+    content.tagline = 'Painter'
+    content.site_description = 'Paintings of the sea.'
+    content.save()
+
+    site = client.get('/about', headers=INERTIA).json()['props']['site']
+    html = client.get('/about').content.decode()
+
+    assert (site['name'], site['tagline']) == ('Studio Name', 'Painter')
+    assert 'About · Studio Name</title>' in html
+    assert '<meta name="description" content="Paintings of the sea.">' in html

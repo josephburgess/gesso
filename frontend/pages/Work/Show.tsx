@@ -2,7 +2,7 @@ import Lightbox from '@/components/Lightbox';
 import ResponsiveImage from '@/components/ResponsiveImage';
 import type { ArtworkDetail, Purchase } from '@/types';
 import SiteLayout from '@/layouts/SiteLayout';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 function PurchasePanel({ purchase }: { purchase: Purchase }) {
@@ -45,7 +45,6 @@ export default function Show({ artwork, purchase }: { artwork: ArtworkDetail; pu
 
   const rail = (
     <>
-      <Head title={artwork.title} />
       <p className="text-meta text-ink-meta tabular-nums">{artwork.year}</p>
       <dl className="mt-6 flex flex-col gap-2">
         {[
@@ -72,7 +71,7 @@ export default function Show({ artwork, purchase }: { artwork: ArtworkDetail; pu
   );
 
   return (
-    <SiteLayout rail={rail}>
+    <SiteLayout title={artwork.title} rail={rail}>
       {first && (
         <button type="button" aria-label="View larger" onClick={() => setOpen(0)} className="block cursor-zoom-in">
           <ResponsiveImage

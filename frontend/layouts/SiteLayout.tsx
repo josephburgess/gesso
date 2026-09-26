@@ -1,12 +1,15 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import Nav from '@/components/Nav';
 
-export default function SiteLayout({ rail, children }: { rail?: ReactNode; children: ReactNode }) {
+type Props = { title?: string; rail?: ReactNode; children: ReactNode };
+
+export default function SiteLayout({ title, rail, children }: Props) {
   const { site } = usePage().props;
 
   return (
     <div className="wide:flex">
+      <Head title={title ? `${title} · ${site.name}` : site.name} />
       <header className="flex flex-wrap items-baseline justify-between gap-x-5 gap-y-2 border-b border-panel-hair bg-panel px-gutter py-4 wide:sticky wide:top-0 wide:h-screen wide:w-75 wide:shrink-0 wide:flex-col wide:flex-nowrap wide:items-start wide:justify-start wide:gap-block wide:border-r wide:border-b-0 wide:px-rail-x wide:pt-block">
         <Link href={site.home_href} className="border-0 text-ink">
           <span className="block font-serif text-wordmark-sm wide:text-wordmark">{site.name}</span>

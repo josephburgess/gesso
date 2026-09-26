@@ -6,8 +6,13 @@ from django.utils.timezone import localtime
 
 from gesso.artworks.models import Artwork, ArtworkStatus
 from gesso.commerce.models import Order
+from gesso.content.models import SiteContent
 from gesso.enquiries.models import Enquiry
 from gesso.web.formatting import price
+
+
+def site_name(request: HttpRequest) -> str:
+    return SiteContent.load().site_name
 
 
 def orders_to_ship(request: HttpRequest) -> int | None:

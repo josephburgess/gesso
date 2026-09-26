@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title inertia>{% if title %}{{ title }} · {% endif %}Elise Beer</title>
-    <meta name="description" content="{{ description|default:'Elise Beer, painter.' }}">
+    <title inertia>{% if title %}{{ title }} · {% endif %}{{ site_name }}</title>
+    <meta name="description" content="{{ description|default:site_description }}">
     {% if image %}<meta property="og:image" content="{{ image }}">{% endif %}
     {% vite_hmr_client %}
     {% vite_react_refresh %}

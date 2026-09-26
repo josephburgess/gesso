@@ -4,6 +4,8 @@ from django.conf import settings
 from django.urls import reverse
 from inertia import share
 
+from gesso.content.models import SiteContent
+
 
 class NavLink(TypedDict):
     label: str
@@ -18,11 +20,11 @@ class Site(TypedDict):
     nav: list[NavLink]
 
 
-def site_props(path: str) -> Site:
+def site_props(path: str, content: SiteContent) -> Site:
     nav = [('Work', reverse('work')), ('About', reverse('about')), ('Contact', reverse('contact'))]
     return {
-        'name': 'Elise Beer',
-        'tagline': 'Painter',
+        'name': content.site_name,
+        'tagline': content.tagline,
         'home_href': reverse('home'),
         'nav': [{'label': label, 'href': href, 'current': _in_section(path, href)} for label, href in nav],
     }
@@ -34,7 +36,7 @@ def _in_section(path: str, href: str) -> bool:
 
 def share_site(get_response):
     def middleware(request):
-        share(request, site=site_props(request.path))
+        share(request, site=lambda: site_props(request.path, SiteContent.load()))
         return get_response(request)
 
     return middleware

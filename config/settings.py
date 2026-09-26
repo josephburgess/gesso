@@ -93,14 +93,15 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'gesso.web.context_processors.site',
             ],
         },
     },
 ]
 
 UNFOLD = {
-    'SITE_TITLE': 'Elise Beer',
-    'SITE_HEADER': 'Elise Beer',
+    'SITE_TITLE': 'config.dashboard.site_name',
+    'SITE_HEADER': 'config.dashboard.site_name',
     'SITE_SUBHEADER': 'Studio',
     'SITE_SYMBOL': 'palette',
     'SITE_URL': '/',

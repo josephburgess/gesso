@@ -2,6 +2,9 @@ from django.db import models
 
 
 class SiteContent(models.Model):
+    site_name = models.CharField(max_length=100, default='Gesso', help_text='Shown in the header, browser tabs and the admin.')
+    tagline = models.CharField(max_length=100, blank=True, help_text='Shown under the name in the header.')
+    site_description = models.CharField(max_length=200, blank=True, help_text='Default text for search results and link previews.')
     intro = models.TextField(blank=True, help_text='Short text in the home page sidebar.')
     statement = models.TextField(blank=True, help_text='Large statement on About page')
     biography = models.TextField(blank=True, help_text='About page content. Blank lines start new paragraphs.')

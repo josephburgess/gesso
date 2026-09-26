@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import ResponsiveImage from '@/components/ResponsiveImage';
 import SiteLayout from '@/layouts/SiteLayout';
 import type { ArtworkTile, Home as HomeProps } from '@/types';
@@ -21,7 +21,6 @@ export default function Home({ home }: { home: HomeProps }) {
 
   return (
     <SiteLayout rail={rail}>
-      <Head title="" />
       {lead && (
         <>
           <div className="text-label text-ink-faint uppercase">Selected work</div>
