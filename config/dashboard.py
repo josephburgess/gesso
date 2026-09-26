@@ -15,6 +15,10 @@ def site_name(request: HttpRequest) -> str:
     return SiteContent.load().site_name
 
 
+def works_active(request: HttpRequest) -> bool:
+    return request.path.startswith(reverse('admin:artworks_artwork_changelist')) and request.path != reverse('admin:artworks_homepage')
+
+
 def site_text_active(request: HttpRequest) -> bool:
     return request.path.startswith(reverse('admin:content_sitecontent_changelist')) and request.path != reverse('admin:content_appearance')
 

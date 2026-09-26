@@ -92,3 +92,14 @@ def test_appearance_page_needs_a_staff_login(client, db):
 
     assert response.status_code == 302
     assert response['Location'].startswith('/admin/login/')
+
+
+def test_about_photos_upload_and_take_alt_text(admin_client, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    base = '/admin/content/sitecontent/about-images/'
+
+    tile = admin_client.post(f'{base}upload/', {'file': _png()}).json()
+    admin_client.post(f'{base}{tile["id"]}/', {'alt': 'In the studio', 'caption': ''})
+
+    photo = SiteContent.load().about_images.get()
+    assert (photo.alt, bool(photo.variants)) == ('In the studio', True)

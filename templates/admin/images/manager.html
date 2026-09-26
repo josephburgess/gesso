@@ -1,0 +1,84 @@
+{% load static %}
+<style>
+  .im { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+  .im-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .im-tile { display: flex; flex-direction: column; gap: 8px; padding: 8px; border: 1px solid var(--color-base-200); border-radius: 6px; background: var(--color-white, #fff); cursor: grab; }
+  .dark .im-tile { border-color: var(--color-base-700); background: var(--color-base-900); }
+  .im-frame { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 3px; background: var(--color-base-100); }
+  .dark .im-frame { background: var(--color-base-800); }
+  .im-frame img { width: 100%; height: 100%; object-fit: cover; transition: opacity .2s; }
+  .im-frame.busy img { opacity: .45; }
+  .im-overlay { position: absolute; inset: auto 8px 8px 8px; display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #fff; text-shadow: 0 1px 2px rgb(0 0 0 / .6); }
+  .im-bar { height: 4px; border-radius: 2px; background: rgb(255 255 255 / .35); overflow: hidden; }
+  .im-bar span { display: block; height: 100%; background: var(--color-primary-600); transition: width .15s; }
+  .im-error { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; text-align: center; font-size: 12px; background: rgb(0 0 0 / .6); color: #fff; }
+  .im-field { display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
+  .im-field input[type=text] { width: 100%; padding: 5px 7px; font-size: 13px; border: 1px solid var(--color-base-200); border-radius: 4px; background: transparent; }
+  .dark .im-field input[type=text] { border-color: var(--color-base-700); }
+  .im-check { display: flex; flex-direction: row; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+  .im-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; }
+  .im-link { cursor: pointer; text-decoration: underline; color: var(--color-primary-600); background: none; border: 0; padding: 0; font: inherit; }
+  .im-danger { color: var(--color-red-600, #dc2626); }
+  .im-status { font-size: 11px; opacity: .7; min-height: 1em; }
+  .im-drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 110px; padding: 16px; text-align: center; font-size: 13px; border: 1px dashed var(--color-base-300); border-radius: 6px; cursor: pointer; transition: background .15s, border-color .15s; }
+  .dark .im-drop { border-color: var(--color-base-600); }
+  .im-drop.over { border-color: var(--color-primary-600); background: color-mix(in oklab, var(--color-primary-600) 8%, transparent); }
+  .im-hint { font-size: 12px; opacity: .7; }
+</style>
+
+{{ config|json_script:"image-manager-config" }}
+<script src="{% static 'artworks/image-manager.js' %}"></script>
+
+<div class="im" x-data="imageManager('image-manager-config')" @dragover.prevent="over = hasFiles($event)" @dragleave.self="over = false" @drop.prevent="drop($event)">
+    {% if pending %}<input type="hidden" name="image_ids" :value="ids">{% endif %}
+
+    <div class="im-grid" x-ref="grid" x-sort="reordered()" x-sort:config="{filter: 'input, button, label', preventOnFilter: false}">
+        <template x-for="tile in tiles" :key="tile.key">
+            <div class="im-tile" :data-key="tile.key">
+                <div class="im-frame" :class="{ busy: tile.state === 'uploading' || tile.state === 'processing' }">
+                    <img :src="tile.preview || tile.thumb" alt="" x-show="tile.preview || tile.thumb">
+                    <div class="im-overlay" x-show="tile.state === 'uploading' || tile.state === 'processing'">
+                        <span x-text="tile.state === 'uploading' ? `Uploading ${Math.round(tile.progress * 100)}%` : 'Processing…'"></span>
+                        <div class="im-bar"><span :style="`width: ${tile.state === 'processing' ? 100 : tile.progress * 100}%`"></span></div>
+                    </div>
+                    <div class="im-error" x-show="tile.state === 'error'">
+                        <span x-text="tile.error"></span>
+                        <button type="button" class="im-link" style="color: #fff" @click="retry(tile)" x-show="tile.file">Try again</button>
+                    </div>
+                </div>
+
+                <template x-for="field in config.fields" :key="field.name">
+                    <div>
+                        <template x-if="field.type === 'checkbox'">
+                            <label class="im-check">
+                                <input type="checkbox" x-model="tile.values[field.name]" @change="save(tile)" :disabled="!tile.id">
+                                <span x-text="field.label"></span>
+                            </label>
+                        </template>
+                        <template x-if="field.type !== 'checkbox'">
+                            <label class="im-field">
+                                <span x-text="field.label"></span>
+                                <input type="text" x-model="tile.values[field.name]" @change="save(tile)" :disabled="!tile.id">
+                            </label>
+                        </template>
+                    </div>
+                </template>
+
+                <div class="im-actions">
+                    <label class="im-link" x-show="tile.id">
+                        Replace
+                        <input type="file" accept="image/*" hidden @change="replace(tile, $event.target.files[0]); $event.target.value = ''">
+                    </label>
+                    <span class="im-status" x-text="tile.note"></span>
+                    <button type="button" class="im-link im-danger" @click="remove(tile)">Delete</button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <label class="im-drop" :class="{ over }">
+        <strong>Add images</strong>
+        <span class="im-hint">Drop files here or click to choose. They upload straight away; drag to reorder.</span>
+        <input type="file" accept="image/*" multiple hidden @change="add($event.target.files); $event.target.value = ''">
+    </label>
+</div>

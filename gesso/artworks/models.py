@@ -129,6 +129,18 @@ class ProcessedImage(models.Model):
     def thumbnail_url(self) -> str | None:
         return self.original.storage.url(self.variants[0]['name']) if self.variants else None
 
+    def replace(self, file) -> None:
+        old = self.original.name
+        self.original = file
+        self.save()
+        self.original.storage.delete(old)
+
+    def delete_files(self) -> None:
+        storage = self.original.storage
+        for variant in self.variants:
+            storage.delete(variant['name'])
+        storage.delete(self.original.name)
+
     def make_variants(self):
         storage = self.original.storage
 
@@ -150,8 +162,10 @@ class ProcessedImage(models.Model):
 
 
 class ArtworkImage(ProcessedImage):
-    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE, related_name='images')
+    artwork = models.ForeignKey(Artwork, null=True, blank=True, on_delete=models.CASCADE, related_name='images')
     position = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    home_position = models.PositiveSmallIntegerField(null=True, blank=True, editable=False)
     caption = models.CharField(max_length=200, blank=True, help_text='Shown under process photos, e.g. "Drying in the yard".')
     is_process = models.BooleanField(
         'studio / process photo',

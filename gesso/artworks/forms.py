@@ -1,11 +1,11 @@
 from decimal import Decimal
 
 from django import forms
-from django.core.exceptions import ValidationError
-from unfold.forms import PaginationInlineFormSet
-from unfold.widgets import UnfoldAdminDecimalFieldWidget
+from django.db import transaction
+from django.db.models import Q
+from unfold.widgets import UnfoldAdminDecimalFieldWidget, UnfoldAdminSelectWidget
 
-from gesso.artworks.models import Artwork, ArtworkStatus
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
 
 
 class PositionedForm(forms.ModelForm):
@@ -24,7 +24,7 @@ class ArtworkAdminForm(forms.ModelForm):
 
     class Meta:
         model = Artwork
-        exclude = ('height_mm', 'width_mm', 'price_pence')  # noqa: DJ006
+        exclude = ('height_mm', 'width_mm', 'price_pence', 'featured_order')  # noqa: DJ006
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -39,9 +39,19 @@ class ArtworkAdminForm(forms.ModelForm):
         cleaned = super().clean()
         if cleaned.get('status') == ArtworkStatus.AVAILABLE and cleaned.get('price') is None:
             self.add_error('price', 'An available work needs a price.')
-        if cleaned.get('featured_order') and not cleaned.get('is_published'):
-            self.add_error('featured_order', 'Only published works can go on the home page.')
+        if cleaned.get('is_published') and not self._images().filter(is_process=False).exists():
+            self.add_error('is_published', 'A published work needs at least one image of the finished work. Add one, or untick Published.')
         return cleaned
+
+    def _pending_ids(self) -> list[int]:
+        return [int(pk) for pk in self.data.get('image_ids', '').split(',') if pk.isdigit()]
+
+    def _images(self):
+        pending = Q(artwork=None, pk__in=self._pending_ids())
+        return ArtworkImage.objects.filter(Q(artwork=self.instance) | pending if self.instance.pk else pending)
+
+    def attach_pending_images(self, artwork: Artwork) -> None:
+        ArtworkImage.objects.filter(artwork=None, pk__in=self._pending_ids()).update(artwork=artwork)
 
     def save(self, commit=True):
         self.instance.height_mm = int(self.cleaned_data['height_cm'] * 10)
@@ -51,16 +61,40 @@ class ArtworkAdminForm(forms.ModelForm):
         return super().save(commit)
 
 
-class ArtworkImageFormSet(PaginationInlineFormSet):
+class HomePageForm(forms.Form):
+    hero = forms.ModelChoiceField(
+        Artwork.objects.published(), required=False, empty_label='None', label='Large hero', widget=UnfoldAdminSelectWidget
+    )
+    second = forms.ModelChoiceField(
+        Artwork.objects.published(), required=False, empty_label='None', label='Second work', widget=UnfoldAdminSelectWidget
+    )
+    studio = forms.TypedMultipleChoiceField(coerce=int, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        featured = {a.featured_order: a for a in Artwork.objects.published().exclude(featured_order=None)}
+        photos = ArtworkImage.objects.filter(is_process=True, artwork__is_published=True)
+        self.fields['studio'].choices = [(photo.pk, photo.pk) for photo in photos]
+        self.initial = {
+            'hero': featured.get(1),
+            'second': featured.get(2),
+            'studio': list(photos.exclude(home_position=None).order_by('home_position').values_list('pk', flat=True)),
+        }
+
     def clean(self):
-        super().clean()
-        kept = [
-            form
-            for form in self.forms
-            if getattr(form, 'cleaned_data', None)
-            and form.cleaned_data.get('original')
-            and not form.cleaned_data.get('DELETE')
-            and not form.cleaned_data.get('is_process')
-        ]
-        if self.instance.is_published and not kept:
-            raise ValidationError('A published work needs at least one image of the finished work. Add one, or untick Published.')
+        cleaned = super().clean()
+        if cleaned.get('hero') and cleaned.get('hero') == cleaned.get('second'):
+            self.add_error('second', 'Choose a different work from the hero.')
+        if len(cleaned.get('studio') or []) > 2:
+            self.add_error('studio', 'Choose up to two studio photos.')
+        return cleaned
+
+    @transaction.atomic
+    def save(self) -> None:
+        Artwork.objects.exclude(featured_order=None).update(featured_order=None)
+        for spot, work in ((1, self.cleaned_data['hero']), (2, self.cleaned_data['second'])):
+            if work:
+                Artwork.objects.filter(pk=work.pk).update(featured_order=spot)
+        ArtworkImage.objects.exclude(home_position=None).update(home_position=None)
+        for position, pk in enumerate(self.cleaned_data['studio']):
+            ArtworkImage.objects.filter(pk=pk).update(home_position=position)

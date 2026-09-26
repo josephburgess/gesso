@@ -51,6 +51,7 @@
             <div class="lg:w-1/2">
                 {% component "unfold/components/card.html" with title="Home page" %}
                     {% component "unfold/components/table.html" with table=home_page_table card_included=1 %}{% endcomponent %}
+                    <a href="{% url 'admin:artworks_homepage' %}" class="mt-4 inline-block text-primary-600 underline">Change the home page</a>
                 {% endcomponent %}
             </div>
             <div class="lg:w-1/2">

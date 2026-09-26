@@ -2,12 +2,15 @@ import io
 from datetime import timedelta
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.forms import modelform_factory
 from django.utils import timezone
 from PIL import Image
 
 from gesso.artworks import processing
 from gesso.artworks.admin import ArtworkAdminForm
+from gesso.artworks.forms import PositionedForm
 from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
+from gesso.content.models import SocialLink
 
 
 def _png(width, height):
@@ -107,22 +110,19 @@ def test_cover_url_without_images_is_none(make_artwork):
     assert make_artwork().cover_url is None
 
 
-def test_admin_form_rejects_a_taken_home_page_spot(make_artwork):
-    make_artwork(featured_order=1, is_published=True)
-
-    form = ArtworkAdminForm(FORM_DATA | {'featured_order': '1', 'is_published': 'on'})
-
-    assert form.errors['featured_order'] == ['Artwork with this Home page spot already exists.']
+ADMIN_ADD = FORM_DATA | {'description': ''}
 
 
-ADMIN_ADD = FORM_DATA | {
-    'description': '',
-    'images-TOTAL_FORMS': '1',
-    'images-INITIAL_FORMS': '0',
-    'images-MIN_NUM_FORMS': '0',
-    'images-MAX_NUM_FORMS': '1000',
-    'images-0-position': '0',
-}
+def _upload(name='photo.png', size=(600, 400)):
+    return SimpleUploadedFile(name, _png(*size).getvalue(), content_type='image/png')
+
+
+def _pending(is_process=False):
+    return ArtworkImage.objects.create(
+        original='originals/p.jpg',
+        is_process=is_process,
+        variants=[{'width': 480, 'height': 360, 'name': 'variants/p/480.webp'}],
+    )
 
 
 def test_admin_blocks_publishing_without_an_image(admin_client):
@@ -133,14 +133,10 @@ def test_admin_blocks_publishing_without_an_image(admin_client):
     assert not Artwork.objects.exists()
 
 
-def test_admin_blocks_publishing_with_only_a_process_photo(admin_client, settings, tmp_path):
-    settings.MEDIA_ROOT = tmp_path
-    upload = SimpleUploadedFile('yard.png', _png(600, 400).getvalue(), content_type='image/png')
+def test_admin_blocks_publishing_with_only_a_process_photo(admin_client):
+    photo = _pending(is_process=True)
 
-    response = admin_client.post(
-        '/admin/artworks/artwork/add/',
-        ADMIN_ADD | {'is_published': 'on', 'images-0-original': upload, 'images-0-is_process': 'on'},
-    )
+    response = admin_client.post('/admin/artworks/artwork/add/', ADMIN_ADD | {'is_published': 'on', 'image_ids': str(photo.pk)})
 
     assert response.status_code == 200
     assert 'at least one image of the finished work' in response.content.decode()
@@ -153,23 +149,145 @@ def test_admin_saves_an_unpublished_work_without_an_image(admin_client):
     assert Artwork.objects.get().title == 'A'
 
 
-def test_admin_ignores_a_blank_image_row_renumbered_by_reordering(admin_client):
-    response = admin_client.post('/admin/artworks/artwork/add/', ADMIN_ADD | {'images-0-position': '3'})
+def test_admin_attaches_images_uploaded_before_the_first_save(admin_client):
+    photo = _pending()
+
+    response = admin_client.post('/admin/artworks/artwork/add/', ADMIN_ADD | {'is_published': 'on', 'image_ids': str(photo.pk)})
 
     assert response.status_code == 302
+    photo.refresh_from_db()
+    assert photo.artwork == Artwork.objects.get()
 
 
-def test_admin_still_needs_a_file_for_a_new_image_row_with_details(admin_client):
-    response = admin_client.post('/admin/artworks/artwork/add/', ADMIN_ADD | {'images-0-position': '3', 'images-0-caption': 'Yard'})
+def test_admin_unpublishing_takes_a_work_off_the_home_page(admin_client, make_artwork):
+    artwork = make_artwork(slug='a', is_published=True, featured_order=1)
 
-    assert response.status_code == 200
-    assert not Artwork.objects.exists()
+    admin_client.post(f'/admin/artworks/artwork/{artwork.pk}/change/', ADMIN_ADD)
+
+    artwork.refresh_from_db()
+    assert artwork.featured_order is None
 
 
-def test_admin_form_keeps_unpublished_works_off_the_home_page(db):
-    form = ArtworkAdminForm(FORM_DATA | {'featured_order': '1'})
+def test_image_manager_uploads_with_variants(admin_client, make_artwork, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    artwork = make_artwork()
 
-    assert form.errors['featured_order'] == ['Only published works can go on the home page.']
+    tile = admin_client.post(f'/admin/artworks/artwork/{artwork.pk}/images/upload/', {'file': _upload()}).json()
+
+    image = artwork.images.get()
+    assert tile == {'id': image.pk, 'thumb': image.thumbnail_url, 'caption': '', 'is_process': False}
+    assert image.variants
+
+
+def test_image_manager_rejects_a_non_image(admin_client, make_artwork):
+    artwork = make_artwork()
+    upload = SimpleUploadedFile('notes.txt', b'hello', content_type='text/plain')
+
+    response = admin_client.post(f'/admin/artworks/artwork/{artwork.pk}/images/upload/', {'file': upload})
+
+    assert response.status_code == 400
+    assert not artwork.images.exists()
+
+
+def test_image_manager_replaces_in_place(admin_client, make_artwork, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    artwork = make_artwork()
+    base = f'/admin/artworks/artwork/{artwork.pk}/images/'
+    first = admin_client.post(f'{base}upload/', {'file': _upload('a.png')}).json()
+    admin_client.post(f'{base}upload/', {'file': _upload('b.png')})
+    admin_client.post(f'{base}{first["id"]}/', {'caption': 'Yard'})
+    old_original = ArtworkImage.objects.get(pk=first['id']).original.name
+
+    admin_client.post(f'{base}{first["id"]}/replace/', {'file': _upload('c.png', (500, 500))})
+
+    image = ArtworkImage.objects.get(pk=first['id'])
+    assert (image.position, image.caption, image.variants[0]['height']) == (0, 'Yard', 480)
+    assert not (tmp_path / old_original).exists()
+    assert all((tmp_path / variant['name']).exists() for variant in image.variants)
+
+
+def test_image_manager_updates_orders_and_deletes(admin_client, make_artwork, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    artwork = make_artwork()
+    base = f'/admin/artworks/artwork/{artwork.pk}/images/'
+    a, b = (admin_client.post(f'{base}upload/', {'file': _upload()}).json()['id'] for _ in range(2))
+
+    admin_client.post(f'{base}{b}/', {'caption': 'Easel', 'is_process': 'on'})
+    admin_client.post(f'{base}order/', f'{{"ids": [{b}, {a}]}}', content_type='application/json')
+    admin_client.post(f'{base}{a}/delete/')
+
+    [image] = artwork.images.all()
+    assert (image.pk, image.caption, image.is_process, image.position) == (b, 'Easel', True, 0)
+
+
+def test_image_manager_cleans_up_stale_pending_uploads(admin_client, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    stale = _pending()
+    ArtworkImage.objects.filter(pk=stale.pk).update(created_at=timezone.now() - timedelta(days=2))
+
+    tile = admin_client.post('/admin/artworks/artwork/pending/images/upload/', {'file': _upload()}).json()
+
+    assert list(ArtworkImage.objects.values_list('pk', flat=True)) == [tile['id']]
+
+
+def test_image_manager_needs_staff(client, make_artwork):
+    artwork = make_artwork()
+
+    response = client.post(f'/admin/artworks/artwork/{artwork.pk}/images/upload/', {'file': _upload()})
+
+    assert response.status_code == 302
+    assert response['Location'].startswith('/admin/login/')
+
+
+def _with_image(artwork, is_process=False):
+    return ArtworkImage.objects.create(
+        artwork=artwork,
+        original='originals/x.jpg',
+        is_process=is_process,
+        variants=[{'width': 480, 'height': 360, 'name': 'variants/x/480.webp'}],
+    )
+
+
+def test_home_page_swaps_the_hero_without_a_clash(admin_client, make_artwork):
+    old = make_artwork(is_published=True, featured_order=1)
+    new = make_artwork(is_published=True)
+
+    response = admin_client.post('/admin/artworks/artwork/home-page/', {'hero': new.pk, 'second': old.pk})
+
+    assert response.status_code == 302
+    old.refresh_from_db()
+    new.refresh_from_db()
+    assert (new.featured_order, old.featured_order) == (1, 2)
+
+
+def test_home_page_rejects_the_same_work_twice(admin_client, make_artwork):
+    work = make_artwork(is_published=True)
+
+    response = admin_client.post('/admin/artworks/artwork/home-page/', {'hero': work.pk, 'second': work.pk})
+
+    assert 'Choose a different work from the hero.' in response.content.decode()
+
+
+def test_home_page_orders_up_to_two_studio_photos(admin_client, make_artwork):
+    work = make_artwork(is_published=True)
+    a, b, c = (_with_image(work, is_process=True) for _ in range(3))
+
+    too_many = admin_client.post('/admin/artworks/artwork/home-page/', {'studio': [a.pk, b.pk, c.pk]})
+    admin_client.post('/admin/artworks/artwork/home-page/', {'studio': [c.pk, a.pk]})
+
+    assert 'Choose up to two studio photos.' in too_many.content.decode()
+    positions = dict(ArtworkImage.objects.values_list('pk', 'home_position'))
+    assert (positions[c.pk], positions[a.pk], positions[b.pk]) == (0, 1, None)
+
+
+def test_positioned_form_ignores_a_blank_row_renumbered_by_reordering(db):
+    form_class = modelform_factory(SocialLink, form=PositionedForm, fields=('label', 'url', 'position'))
+
+    def form(**data):
+        return form_class(data, empty_permitted=True, use_required_attribute=False)
+
+    assert not form(label='', url='', position='3').has_changed()
+    assert form(label='Instagram', url='', position='3').has_changed()
 
 
 def test_admin_list_shows_status_badges(admin_client, make_artwork):
