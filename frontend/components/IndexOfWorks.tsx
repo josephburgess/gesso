@@ -1,21 +1,25 @@
 import { Link } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import Status from '@/components/Status';
 import type { ArtworkTile } from '@/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
+const PREVIEW_WIDTH = 150;
+const OFFSET = 18;
+
 export default function IndexOfWorks({ works }: { works: ArtworkTile[] }) {
-  const section = useRef<HTMLElement>(null);
   const [hovered, setHovered] = useState<ArtworkTile | null>(null);
-  const [y, setY] = useState(0);
-  const thumb = hovered?.cover?.thumb;
+  const [pointer, setPointer] = useState({ x: 0, y: 0 });
+  const cover = hovered?.cover;
+  const height = cover ? (PREVIEW_WIDTH * cover.height) / cover.width : 0;
+  const left = Math.min(pointer.x + OFFSET, window.innerWidth - PREVIEW_WIDTH - OFFSET);
+  const top = pointer.y + OFFSET + height > window.innerHeight ? pointer.y - OFFSET - height : pointer.y + OFFSET;
 
   return (
     <section
-      ref={section}
-      className="relative"
-      onMouseMove={(event) => setY(event.clientY - (section.current?.getBoundingClientRect().top ?? 0))}
+      onMouseMove={(event) => setPointer({ x: event.clientX, y: event.clientY })}
       onMouseLeave={() => setHovered(null)}
     >
       <div className="flex items-baseline justify-between border-b border-rule pb-2.5 text-label uppercase">
@@ -36,13 +40,16 @@ export default function IndexOfWorks({ works }: { works: ArtworkTile[] }) {
           <Status status={tile.status} available={tile.available} />
         </Link>
       ))}
-      <div
-        aria-hidden="true"
-        style={{ top: y, transitionDuration: 'var(--d-state), calc(var(--d-state) * 0.6)' }}
-        className={`pointer-events-none absolute right-[90px] z-2 w-[150px] -translate-y-1/2 transition-[opacity,top] ease-out wide:right-[150px] ${thumb ? 'opacity-100' : 'opacity-0'}`}
-      >
-        {thumb && <img src={thumb} alt="" className="w-full" />}
-      </div>
+      {createPortal(
+        <div
+          aria-hidden="true"
+          style={{ left, top, width: PREVIEW_WIDTH }}
+          className={`pointer-events-none fixed z-2 transition-opacity duration-(--d-state) ease-out ${cover ? 'opacity-100' : 'opacity-0'}`}
+        >
+          {cover && <img src={cover.thumb} alt="" width={cover.width} height={cover.height} className="w-full" />}
+        </div>,
+        document.body,
+      )}
     </section>
   );
 }
