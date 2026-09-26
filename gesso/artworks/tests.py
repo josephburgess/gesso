@@ -89,8 +89,49 @@ def test_cover_url_without_images_is_none(make_artwork):
 
 
 def test_admin_form_rejects_a_taken_home_page_spot(make_artwork):
-    make_artwork(featured_order=1)
+    make_artwork(featured_order=1, is_published=True)
 
+    form = ArtworkAdminForm(FORM_DATA | {'featured_order': '1', 'is_published': 'on'})
+
+    assert form.errors['featured_order'] == ['Artwork with this Home page spot already exists.']
+
+
+ADMIN_ADD = FORM_DATA | {
+    'description': '',
+    'images-TOTAL_FORMS': '1',
+    'images-INITIAL_FORMS': '0',
+    'images-MIN_NUM_FORMS': '0',
+    'images-MAX_NUM_FORMS': '1000',
+    'images-0-position': '0',
+}
+
+
+def test_admin_blocks_publishing_without_an_image(admin_client):
+    response = admin_client.post('/admin/artworks/artwork/add/', ADMIN_ADD | {'is_published': 'on'})
+
+    assert response.status_code == 200
+    assert 'A published work needs at least one image' in response.content.decode()
+    assert not Artwork.objects.exists()
+
+
+def test_admin_saves_an_unpublished_work_without_an_image(admin_client):
+    response = admin_client.post('/admin/artworks/artwork/add/', ADMIN_ADD)
+
+    assert response.status_code == 302
+    assert Artwork.objects.get().title == 'A'
+
+
+def test_admin_form_keeps_unpublished_works_off_the_home_page(db):
     form = ArtworkAdminForm(FORM_DATA | {'featured_order': '1'})
 
-    assert 'featured_order' in form.errors
+    assert form.errors['featured_order'] == ['Only published works can go on the home page.']
+
+
+def test_admin_list_shows_status_badges(admin_client, make_artwork):
+    make_artwork(title='Held', status=ArtworkStatus.AVAILABLE, price_pence=100, reserved_until=timezone.now() + timedelta(minutes=5))
+
+    html = admin_client.get('/admin/artworks/artwork/').content.decode()
+
+    assert 'Held' in html
+    assert 'Reserved' in html
+    assert 'bg-orange-100' in html

@@ -1,6 +1,8 @@
 from decimal import Decimal
 
 from django import forms
+from django.core.exceptions import ValidationError
+from unfold.forms import PaginationInlineFormSet
 from unfold.widgets import UnfoldAdminDecimalFieldWidget
 
 from gesso.artworks.models import Artwork, ArtworkStatus
@@ -30,6 +32,8 @@ class ArtworkAdminForm(forms.ModelForm):
         cleaned = super().clean()
         if cleaned.get('status') == ArtworkStatus.AVAILABLE and cleaned.get('price') is None:
             self.add_error('price', 'An available work needs a price.')
+        if cleaned.get('featured_order') and not cleaned.get('is_published'):
+            self.add_error('featured_order', 'Only published works can go on the home page.')
         return cleaned
 
     def save(self, commit=True):
@@ -38,3 +42,15 @@ class ArtworkAdminForm(forms.ModelForm):
         price = self.cleaned_data['price']
         self.instance.price_pence = int(price * 100) if price is not None else None
         return super().save(commit)
+
+
+class ArtworkImageFormSet(PaginationInlineFormSet):
+    def clean(self):
+        super().clean()
+        kept = [
+            form
+            for form in self.forms
+            if getattr(form, 'cleaned_data', None) and form.cleaned_data.get('original') and not form.cleaned_data.get('DELETE')
+        ]
+        if self.instance.is_published and not kept:
+            raise ValidationError('A published work needs at least one image. Add one, or untick Published.')

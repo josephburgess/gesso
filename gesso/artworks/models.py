@@ -3,6 +3,7 @@ from typing import Self
 
 from django.core.files.base import ContentFile
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
 from gesso.artworks import processing
@@ -61,6 +62,9 @@ class Artwork(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self) -> str:
+        return reverse('work_show', args=[self.slug])
+
     def reserve(self, until: datetime) -> None:
         self.reserved_until = until
         self.save(update_fields=['reserved_until'])
@@ -112,6 +116,10 @@ class ArtworkImage(models.Model):
         super().save(*args, **kwargs)
         if new_upload:
             self.make_variants()
+
+    @property
+    def thumbnail_url(self) -> str | None:
+        return self.original.storage.url(self.variants[0]['name']) if self.variants else None
 
     def make_variants(self):
         storage = self.original.storage
