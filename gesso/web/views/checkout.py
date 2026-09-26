@@ -3,6 +3,7 @@ from uuid import UUID
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 from django_ratelimit.decorators import ratelimit
 from inertia import location, render
@@ -31,7 +32,7 @@ def start(request: HttpRequest, slug: str) -> HttpResponse:
 def success(request: HttpRequest) -> HttpResponse:
     order = Order.objects.select_related('artwork').filter(stripe_session_id=request.GET.get('session_id', '')).first()
     title = order.artwork.title if order else None
-    return render(request, 'Checkout/Success', {'title': title}, template_data={'title': 'Thank you'})
+    return render(request, 'Checkout/Success', {'title': title, 'work_href': reverse('work')}, template_data={'title': 'Thank you'})
 
 
 @require_GET
