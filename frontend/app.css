@@ -71,6 +71,8 @@
   --spacing-grid-col: clamp(20px, 2.6vw, 40px);
   --spacing-slot: clamp(20px, 2vw, 26px);
   --text-price: 19px;
+
+  --animate-page-enter: page-enter var(--d-enter) var(--ease-out) both;
 }
 
 :root {
