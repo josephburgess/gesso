@@ -55,7 +55,7 @@ export default function Home({ home }: { home: HomeProps }) {
   const rail = !top && (
     <div className="flex flex-col gap-5.5">
       {home.intro && <p className="mb-0 max-w-[33ch] text-[13.5px] leading-[1.75]">{home.intro}</p>}
-      <Link href={home.about_href} className="self-start text-meta">
+      <Link href={home.about_href} className="hidden self-start text-meta wide:block">
         Read the full statement
       </Link>
     </div>

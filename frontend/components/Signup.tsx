@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { useState, type SubmitEvent } from 'react';
+import Honeypot from '@/components/Honeypot';
 import SectionLabel from '@/components/SectionLabel';
 
 const csrfToken = () => document.cookie.match(/(?:^|; )csrftoken=([^;]*)/)?.[1] ?? '';
@@ -33,7 +34,7 @@ export default function Signup({ className = '' }: { className?: string }) {
   }
 
   return (
-    <section className={className}>
+    <section className={`max-w-[620px] border border-line bg-panel p-block ${className}`}>
       <SectionLabel>Mailing list</SectionLabel>
       <p className="mt-3 mb-0 max-w-[46ch] text-meta text-ink-muted">
         Occasional emails about new work. Unsubscribe any time.
@@ -56,16 +57,7 @@ export default function Signup({ className = '' }: { className?: string }) {
               className="border-b border-line bg-transparent py-2 text-body-sm text-ink transition-colors duration-(--d-state) outline-none placeholder:text-ink-faint focus:border-accent"
             />
           </label>
-          <input
-            type="text"
-            name="website"
-            tabIndex={-1}
-            autoComplete="off"
-            aria-hidden="true"
-            value={website}
-            onChange={(e) => setWebsite(e.target.value)}
-            className="absolute left-[9999px]"
-          />
+          <Honeypot value={website} onChange={setWebsite} />
           <button
             type="submit"
             disabled={sending}

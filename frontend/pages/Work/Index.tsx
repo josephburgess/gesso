@@ -20,7 +20,7 @@ function Exhibit({ tile, i }: { tile: ArtworkTile; i: number }) {
 
   return (
     <Reveal>
-      <div className={`flex flex-wrap items-end gap-x-section gap-y-block ${i % 2 ? 'flex-row-reverse' : ''}`}>
+      <div className={`flex flex-wrap items-end gap-x-section gap-y-block ${i % 2 ? 'wide:flex-row-reverse' : ''}`}>
         <Link
           href={tile.href}
           style={{ maxWidth: `calc(72vh * ${ratio})` }}
