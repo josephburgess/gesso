@@ -3,6 +3,7 @@ import SiteLayout from '@/layouts/SiteLayout';
 import type { Contact as ContactProps } from '@/types';
 import type { SubmitEvent } from 'react';
 import Field from '@/components/Field';
+import Honeypot from '@/components/Honeypot';
 import Signup from '@/components/Signup';
 
 const line =
@@ -39,29 +40,27 @@ export default function Contact({ contact }: { contact: ContactProps }) {
         </p>
       )}
       <form onSubmit={submit} className="flex max-w-190 flex-col gap-5.5 pt-9.5">
-        <div className="flex flex-wrap gap-5.5">
-          <Field label="Name" error={form.errors.name} className="min-w-0 flex-[1_1_220px]">
-            <input
-              type="text"
-              required
-              value={form.data.name}
-              onChange={(e) => form.setData('name', e.target.value)}
-              aria-invalid={!!form.errors.name}
-              className={`border-b border-line py-2 ${line}`}
-            />
-          </Field>
-          <Field label="Email" error={form.errors.email} className="min-w-0 flex-[1_1_220px]">
-            <input
-              type="email"
-              required
-              value={form.data.email}
-              onChange={(e) => form.setData('email', e.target.value)}
-              aria-invalid={!!form.errors.email}
-              className={`border-b border-line py-2 ${line}`}
-            />
-          </Field>
-        </div>
-        <Field label="Topic" error={form.errors.topic} className="max-w-[320px]">
+        <Field label="Name" error={form.errors.name}>
+          <input
+            type="text"
+            required
+            value={form.data.name}
+            onChange={(e) => form.setData('name', e.target.value)}
+            aria-invalid={!!form.errors.name}
+            className={`border-b border-line py-2 ${line}`}
+          />
+        </Field>
+        <Field label="Email" error={form.errors.email}>
+          <input
+            type="email"
+            required
+            value={form.data.email}
+            onChange={(e) => form.setData('email', e.target.value)}
+            aria-invalid={!!form.errors.email}
+            className={`border-b border-line py-2 ${line}`}
+          />
+        </Field>
+        <Field label="Topic" error={form.errors.topic}>
           <select
             value={form.data.topic}
             onChange={(e) => form.setData('topic', e.target.value)}
@@ -84,16 +83,7 @@ export default function Contact({ contact }: { contact: ContactProps }) {
             className={`resize-y border border-line p-3 leading-[1.7] ${line}`}
           />
         </Field>
-        <input
-          type="text"
-          name="website"
-          tabIndex={-1}
-          autoComplete="off"
-          aria-hidden="true"
-          value={form.data.website}
-          onChange={(e) => form.setData('website', e.target.value)}
-          className="absolute left-[9999px]"
-        />
+        <Honeypot value={form.data.website} onChange={(value) => form.setData('website', value)} />
         <button
           type="submit"
           disabled={form.processing}
