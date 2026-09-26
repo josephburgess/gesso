@@ -86,6 +86,11 @@ class Artwork(models.Model):
         return self.status == ArtworkStatus.AVAILABLE and self.price_pence is not None and not self.is_reserved
 
     @property
+    def thumbnail_url(self) -> str | None:
+        images = self.images.all()
+        return images[0].thumbnail_url if images else None
+
+    @property
     def cover_url(self) -> str | None:
         image = self.images.first()
         if image is None or not image.variants:

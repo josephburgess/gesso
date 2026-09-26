@@ -159,3 +159,34 @@ def test_stripe_webhook_rejects_bad_signature(client, settings):
     response = client.post('/webhooks/stripe', '{}', content_type='application/json', headers={'Stripe-Signature': 't=1,v1=bad'})
 
     assert response.status_code == 400
+
+
+def _paid(artwork) -> Order:
+    order = _checkout(artwork)
+    handle_event(_event('checkout.session.completed', order))
+    order.refresh_from_db()
+    return order
+
+
+def test_admin_ship_button_marks_a_paid_order_shipped(admin_client, for_sale, stripe_sessions):
+    order = _paid(for_sale)
+
+    page = admin_client.get(f'/admin/commerce/order/{order.pk}/change/').content.decode()
+    response = admin_client.get(f'/admin/commerce/order/{order.pk}/ship/')
+
+    order.refresh_from_db()
+    assert 'Mark shipped' in page
+    assert '1 Quay St<br>Dover' in page
+    assert response.status_code == 302
+    assert order.status == OrderStatus.SHIPPED
+    assert order.shipped_at is not None
+
+
+def test_admin_ship_button_is_refused_for_an_unpaid_order(admin_client, for_sale, stripe_sessions):
+    order = _checkout(for_sale)
+
+    response = admin_client.get(f'/admin/commerce/order/{order.pk}/ship/')
+
+    order.refresh_from_db()
+    assert response.status_code == 403
+    assert order.status == OrderStatus.PENDING

@@ -46,11 +46,9 @@ class ArtworkAdmin(ModelAdmin):
 
     @display(description='')
     def thumbnail(self, obj):
-        images = obj.images.all()
-        url = images[0].thumbnail_url if images else None
-        if not url:
+        if not obj.thumbnail_url:
             return ''
-        return format_html('<img src="{}" alt="" style="height:48px;width:48px;object-fit:cover">', url)
+        return format_html('<img src="{}" alt="" style="height:48px;width:48px;object-fit:cover">', obj.thumbnail_url)
 
     @display(description='Status', ordering='status', label={'Available': 'success', 'Reserved': 'warning', 'Sold': 'info'})
     def status_label(self, obj):

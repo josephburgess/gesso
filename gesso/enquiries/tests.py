@@ -1,4 +1,5 @@
 from django.urls import reverse
+from django.utils import timezone
 
 from gesso.content.models import SiteContent
 from gesso.enquiries.forms import EnquiryForm
@@ -43,3 +44,24 @@ def test_opening_an_enquiry_marks_it_read(admin_client):
 
     enquiry.refresh_from_db()
     assert enquiry.read_at is not None
+
+
+def test_admin_lists_unread_enquiries_first(admin_client):
+    read = Enquiry.objects.create(name='Read Rita', email='r@example.com', message='Hi')
+    Enquiry.objects.filter(pk=read.pk).update(read_at=timezone.now())
+    Enquiry.objects.create(name='Unread Una', email='u@example.com', message='Hi')
+
+    html = admin_client.get('/admin/enquiries/enquiry/').content.decode()
+
+    assert html.index('Unread Una') < html.index('Read Rita')
+
+
+def test_admin_offers_a_reply_by_email(admin_client, make_artwork):
+    enquiry = Enquiry.objects.create(
+        name='Ann', email='ann@example.com', message='Is it still available?', artwork=make_artwork(title='Ferry Light')
+    )
+
+    html = admin_client.get(f'/admin/enquiries/enquiry/{enquiry.pk}/change/').content.decode()
+
+    assert 'mailto:ann@example.com?subject=Re%3A%20Ferry%20Light' in html
+    assert 'Is%20it%20still%20available' in html

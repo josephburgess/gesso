@@ -51,6 +51,13 @@ class Order(models.Model):
         self.save()
         self.artwork.mark_sold()
 
+    def mark_shipped(self) -> None:
+        if self.status != OrderStatus.PAID:
+            return
+        self.status = OrderStatus.SHIPPED
+        self.shipped_at = timezone.now()
+        self.save(update_fields=['status', 'shipped_at'])
+
     def mark_expired(self) -> None:
         if self.status != OrderStatus.PENDING:
             return
