@@ -4,12 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script>
-      (function () {
-        var stored = null;
-        try { stored = localStorage.getItem('theme'); } catch (e) {}
-        var dark = stored ? stored === 'charcoal' : matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.dataset.theme = dark ? 'charcoal' : 'paper';
-      })();
+      try {
+        if (localStorage.getItem('theme') === 'charcoal') document.documentElement.dataset.theme = 'charcoal';
+      } catch (e) {}
     </script>
     <title inertia>{% if title %}{{ title }} · {% endif %}{{ site_name }}</title>
     <meta name="description" content="{{ description|default:site_description }}">
