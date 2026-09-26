@@ -1,6 +1,7 @@
 import Lightbox from '@/components/Lightbox';
 import ResponsiveImage from '@/components/ResponsiveImage';
-import type { ArtworkDetail, Purchase } from '@/types';
+import Reveal from '@/components/Reveal';
+import type { ArtworkDetail, Neighbour, Purchase } from '@/types';
 import SiteLayout from '@/layouts/SiteLayout';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -37,7 +38,18 @@ function PurchasePanel({ purchase }: { purchase: Purchase }) {
   );
 }
 
-export default function Show({ artwork, purchase }: { artwork: ArtworkDetail; purchase: Purchase }) {
+function NeighbourLink({ label, work, className = '' }: { label: string; work: Neighbour; className?: string }) {
+  return (
+    <Link href={work.href} className={`flex flex-col gap-1 border-0 ${className}`}>
+      <span className="text-label text-ink-faint uppercase">{label}</span>
+      <span className="font-serif text-title text-ink">{work.title}</span>
+    </Link>
+  );
+}
+
+type Props = { artwork: ArtworkDetail; purchase: Purchase; prev: Neighbour | null; next: Neighbour | null };
+
+export default function Show({ artwork, purchase, prev, next }: Props) {
   const [open, setOpen] = useState<number | null>(null);
   const [first, ...rest] = artwork.images;
   const alt = (index: number) =>
@@ -45,7 +57,8 @@ export default function Show({ artwork, purchase }: { artwork: ArtworkDetail; pu
 
   const rail = (
     <>
-      <p className="text-meta text-ink-meta tabular-nums">{artwork.year}</p>
+      <h1 className="mb-0 text-title-lg leading-tight">{artwork.title}</h1>
+      <p className="mt-1 mb-0 text-meta text-ink-meta tabular-nums">{artwork.year}</p>
       <dl className="mt-6 flex flex-col gap-2">
         {[
           ['Medium', artwork.medium],
@@ -73,13 +86,20 @@ export default function Show({ artwork, purchase }: { artwork: ArtworkDetail; pu
   return (
     <SiteLayout title={artwork.title} rail={rail}>
       {first && (
-        <button type="button" aria-label="View larger" onClick={() => setOpen(0)} className="block cursor-zoom-in">
+        <button
+          type="button"
+          aria-label="View larger"
+          onClick={() => setOpen(0)}
+          style={{ width: `min(100%, calc(85vh * ${first.width / first.height}))` }}
+          className="block cursor-zoom-in bg-image-bg"
+        >
           <ResponsiveImage
             image={first}
             alt={alt(0)}
             sizes="(min-width: 1000px) 62vw, 100vw"
             eager
-            className="max-h-[85vh] w-auto"
+            reveal
+            className="w-full"
           />
         </button>
       )}
@@ -93,18 +113,24 @@ export default function Show({ artwork, purchase }: { artwork: ArtworkDetail; pu
               onClick={() => setOpen(i + 1)}
               className="cursor-zoom-in"
             >
-              <ResponsiveImage image={image} alt={alt(i + 1)} sizes="160px" className="h-28 w-auto" />
+              <ResponsiveImage image={image} alt={alt(i + 1)} sizes="160px" reveal className="h-28 w-auto" />
             </button>
           ))}
         </div>
       )}
       <Lightbox images={artwork.images} index={open} alt={alt} onChange={setOpen} />
       {artwork.description.length > 0 && (
-        <div className="mt-block">
+        <Reveal className="mt-block">
           {artwork.description.map((p, i) => (
             <p key={i}>{p}</p>
           ))}
-        </div>
+        </Reveal>
+      )}
+      {prev && next && (
+        <nav aria-label="More work" className="mt-section flex justify-between gap-6 border-t border-hair pt-slot">
+          <NeighbourLink label="‹ Previous" work={prev} />
+          <NeighbourLink label="Next ›" work={next} className="items-end text-right" />
+        </nav>
       )}
     </SiteLayout>
   );
