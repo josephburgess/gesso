@@ -1,10 +1,29 @@
+import { useEffect, useRef, useState } from 'react';
 import type { ImageProps } from '@/types';
 
-type Props = { image: ImageProps; alt: string; sizes: string; eager?: boolean; className?: string };
+type Props = {
+  image: ImageProps;
+  alt: string;
+  sizes: string;
+  eager?: boolean;
+  reveal?: boolean;
+  className?: string;
+};
 
-export default function ResponsiveImage({ image, alt, sizes, eager, className }: Props) {
+export default function ResponsiveImage({ image, alt, sizes, eager, reveal, className = '' }: Props) {
+  const ref = useRef<HTMLImageElement>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (element?.complete && element.naturalWidth) setLoaded(true);
+  }, [image.src]);
+
+  const revealClass = reveal ? `transition-image-reveal ${loaded ? '' : 'scale-[1.015] opacity-0'}` : '';
+
   return (
     <img
+      ref={ref}
       src={image.src}
       srcSet={image.srcset}
       sizes={sizes}
@@ -13,7 +32,8 @@ export default function ResponsiveImage({ image, alt, sizes, eager, className }:
       alt={alt}
       loading={eager ? 'eager' : 'lazy'}
       fetchPriority={eager ? 'high' : undefined}
-      className={className}
+      onLoad={() => setLoaded(true)}
+      className={`${revealClass} ${className}`}
       decoding="async"
     />
   );

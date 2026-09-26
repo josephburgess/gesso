@@ -50,7 +50,10 @@ class ArtworkImageFormSet(PaginationInlineFormSet):
         kept = [
             form
             for form in self.forms
-            if getattr(form, 'cleaned_data', None) and form.cleaned_data.get('original') and not form.cleaned_data.get('DELETE')
+            if getattr(form, 'cleaned_data', None)
+            and form.cleaned_data.get('original')
+            and not form.cleaned_data.get('DELETE')
+            and not form.cleaned_data.get('is_process')
         ]
         if self.instance.is_published and not kept:
-            raise ValidationError('A published work needs at least one image. Add one, or untick Published.')
+            raise ValidationError('A published work needs at least one image of the finished work. Add one, or untick Published.')

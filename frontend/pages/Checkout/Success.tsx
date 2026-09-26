@@ -1,6 +1,7 @@
+import { Link } from '@inertiajs/react';
 import SiteLayout from '@/layouts/SiteLayout';
 
-export default function Success({ title }: { title: string | null }) {
+export default function Success({ title, work_href }: { title: string | null; work_href: string }) {
   return (
     <SiteLayout title="Thank you">
       <h1>Thank you</h1>
@@ -14,6 +15,9 @@ export default function Success({ title }: { title: string | null }) {
         )}{' '}
         A confirmation email is on its way, and we'll be in touch about delivery.
       </p>
+      <Link href={work_href} className="text-meta">
+        Back to the work
+      </Link>
     </SiteLayout>
   );
 }

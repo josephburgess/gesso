@@ -11,7 +11,7 @@ class ArtworkImageInline(TabularInline):
     model = ArtworkImage
     formset = ArtworkImageFormSet
     extra = 1
-    fields = ('preview', 'original', 'position')
+    fields = ('preview', 'original', 'caption', 'is_process', 'position')
     readonly_fields = ('preview',)
     ordering_field = 'position'
     hide_ordering_field = True

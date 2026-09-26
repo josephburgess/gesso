@@ -1,9 +1,9 @@
 import { Link } from '@inertiajs/react';
 import type { NavLink } from '@/types';
 
-export default function Nav({ links }: { links: NavLink[] }) {
+export default function Nav({ links, inline }: { links: NavLink[]; inline?: boolean }) {
   return (
-    <nav className="flex gap-4.5 wide:flex-col wide:items-start wide:gap-1">
+    <nav className={`flex gap-4.5 ${inline ? '' : 'wide:flex-col wide:items-start wide:gap-1'}`}>
       {links.map((link) => (
         <Link
           key={link.href}

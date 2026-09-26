@@ -43,7 +43,7 @@ class Artwork(models.Model):
         null=True,
         blank=True,
         unique=True,
-        choices=((1, '1 (large hero)'), (2, '2'), (3, '3')),
+        choices=((1, '1 (large hero)'), (2, '2')),
         help_text='Leave empty to keep this work off the home page.',
     )
 
@@ -86,13 +86,16 @@ class Artwork(models.Model):
         return self.status == ArtworkStatus.AVAILABLE and self.price_pence is not None and not self.is_reserved
 
     @property
+    def cover(self) -> ArtworkImage | None:
+        return next((image for image in self.images.all() if not image.is_process), None)
+
+    @property
     def thumbnail_url(self) -> str | None:
-        images = self.images.all()
-        return images[0].thumbnail_url if images else None
+        return self.cover.thumbnail_url if self.cover else None
 
     @property
     def cover_url(self) -> str | None:
-        image = self.images.first()
+        image = self.cover
         if image is None or not image.variants:
             return None
         return image.original.storage.url(image.variants[-1]['name'])
@@ -149,6 +152,12 @@ class ProcessedImage(models.Model):
 class ArtworkImage(ProcessedImage):
     artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE, related_name='images')
     position = models.PositiveSmallIntegerField(default=0)
+    caption = models.CharField(max_length=200, blank=True, help_text='Shown under process photos, e.g. "Drying in the yard".')
+    is_process = models.BooleanField(
+        'studio / process photo',
+        default=False,
+        help_text='Show in "In the studio" rather than as a view of the finished work.',
+    )
 
     class Meta:
-        ordering = ('position', 'pk')
+        ordering = ('is_process', 'position', 'pk')

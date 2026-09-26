@@ -47,6 +47,8 @@
   --color-accent: #8a5f1d;
   --color-accent-soft: #ddcfb2;
   --color-accent-tint: #f4f0e6;
+  --color-overlay: #26241f;
+  --color-on-overlay: #fdfbf6;
 
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ease-io: cubic-bezier(0.4, 0, 0.2, 1);
@@ -69,6 +71,8 @@
   --spacing-grid-col: clamp(20px, 2.6vw, 40px);
   --spacing-slot: clamp(20px, 2vw, 26px);
   --text-price: 19px;
+
+  --animate-page-enter: page-enter var(--d-enter) var(--ease-out) both;
 }
 
 :root {
@@ -76,6 +80,76 @@
   --d-state: 200ms;
   --d-enter: 420ms;
   --d-image: 900ms;
+  --zoom-hover: 1.02;
+  --zoom-tile: 1.03;
+}
+
+[data-theme='charcoal'] {
+  --color-paper: #151412;
+  --color-panel: #1c1b18;
+  --color-panel-hair: #2b2925;
+  --color-image-bg: #23211e;
+  --color-ink: #f2ede3;
+  --color-ink-body: #d9d3c7;
+  --color-ink-muted: #c0b9ab;
+  --color-ink-meta: #a7a092;
+  --color-ink-dim: #8c8578;
+  --color-ink-faint: #746e63;
+  --color-hair: #2e2c28;
+  --color-hair-light: #262420;
+  --color-line: #3b3833;
+  --color-rule: #f2ede3;
+  --color-accent: #d9a066;
+  --color-accent-soft: #5c4731;
+  --color-accent-tint: #221f1a;
+  --color-overlay: #0a0908;
+  color-scheme: dark;
+}
+
+[data-type='sans'] {
+  --font-serif: 'Public Sans', system-ui, -apple-system, sans-serif;
+}
+
+html[data-motion='off'] {
+  --d-ui: 0.01ms;
+  --d-state: 0.01ms;
+  --d-enter: 0.01ms;
+  --d-image: 0.01ms;
+  --zoom-hover: 1;
+  --zoom-tile: 1;
+}
+
+html,
+body {
+  transition: background-color var(--d-enter) var(--ease-io);
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+
+@utility transition-reveal {
+  transition:
+    opacity var(--d-enter) var(--ease-out),
+    translate calc(var(--d-enter) * 1.6) var(--ease-out);
+}
+
+@utility transition-image-reveal {
+  transition:
+    opacity var(--d-image) var(--ease-out),
+    scale calc(var(--d-image) * 1.4) var(--ease-out);
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @layer base {
@@ -112,6 +186,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --zoom-hover: 1;
+    --zoom-tile: 1;
+  }
+
   *,
   *::before,
   *::after {

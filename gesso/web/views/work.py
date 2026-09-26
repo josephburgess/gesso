@@ -21,6 +21,7 @@ class ImageProps(TypedDict):
     srcset: str
     width: int
     height: int
+    thumb: str
 
 
 def responsive_image(image: ProcessedImage) -> ImageProps | None:
@@ -33,12 +34,12 @@ def responsive_image(image: ProcessedImage) -> ImageProps | None:
         'srcset': ', '.join(f'{url(v["name"])} {v["width"]}w' for v in image.variants),
         'width': largest['width'],
         'height': largest['height'],
+        'thumb': url(image.variants[0]['name']),
     }
 
 
 def _cover(artwork: Artwork) -> ImageProps | None:
-    images = artwork.images.all()
-    return responsive_image(images[0]) if images else None
+    return responsive_image(artwork.cover) if artwork.cover else None
 
 
 class ArtworkTile(TypedDict):
@@ -50,6 +51,11 @@ class ArtworkTile(TypedDict):
     available: bool
     medium: str
     size: str
+    price: str | None
+
+
+def _price(artwork: Artwork) -> str | None:
+    return price(artwork.price_pence) if artwork.status == ArtworkStatus.AVAILABLE and artwork.price_pence else None
 
 
 def artwork_tile(artwork: Artwork) -> ArtworkTile:
@@ -62,6 +68,7 @@ def artwork_tile(artwork: Artwork) -> ArtworkTile:
         'cover': _cover(artwork),
         'medium': artwork.medium,
         'size': dimensions(artwork.height_mm, artwork.width_mm),
+        'price': _price(artwork),
     }
 
 
@@ -85,7 +92,7 @@ def _artwork_detail(artwork: Artwork) -> ArtworkDetail:
         'size': dimensions(artwork.height_mm, artwork.width_mm),
         'status': artwork.display_status,
         'available': artwork.is_purchasable,
-        'price': price(artwork.price_pence) if artwork.status == ArtworkStatus.AVAILABLE and artwork.price_pence else None,
+        'price': _price(artwork),
         'images': [image for image in map(responsive_image, artwork.images.all()) if image],
         'description': paragraphs(artwork.description),
     }
@@ -98,6 +105,23 @@ def _artwork_meta(request: HttpRequest, detail: ArtworkDetail) -> dict[str, str]
         'description': Truncator(description[0]).chars(155) if description else '',
         'image': request.build_absolute_uri(images[0]['src']) if images else '',
     }
+
+
+class Neighbour(TypedDict):
+    title: str
+    href: str
+
+
+def _neighbours(artwork: Artwork) -> tuple[Neighbour | None, Neighbour | None]:
+    works = list(Artwork.objects.published().values_list('slug', 'title'))
+    if len(works) < 2:
+        return None, None
+    i = next(i for i, (slug, _) in enumerate(works) if slug == artwork.slug)
+    prev, next_ = works[i - 1], works[(i + 1) % len(works)]
+    return (
+        {'title': prev[1], 'href': reverse('work_show', args=[prev[0]])},
+        {'title': next_[1], 'href': reverse('work_show', args=[next_[0]])},
+    )
 
 
 class Purchase(TypedDict):
@@ -162,9 +186,10 @@ def show(request: HttpRequest, slug: str) -> HttpResponse:
     artwork = get_object_or_404(Artwork.objects.published(), slug=slug)
     content = SiteContent.load()
     detail = _artwork_detail(artwork)
+    prev, next_ = _neighbours(artwork)
     return render(
         request,
         'Work/Show',
-        {'artwork': detail, 'purchase': _purchase(artwork, content)},
+        {'artwork': detail, 'purchase': _purchase(artwork, content), 'prev': prev, 'next': next_},
         template_data=_artwork_meta(request, detail) | {'structured_data': _structured_data(request, artwork, detail, content.site_name)},
     )

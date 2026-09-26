@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/react';
 import type { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@/app.css';
+import type { Appearance } from '@/types';
 
 const meta = (name: string) => document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)?.content;
 const sentryDsn = meta('sentry-dsn');
@@ -13,6 +14,14 @@ if (sentryDsn) {
     dsn: sentryDsn,
     environment: meta('sentry-environment'),
     dataCollection: { userInfo: false, cookies: false, httpBodies: [], urlQueryParams: false },
+  });
+}
+
+if (new URLSearchParams(location.search).get('preview') === '1') {
+  window.addEventListener('message', (event: MessageEvent<{ type: string; value: Appearance }>) => {
+    if (event.origin !== location.origin || event.data?.type !== 'appearance') return;
+    const { headings, motion } = event.data.value;
+    Object.assign(document.documentElement.dataset, { type: headings, motion: motion ? 'on' : 'off' });
   });
 }
 

@@ -1,0 +1,37 @@
+from typing import TypedDict
+
+from django.db import models
+from django.http import HttpRequest, QueryDict
+
+from gesso.content.models import Headings, SiteContent, SiteLayout, WorkLayout
+
+
+class Appearance(TypedDict):
+    layout: str
+    work_layout: str
+    headings: str
+    motion: bool
+
+
+def _query(request: HttpRequest) -> QueryDict:
+    return QueryDict(request.META.get('QUERY_STRING', ''))
+
+
+def is_preview(request: HttpRequest) -> bool:
+    return _query(request).get('preview') == '1' and request.user.is_staff
+
+
+def appearance(request: HttpRequest, content: SiteContent) -> Appearance:
+    query = _query(request) if is_preview(request) else QueryDict()
+
+    def pick(field: str, choices: type[models.TextChoices]) -> str:
+        value = query.get(field, '')
+        return value if value in choices.values else getattr(content, field)
+
+    motion = query.get('motion')
+    return {
+        'layout': pick('layout', SiteLayout),
+        'work_layout': pick('work_layout', WorkLayout),
+        'headings': pick('headings', Headings),
+        'motion': motion == 'on' if motion in ('on', 'off') else content.motion,
+    }

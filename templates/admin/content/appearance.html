@@ -1,0 +1,218 @@
+{% extends 'admin/base.html' %}
+{% load unfold %}
+
+{% block title %}{{ title }} | {{ site_title }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block extrastyle %}
+<style>
+  .appearance { display: grid; gap: 24px; align-items: start; }
+  @media (min-width: 1024px) { .appearance { grid-template-columns: minmax(340px, 420px) minmax(0, 1fr); } }
+  .appearance-label { font-size: 14px; font-weight: 600; }
+  .appearance-help { font-size: 13px; margin: 2px 0 14px; opacity: .75; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choices-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .choice { display: flex; flex-direction: column; gap: 8px; padding: 8px; cursor: pointer; border: 1px solid var(--color-base-200); border-radius: 6px; box-shadow: 0 1px 2px rgb(0 0 0 / .05); }
+  .choice input { position: absolute; opacity: 0; pointer-events: none; }
+  .dark .choice, .dark .segmented, .dark .pill, .dark .preview-frame { border-color: var(--color-base-700); }
+  .choice:has(input:checked) { border-color: var(--color-primary-600); box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary-600) 25%, transparent); }
+  .choice:has(input:focus-visible) { outline: 2px solid var(--color-primary-600); outline-offset: 2px; }
+  .choice-name { font-size: 13px; font-weight: 600; }
+  .choice-note { font-size: 12px; line-height: 1.35; opacity: .7; }
+  .mini { display: flex; height: 64px; overflow: hidden; border-radius: 3px; border: 1px solid rgb(0 0 0 / .06); background: var(--color-base-50); }
+  .mini-panel { width: 22px; }
+  .mini-body { flex: 1; display: flex; flex-direction: column; gap: 5px; padding: 8px; }
+  .mini-bar { height: 4px; border-radius: 1px; }
+  .mini-block { background: var(--color-base-300); }
+  .segmented { display: inline-flex; border: 1px solid var(--color-base-200); border-radius: 6px; overflow: hidden; }
+  .segmented label { cursor: pointer; padding: 8px 14px; font-size: 14px; }
+  .segmented input { position: absolute; opacity: 0; pointer-events: none; }
+  .segmented label:has(input:checked) { background: var(--color-primary-600); color: #fff; }
+  .switch { display: flex; align-items: center; gap: 12px; cursor: pointer; margin-top: 18px; }
+  .switch input { position: absolute; opacity: 0; pointer-events: none; }
+  .switch-track { position: relative; flex-shrink: 0; width: 36px; height: 20px; border-radius: 999px; background: var(--color-base-300); transition: background .2s; }
+  .switch-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .2s; }
+  .switch:has(input:checked) .switch-track { background: var(--color-primary-600); }
+  .switch:has(input:checked) .switch-track::after { left: 18px; }
+  .switch:has(input:focus-visible) .switch-track { outline: 2px solid var(--color-primary-600); outline-offset: 2px; }
+  .preview-column { position: sticky; top: 24px; }
+  .pills { display: flex; gap: 4px; }
+  .pill { font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--color-base-200); cursor: pointer; }
+  .pill[aria-pressed='true'] { border-color: var(--color-primary-600); background: color-mix(in oklab, var(--color-primary-600) 12%, transparent); }
+  .preview-frame { overflow: hidden; border: 1px solid var(--color-base-200); border-radius: 4px; }
+  .preview-frame iframe { width: 1280px; height: 800px; border: 0; transform-origin: 0 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="appearance">
+    <form method="post" id="appearance-form" class="flex flex-col gap-6">
+        {% csrf_token %}
+
+        {% component "unfold/components/card.html" %}
+            <div class="appearance-label">Site layout</div>
+            <p class="appearance-help">{{ form.layout.help_text }}</p>
+            <div class="choices">
+                {% for choice, note in layouts %}
+                    <label class="choice">
+                        {{ choice.tag }}
+                        <span class="mini">
+                            {% if choice.data.value == 'rail' %}
+                                <span class="mini-panel" style="width: 30px; background: var(--color-base-200)"></span>
+                                <span class="mini-body"><span class="mini-block" style="height: 40px; width: 70%"></span></span>
+                            {% else %}
+                                <span class="flex flex-1 flex-col">
+                                    <span style="height: 12px; background: var(--color-base-200)"></span>
+                                    <span class="flex flex-1 gap-1.5" style="padding: 7px">
+                                        <span class="mini-block flex-1"></span>
+                                        <span class="mini-bar mini-block" style="width: 22px"></span>
+                                    </span>
+                                </span>
+                            {% endif %}
+                        </span>
+                        <span>
+                            <span class="choice-name block">{{ choice.choice_label }}</span>
+                            <span class="choice-note block">{{ note }}</span>
+                        </span>
+                    </label>
+                {% endfor %}
+            </div>
+        {% endcomponent %}
+
+        {% component "unfold/components/card.html" %}
+            <div class="appearance-label">Work page</div>
+            <p class="appearance-help">{{ form.work_layout.help_text }}</p>
+            <div class="choices choices-3">
+                {% for choice, note in work_layouts %}
+                    <label class="choice">
+                        {{ choice.tag }}
+                        <span class="mini">
+                            <span class="mini-body" style="flex-direction: row; gap: 4px; align-items: {% if choice.data.value == 'grid' %}flex-end{% else %}flex-start{% endif %}">
+                                {% if choice.data.value == 'stack' %}
+                                    <span class="mini-block" style="flex: 1.6; height: 34px"></span>
+                                    <span class="flex flex-1 flex-col justify-end gap-1" style="height: 34px">
+                                        <span class="mini-bar mini-block" style="width: 90%"></span>
+                                        <span class="mini-bar mini-block" style="width: 60%"></span>
+                                    </span>
+                                {% elif choice.data.value == 'salon' %}
+                                    <span class="mini-block flex-1" style="height: 30px"></span>
+                                    <span class="mini-block flex-1" style="height: 20px"></span>
+                                    <span class="mini-block flex-1" style="height: 36px"></span>
+                                {% else %}
+                                    <span class="mini-block flex-1" style="height: 22px"></span>
+                                    <span class="mini-block flex-1" style="height: 22px"></span>
+                                    <span class="mini-block flex-1" style="height: 22px"></span>
+                                {% endif %}
+                            </span>
+                        </span>
+                        <span>
+                            <span class="choice-name block">{{ choice.choice_label }}</span>
+                            <span class="choice-note block">{{ note }}</span>
+                        </span>
+                    </label>
+                {% endfor %}
+            </div>
+        {% endcomponent %}
+
+        {% component "unfold/components/card.html" %}
+            <div class="appearance-label" style="margin-bottom: 14px">Headings</div>
+            <div class="segmented">
+                {% for choice in form.headings %}
+                    <label style="font-family: {% if choice.data.value == 'serif' %}'Libre Caslon Text', Georgia, serif{% else %}'Public Sans', system-ui, sans-serif{% endif %}">
+                        {{ choice.tag }}{{ choice.choice_label }}
+                    </label>
+                {% endfor %}
+            </div>
+            <label class="switch">
+                {{ form.motion }}
+                <span class="switch-track"></span>
+                <span>
+                    <span class="appearance-label block">Gentle motion</span>
+                    <span class="block" style="font-size: 13px; opacity: .75">{{ form.motion.help_text }}</span>
+                </span>
+            </label>
+        {% endcomponent %}
+
+        <div class="flex justify-end gap-3">
+            {% component "unfold/components/button.html" with variant="default" type="button" name="appearance-reset" %}Reset{% endcomponent %}
+            {% component "unfold/components/button.html" with submit=1 %}Save appearance{% endcomponent %}
+        </div>
+    </form>
+
+    <div class="preview-column">
+        {% component "unfold/components/card.html" with title="Live preview" %}
+            <div class="pills" style="margin-bottom: 14px">
+                {% for label, href in pages %}
+                    <button type="button" class="pill" data-page="{{ href }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">{{ label }}</button>
+                {% endfor %}
+            </div>
+            <div class="preview-frame" id="preview-frame">
+                <iframe title="Site preview" src="about:blank"></iframe>
+            </div>
+        {% endcomponent %}
+    </div>
+</div>
+
+<script>
+  (() => {
+    const form = document.getElementById('appearance-form');
+    const box = document.getElementById('preview-frame');
+    const frame = box.querySelector('iframe');
+    const pills = [...document.querySelectorAll('.pill')];
+    const defaults = { layout: 'rail', work_layout: 'grid', headings: 'serif', motion: true };
+    let page = pills[0].dataset.page;
+    let loaded = null;
+
+    const values = () => {
+      const data = new FormData(form);
+      return {
+        layout: data.get('layout'),
+        work_layout: data.get('work_layout'),
+        headings: data.get('headings'),
+        motion: data.has('motion'),
+      };
+    };
+
+    const load = (value) => {
+      const query = new URLSearchParams({ ...value, motion: value.motion ? 'on' : 'off', preview: '1' });
+      frame.src = `${page}?${query}`;
+      loaded = value;
+    };
+
+    const update = () => {
+      const value = values();
+      if (!loaded || value.layout !== loaded.layout || value.work_layout !== loaded.work_layout) return load(value);
+      frame.contentWindow.postMessage({ type: 'appearance', value }, location.origin);
+    };
+
+    form.addEventListener('change', update);
+
+    form.querySelector('[name="appearance-reset"]').addEventListener('click', () => {
+      for (const [name, value] of Object.entries(defaults)) {
+        const input = name === 'motion' ? form.elements.motion : form.querySelector(`[name="${name}"][value="${value}"]`);
+        input.checked = name === 'motion' ? value : true;
+      }
+      update();
+    });
+
+    pills.forEach((pill) =>
+      pill.addEventListener('click', () => {
+        pills.forEach((other) => other.setAttribute('aria-pressed', String(other === pill)));
+        page = pill.dataset.page;
+        load(values());
+      }),
+    );
+
+    new ResizeObserver(([entry]) => {
+      const scale = entry.contentRect.width / 1280;
+      frame.style.transform = `scale(${scale})`;
+      box.style.height = `${800 * scale}px`;
+    }).observe(box);
+
+    load(values());
+  })();
+</script>
+{% endblock %}

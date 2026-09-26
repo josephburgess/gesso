@@ -15,6 +15,10 @@ def site_name(request: HttpRequest) -> str:
     return SiteContent.load().site_name
 
 
+def site_text_active(request: HttpRequest) -> bool:
+    return request.path.startswith(reverse('admin:content_sitecontent_changelist')) and request.path != reverse('admin:content_appearance')
+
+
 def orders_to_ship(request: HttpRequest) -> int | None:
     return Order.objects.to_ship().count() or None
 
@@ -80,14 +84,14 @@ def dashboard_callback(request: HttpRequest, context: dict) -> dict:
     context['home_page_table'] = {
         'headers': ['Spot', 'Work'],
         'rows': [
-            [label, _artwork_link(featured[spot]) if spot in featured else 'Empty']
-            for spot, label in ((1, '1 (large hero)'), (2, '2'), (3, '3'))
+            [label, _artwork_link(featured[spot]) if spot in featured else 'Empty'] for spot, label in ((1, '1 (large hero)'), (2, '2'))
         ],
     }
     context['without_images'] = [_artwork_link(a) for a in Artwork.objects.filter(images__isnull=True)]
     context['actions'] = [
         {'label': 'Add a work', 'href': reverse('admin:artworks_artwork_add')},
         {'label': 'Edit site text', 'href': reverse('admin:content_sitecontent_changelist')},
+        {'label': 'Change appearance', 'href': reverse('admin:content_appearance')},
         {'label': 'View site', 'href': '/'},
     ]
     return context
