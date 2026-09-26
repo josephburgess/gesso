@@ -39,6 +39,7 @@ jobs:
       - run: uv sync --frozen
       - run: npm ci
       - run: make lint check test
+      - run: npm run build
 
   deploy:
     needs: test
