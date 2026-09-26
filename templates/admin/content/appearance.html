@@ -118,6 +118,51 @@
         {% endcomponent %}
 
         {% component "unfold/components/card.html" %}
+            <div class="appearance-label">About page</div>
+            <p class="appearance-help">{{ form.about_layout.help_text }}</p>
+            <div class="choices">
+                {% for choice, note in about_layouts %}
+                    <label class="choice">
+                        {{ choice.tag }}
+                        <span class="mini">
+                            {% if choice.data.value == 'beside' %}
+                                <span class="mini-body" style="flex-direction: row; align-items: flex-end; gap: 6px">
+                                    <span class="mini-block" style="width: 38%; height: 44px"></span>
+                                    <span class="flex flex-1 flex-col gap-1">
+                                        <span class="mini-bar mini-block" style="width: 90%"></span>
+                                        <span class="mini-bar mini-block" style="width: 70%"></span>
+                                    </span>
+                                </span>
+                            {% else %}
+                                <span class="mini-body">
+                                    <span class="mini-block" style="height: 30px; width: 80%"></span>
+                                    <span class="mini-bar mini-block" style="width: 60%"></span>
+                                    <span class="mini-bar mini-block" style="width: 45%"></span>
+                                </span>
+                            {% endif %}
+                        </span>
+                        <span>
+                            <span class="choice-name block">{{ choice.choice_label }}</span>
+                            <span class="choice-note block">{{ note }}</span>
+                        </span>
+                    </label>
+                {% endfor %}
+            </div>
+        {% endcomponent %}
+
+        {% component "unfold/components/card.html" %}
+            <div class="appearance-label">Home page</div>
+            <label class="switch" style="margin-top: 10px">
+                {{ form.show_index }}
+                <span class="switch-track"></span>
+                <span>
+                    <span class="appearance-label block">Index of works</span>
+                    <span class="block" style="font-size: 13px; opacity: .75">{{ form.show_index.help_text }}</span>
+                </span>
+            </label>
+        {% endcomponent %}
+
+        {% component "unfold/components/card.html" %}
             <div class="appearance-label" style="margin-bottom: 14px">Headings</div>
             <div class="segmented">
                 {% for choice in form.headings %}
@@ -162,7 +207,9 @@
     const box = document.getElementById('preview-frame');
     const frame = box.querySelector('iframe');
     const pills = [...document.querySelectorAll('.pill')];
-    const defaults = { layout: 'rail', work_layout: 'grid', headings: 'serif', motion: true };
+    const defaults = { layout: 'rail', work_layout: 'grid', headings: 'serif', about_layout: 'beside', motion: true, show_index: true };
+    const switches = ['motion', 'show_index'];
+    const reloads = { layout: null, work_layout: 'Work', about_layout: 'About', show_index: 'Home' };
     let page = pills[0].dataset.page;
     let loaded = null;
 
@@ -172,19 +219,38 @@
         layout: data.get('layout'),
         work_layout: data.get('work_layout'),
         headings: data.get('headings'),
+        about_layout: data.get('about_layout'),
         motion: data.has('motion'),
+        show_index: data.has('show_index'),
       };
     };
 
+    const showPage = (label) => {
+      const pill = pills.find((p) => p.textContent === label);
+      if (!pill) return;
+      pills.forEach((other) => other.setAttribute('aria-pressed', String(other === pill)));
+      page = pill.dataset.page;
+    };
+
     const load = (value) => {
-      const query = new URLSearchParams({ ...value, motion: value.motion ? 'on' : 'off', preview: '1' });
+      const { show_index, ...rest } = value;
+      const query = new URLSearchParams({
+        ...rest,
+        motion: value.motion ? 'on' : 'off',
+        index: show_index ? 'on' : 'off',
+        preview: '1',
+      });
       frame.src = `${page}?${query}`;
       loaded = value;
     };
 
     const update = () => {
       const value = values();
-      if (!loaded || value.layout !== loaded.layout || value.work_layout !== loaded.work_layout) return load(value);
+      const changed = loaded && Object.keys(reloads).find((key) => value[key] !== loaded[key]);
+      if (!loaded || changed) {
+        if (changed && reloads[changed]) showPage(reloads[changed]);
+        return load(value);
+      }
       frame.contentWindow.postMessage({ type: 'appearance', value }, location.origin);
     };
 
@@ -192,16 +258,15 @@
 
     form.querySelector('[name="appearance-reset"]').addEventListener('click', () => {
       for (const [name, value] of Object.entries(defaults)) {
-        const input = name === 'motion' ? form.elements.motion : form.querySelector(`[name="${name}"][value="${value}"]`);
-        input.checked = name === 'motion' ? value : true;
+        if (switches.includes(name)) form.elements[name].checked = value;
+        else form.querySelector(`[name="${name}"][value="${value}"]`).checked = true;
       }
       update();
     });
 
     pills.forEach((pill) =>
       pill.addEventListener('click', () => {
-        pills.forEach((other) => other.setAttribute('aria-pressed', String(other === pill)));
-        page = pill.dataset.page;
+        showPage(pill.textContent);
         load(values());
       }),
     );

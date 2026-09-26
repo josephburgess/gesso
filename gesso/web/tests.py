@@ -367,16 +367,24 @@ def _image(artwork, name, position=0, **fields):
 def test_appearance_is_shared_and_rendered_on_the_html_element(client, db):
     content = SiteContent.load()
     content.layout, content.work_layout, content.headings, content.motion = 'top', 'salon', 'sans', False
+    content.show_index, content.about_layout = False, 'above'
     content.save()
 
     site = client.get('/about', headers=INERTIA).json()['props']['site']
     html = client.get('/about').content.decode()
 
-    assert site['appearance'] == {'layout': 'top', 'work_layout': 'salon', 'headings': 'sans', 'motion': False}
+    assert site['appearance'] == {
+        'layout': 'top',
+        'work_layout': 'salon',
+        'headings': 'sans',
+        'motion': False,
+        'show_index': False,
+        'about_layout': 'above',
+    }
     assert '<html lang="en-GB" data-theme="paper" data-type="sans" data-motion="off">' in html
 
 
-PREVIEW = '/about?preview=1&layout=top&work_layout=stack&headings=sans&motion=off'
+PREVIEW = '/about?preview=1&layout=top&work_layout=stack&headings=sans&motion=off&index=off&about_layout=above'
 
 
 def test_staff_can_preview_appearance(admin_client):
@@ -387,6 +395,8 @@ def test_staff_can_preview_appearance(admin_client):
         'work_layout': 'stack',
         'headings': 'sans',
         'motion': False,
+        'show_index': False,
+        'about_layout': 'above',
     }
     assert response.headers['X-Robots-Tag'] == 'noindex'
     assert response.headers['X-Frame-Options'] == 'SAMEORIGIN'

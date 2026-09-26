@@ -18,6 +18,8 @@ NOTES = {
     'grid': 'Even rows',
     'salon': 'Staggered columns',
     'stack': 'One work at a time',
+    'beside': 'Photo and statement side by side',
+    'above': 'Large photo, words underneath',
 }
 
 
@@ -77,6 +79,7 @@ class SiteContentAdmin(ModelAdmin):
             'form': form,
             'layouts': [(choice, NOTES[choice.data['value']]) for choice in form['layout'].subwidgets],
             'work_layouts': [(choice, NOTES[choice.data['value']]) for choice in form['work_layout'].subwidgets],
+            'about_layouts': [(choice, NOTES[choice.data['value']]) for choice in form['about_layout'].subwidgets],
             'pages': pages,
         }
         return TemplateResponse(request, 'admin/content/appearance.html', context)

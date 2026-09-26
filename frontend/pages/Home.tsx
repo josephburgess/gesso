@@ -139,7 +139,7 @@ export default function Home({ home }: { home: HomeProps }) {
         </section>
       )}
 
-      {home.index.length > 0 && (
+      {site.appearance.show_index && home.index.length > 0 && (
         <Reveal className="mt-section">
           <IndexOfWorks works={home.index} />
         </Reveal>

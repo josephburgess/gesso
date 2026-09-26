@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import Figure from '@/components/Figure';
 import Reveal from '@/components/Reveal';
 import Statement from '@/components/Statement';
@@ -5,24 +6,26 @@ import SiteLayout from '@/layouts/SiteLayout';
 import type { About as AboutProps } from '@/types';
 
 export default function About({ about }: { about: AboutProps }) {
+  const { site } = usePage().props;
+  const above = site.appearance.about_layout === 'above';
   const [portrait, ...more] = about.photos;
 
   return (
     <SiteLayout title="About">
-      <div className="mb-section flex flex-wrap items-end gap-x-section gap-y-block">
+      <div className={`mb-section flex gap-x-section gap-y-block ${above ? 'flex-col' : 'flex-wrap items-end'}`}>
         {portrait && (
-          <div className="max-w-[560px] min-w-0 flex-[1_1_300px]">
+          <div className={`min-w-0 ${above ? 'max-w-[900px]' : 'max-w-[560px] flex-[1_1_300px]'}`}>
             <Figure
               image={portrait.image}
               alt={portrait.alt}
               caption={portrait.caption}
-              sizes="(min-width: 1000px) 40vw, 92vw"
+              sizes={above ? '(min-width: 1000px) 900px, 92vw' : '(min-width: 1000px) 40vw, 92vw'}
               eager
             />
           </div>
         )}
         {about.statement && (
-          <Reveal className="min-w-0 flex-[999_1_340px]">
+          <Reveal className={`min-w-0 ${above ? '' : 'flex-[999_1_340px]'}`}>
             <Statement className="max-w-[26ch]">{about.statement}</Statement>
           </Reveal>
         )}

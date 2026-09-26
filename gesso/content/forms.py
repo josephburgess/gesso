@@ -18,7 +18,7 @@ class SiteContentAdminForm(forms.ModelForm):
 
     class Meta:
         model = SiteContent
-        exclude = ('delivery_pence', 'layout', 'work_layout', 'headings', 'motion')  # noqa: DJ006
+        exclude = ('delivery_pence', 'layout', 'work_layout', 'headings', 'motion', 'show_index', 'about_layout')  # noqa: DJ006
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,5 +32,5 @@ class SiteContentAdminForm(forms.ModelForm):
 class AppearanceForm(forms.ModelForm):
     class Meta:
         model = SiteContent
-        fields = ('layout', 'work_layout', 'headings', 'motion')
-        widgets = dict.fromkeys(('layout', 'work_layout', 'headings'), forms.RadioSelect)
+        fields = ('layout', 'work_layout', 'headings', 'motion', 'show_index', 'about_layout')
+        widgets = dict.fromkeys(('layout', 'work_layout', 'headings', 'about_layout'), forms.RadioSelect)

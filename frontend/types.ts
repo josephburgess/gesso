@@ -57,6 +57,8 @@ export type Appearance = {
   work_layout: 'grid' | 'salon' | 'stack';
   headings: 'serif' | 'sans';
   motion: boolean;
+  show_index: boolean;
+  about_layout: 'beside' | 'above';
 };
 
 export type Site = { name: string; tagline: string; home_href: string; nav: NavLink[]; appearance: Appearance };

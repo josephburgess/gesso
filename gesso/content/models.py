@@ -14,6 +14,11 @@ class WorkLayout(models.TextChoices):
     STACK = 'stack', 'Exhibition'
 
 
+class AboutLayout(models.TextChoices):
+    BESIDE = 'beside', 'Portrait beside statement'
+    ABOVE = 'above', 'Portrait above'
+
+
 class Headings(models.TextChoices):
     SERIF = 'serif', 'Classic serif'
     SANS = 'sans', 'Modern sans'
@@ -36,6 +41,12 @@ class SiteContent(models.Model):
         max_length=20, choices=WorkLayout, default=WorkLayout.GRID, help_text='How the full list of works is arranged.'
     )
     headings = models.CharField(max_length=20, choices=Headings, default=Headings.SERIF)
+    show_index = models.BooleanField(
+        'index of works on the home page', default=True, help_text='A list of every work under the featured ones.'
+    )
+    about_layout = models.CharField(
+        max_length=20, choices=AboutLayout, default=AboutLayout.BESIDE, help_text='How the About page is arranged.'
+    )
     motion = models.BooleanField(
         'gentle motion',
         default=True,
