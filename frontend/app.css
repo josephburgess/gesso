@@ -199,8 +199,8 @@
   --text-title-lg: clamp(22px, 2.4vw, 28px);
   --text-tile: 18px;
   --text-display: clamp(23px, 2.9vw, 34px);
-  --text-wordmark: 27px;
-  --text-wordmark-sm: 24px;
+  --text-wordmark: 29px;
+  --text-wordmark-sm: 26px;
 }
 
 [data-type='sans'] {
