@@ -300,3 +300,20 @@ def test_admin_list_shows_status_badges(admin_client, make_artwork):
     assert 'Held' in html
     assert 'Reserved' in html
     assert 'bg-orange-100' in html
+
+
+def test_new_work_goes_to_the_top_of_the_work_page(admin_client, make_artwork):
+    make_artwork(title='Older', position=0)
+    make_artwork(title='Oldest', position=1)
+
+    admin_client.post('/admin/artworks/artwork/add/', ADMIN_ADD)
+
+    assert [a.title for a in Artwork.objects.all()] == ['A', 'Older', 'Oldest']
+
+
+def test_works_can_be_dragged_into_order(admin_client, make_artwork):
+    make_artwork()
+
+    html = admin_client.get('/admin/artworks/artwork/').content.decode()
+
+    assert 'name="form-0-position"' in html

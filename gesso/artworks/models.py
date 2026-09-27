@@ -49,10 +49,12 @@ class Artwork(models.Model):
         help_text='Leave empty to keep this work off the home page.',
     )
 
+    position = models.IntegerField(default=0)
+
     objects = ArtworkQuerySet.as_manager()
 
     class Meta:
-        ordering = ('-year', 'title')
+        ordering = ('position', '-year', 'title')
         constraints = (
             models.CheckConstraint(
                 condition=~models.Q(status=ArtworkStatus.AVAILABLE, price_pence__isnull=True),
