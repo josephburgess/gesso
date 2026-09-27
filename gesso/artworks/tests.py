@@ -312,11 +312,26 @@ def test_new_work_goes_to_the_top_of_the_work_page(admin_client, make_artwork):
 
 
 def test_works_can_be_dragged_into_order(admin_client, make_artwork):
-    make_artwork()
+    first = make_artwork(title='First', position=0)
+    second = make_artwork(title='Second', position=1)
 
     html = admin_client.get('/admin/artworks/artwork/').content.decode()
+    response = admin_client.post(
+        '/admin/artworks/artwork/',
+        {
+            'form-TOTAL_FORMS': '2',
+            'form-INITIAL_FORMS': '2',
+            'form-0-id': str(first.pk),
+            'form-0-position': '1',
+            'form-1-id': str(second.pk),
+            'form-1-position': '0',
+            '_save': 'Save',
+        },
+    )
 
     assert 'name="form-0-position"' in html
+    assert response.status_code == 302
+    assert [a.title for a in Artwork.objects.all()] == ['Second', 'First']
 
 
 def test_renamed_work_redirects_from_its_old_address(admin_client, client, make_artwork):
