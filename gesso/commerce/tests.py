@@ -344,3 +344,50 @@ def test_refund_is_refused_for_an_unpaid_order(admin_client, for_sale, stripe_se
     order = _checkout(for_sale)
 
     assert admin_client.get(f'/admin/commerce/order/{order.pk}/refund/').status_code == 403
+
+
+def test_admin_records_an_exhibition_sale(admin_client, for_sale):
+    data = {
+        'price': '3200',
+        'sold_on': '2026-09-20',
+        'source': 'exhibition',
+        'venue': 'Bermondsey Open',
+        'buyer_name': 'C Collector',
+        'buyer_email': '',
+        'notes': 'Paid by bank transfer',
+    }
+
+    form = admin_client.get(f'/admin/artworks/artwork/{for_sale.pk}/record-sale/').content.decode()
+    response = admin_client.post(f'/admin/artworks/artwork/{for_sale.pk}/record-sale/', data)
+
+    order = Order.objects.get()
+    for_sale.refresh_from_db()
+    assert 'value="3400"' in form
+    assert response['Location'] == f'/admin/commerce/order/{order.pk}/change/'
+    assert (order.source, order.venue, order.amount_pence, order.buyer_name) == ('exhibition', 'Bermondsey Open', 320000, 'C Collector')
+    assert order.status == OrderStatus.SHIPPED
+    assert timezone.localdate(order.paid_at).isoformat() == '2026-09-20'
+    assert for_sale.status == ArtworkStatus.SOLD
+
+
+def test_sale_still_to_deliver_goes_to_orders_to_ship(admin_client, for_sale):
+    data = {'price': '3400', 'sold_on': '2026-09-20', 'source': 'private', 'to_deliver': 'on'}
+
+    admin_client.post(f'/admin/artworks/artwork/{for_sale.pk}/record-sale/', data)
+
+    assert list(Order.objects.to_ship()) == [Order.objects.get(source='private')]
+
+
+def test_sold_work_has_no_record_sale_button(admin_client, make_artwork):
+    sold = make_artwork(status=ArtworkStatus.SOLD)
+
+    assert admin_client.get(f'/admin/artworks/artwork/{sold.pk}/record-sale/').status_code == 403
+
+
+def test_order_notes_are_editable(admin_client, for_sale, stripe_sessions):
+    order = _paid(for_sale)
+
+    admin_client.post(f'/admin/commerce/order/{order.pk}/change/', {'notes': 'Wrapped twice'})
+
+    order.refresh_from_db()
+    assert order.notes == 'Wrapped twice'

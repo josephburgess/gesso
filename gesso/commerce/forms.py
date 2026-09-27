@@ -1,7 +1,19 @@
 from decimal import Decimal
 
 from django import forms
-from unfold.widgets import UnfoldAdminDecimalFieldWidget, UnfoldAdminTextInputWidget, UnfoldAdminURLInputWidget, UnfoldBooleanWidget
+from django.utils import timezone
+from unfold.widgets import (
+    UnfoldAdminDecimalFieldWidget,
+    UnfoldAdminEmailInputWidget,
+    UnfoldAdminSelectWidget,
+    UnfoldAdminSingleDateWidget,
+    UnfoldAdminTextareaWidget,
+    UnfoldAdminTextInputWidget,
+    UnfoldAdminURLInputWidget,
+    UnfoldBooleanWidget,
+)
+
+from gesso.commerce.models import OrderSource
 
 
 class ShipForm(forms.Form):
@@ -26,3 +38,23 @@ class RefundForm(forms.Form):
         if pence > self.total_pence:
             raise forms.ValidationError('That is more than the buyer paid.')
         return pence
+
+
+class SaleForm(forms.Form):
+    price = forms.DecimalField(label='Price (£)', max_digits=9, decimal_places=2, min_value=0, widget=UnfoldAdminDecimalFieldWidget)
+    sold_on = forms.DateField(label='Date', initial=timezone.localdate, widget=UnfoldAdminSingleDateWidget)
+    source = forms.ChoiceField(
+        label='Where', choices=[c for c in OrderSource.choices if c[0] != OrderSource.ONLINE], widget=UnfoldAdminSelectWidget
+    )
+    venue = forms.CharField(max_length=200, required=False, help_text='For example the gallery or fair.', widget=UnfoldAdminTextInputWidget)
+    buyer_name = forms.CharField(max_length=200, required=False, widget=UnfoldAdminTextInputWidget)
+    buyer_email = forms.EmailField(required=False, widget=UnfoldAdminEmailInputWidget)
+    notes = forms.CharField(required=False, widget=UnfoldAdminTextareaWidget)
+    to_deliver = forms.BooleanField(
+        label='Still needs delivering', required=False, help_text='Adds it to Orders to ship.', widget=UnfoldBooleanWidget
+    )
+
+    def __init__(self, *args, price_pence: int | None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if price_pence is not None:
+            self.initial['price'] = Decimal(price_pence) / 100

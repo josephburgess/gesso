@@ -10,11 +10,13 @@ from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin
-from unfold.decorators import display
+from unfold.decorators import action, display
 
 from gesso.artworks.forms import ArtworkAdminForm, HomePageForm
 from gesso.artworks.image_manager import PENDING, ImageManager
-from gesso.artworks.models import Artwork, ArtworkImage
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
+from gesso.commerce.forms import SaleForm
+from gesso.commerce.services import record_sale
 
 
 class ArtworkImages(ImageManager):
@@ -50,6 +52,7 @@ class ArtworkAdmin(ModelAdmin):
     search_fields = ('title', 'medium')
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('images_manager', 'home_page')
+    actions_detail = ('record_sale',)
     fieldsets = (
         (None, {'fields': ('title', 'slug', 'year', 'medium', 'height_cm', 'width_cm', 'framing', 'description')}),
         ('Images', {'fields': ('images_manager',)}),
@@ -118,3 +121,25 @@ class ArtworkAdmin(ModelAdmin):
     @display(description='Status', ordering='status', label={'Available': 'success', 'Reserved': 'warning', 'Sold': 'info'})
     def status_label(self, obj):
         return obj.display_status
+
+    def has_record_sale_permission(self, request, object_id=None):
+        return object_id is not None and Artwork.objects.filter(pk=object_id).exclude(status=ArtworkStatus.SOLD).exists()
+
+    @action(description='Record a sale', url_path='record-sale', icon='sell', permissions=['record_sale'])
+    def record_sale(self, request, object_id):
+        artwork = get_object_or_404(Artwork, pk=object_id)
+        form = SaleForm(request.POST or None, price_pence=artwork.price_pence)
+        if form.is_valid():
+            data = form.cleaned_data
+            order = record_sale(artwork, price_pence=int(data.pop('price') * 100), **data)
+            self.message_user(request, f'{artwork} recorded as sold.')
+            return redirect('admin:commerce_order_change', order.pk)
+        context = {
+            **self.admin_site.each_context(request),
+            'title': f'Record a sale of {artwork}',
+            'intro': 'For works sold at an exhibition or privately. The work is marked sold and the sale appears under Orders.',
+            'form': form,
+            'submit_label': 'Record sale',
+            'back_url': reverse('admin:artworks_artwork_change', args=[object_id]),
+        }
+        return TemplateResponse(request, 'admin/action_form.html', context)

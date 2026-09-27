@@ -15,6 +15,12 @@ class OrderStatus(models.TextChoices):
     REFUNDED = 'refunded', 'Refunded'
 
 
+class OrderSource(models.TextChoices):
+    ONLINE = 'online', 'Online'
+    EXHIBITION = 'exhibition', 'Exhibition'
+    PRIVATE = 'private', 'Private sale'
+
+
 class OrderQuerySet(models.QuerySet['Order']):
     def to_ship(self) -> Self:
         return self.filter(status=OrderStatus.PAID)
@@ -24,6 +30,8 @@ class Order(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     artwork = models.ForeignKey(Artwork, on_delete=models.PROTECT, related_name='orders')
     status = models.CharField(max_length=20, choices=OrderStatus, default=OrderStatus.PENDING)
+    source = models.CharField(max_length=20, choices=OrderSource, default=OrderSource.ONLINE)
+    venue = models.CharField(max_length=200, blank=True)
     amount_pence = models.PositiveIntegerField()
     delivery_pence = models.PositiveIntegerField()
     stripe_session_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
@@ -31,13 +39,14 @@ class Order(models.Model):
     buyer_email = models.EmailField(blank=True)
     shipping_address = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
+    expires_at = models.DateTimeField(null=True, blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
     shipped_at = models.DateTimeField(null=True, blank=True)
     courier = models.CharField(max_length=100, blank=True)
     tracking_url = models.URLField('tracking link', blank=True)
     refund_pence = models.PositiveIntegerField(null=True, blank=True)
     refunded_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
 
     objects = OrderQuerySet.as_manager()
 
@@ -83,7 +92,8 @@ class Order(models.Model):
             return
         self.status = OrderStatus.EXPIRED
         self.save(update_fields=['status'])
-        self.artwork.release(until=self.expires_at)
+        if self.expires_at:
+            self.artwork.release(until=self.expires_at)
 
 
 class StripeEvent(models.Model):

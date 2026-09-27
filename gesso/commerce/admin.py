@@ -18,11 +18,13 @@ from gesso.web.formatting import price
 
 @admin.register(Order)
 class OrderAdmin(ModelAdmin):
-    list_display = ('artwork', 'status_label', 'buyer_name', 'total', 'paid_at')
-    list_filter = ('status',)
+    list_display = ('artwork', 'status_label', 'source', 'buyer_name', 'total', 'paid_at')
+    list_filter = ('status', 'source')
     fields = (
         'artwork',
         'status',
+        'source',
+        'venue',
         'total',
         'buyer_name',
         'buyer_email',
@@ -34,8 +36,9 @@ class OrderAdmin(ModelAdmin):
         'tracking_link',
         'refund',
         'stripe_link',
+        'notes',
     )
-    readonly_fields = fields
+    readonly_fields = tuple(f for f in fields if f != 'notes')
     actions = ('mark_shipped',)
     actions_detail = ('ship', 'refund_order')
 
