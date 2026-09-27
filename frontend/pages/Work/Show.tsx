@@ -63,12 +63,15 @@ export default function Show({ artwork, purchase, prev, next }: Props) {
         {[
           ['Medium', artwork.medium],
           ['Size', artwork.size],
-        ].map(([label, value]) => (
-          <div key={label} className="flex gap-3.5">
-            <dt className="w-20 shrink-0 pt-0.5 text-micro tracking-[0.06em] text-ink-dim uppercase">{label}</dt>
-            <dd className="text-ink-muted tabular-nums">{value}</dd>
-          </div>
-        ))}
+          ['Framing', artwork.framing],
+        ]
+          .filter(([, value]) => value)
+          .map(([label, value]) => (
+            <div key={label} className="flex gap-3.5">
+              <dt className="w-20 shrink-0 pt-0.5 text-micro tracking-[0.06em] text-ink-dim uppercase">{label}</dt>
+              <dd className="text-ink-muted tabular-nums">{value}</dd>
+            </div>
+          ))}
       </dl>
       <div className="mt-6 flex items-baseline justify-between gap-3 text-body-sm">
         <span className="flex items-center gap-2 text-ink-muted">

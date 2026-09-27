@@ -100,6 +100,14 @@ def test_artwork_page_shows_every_processed_image_in_order(client, make_artwork)
     assert [image['src'] for image in images] == ['/media/variants/first/480.webp', '/media/variants/second/480.webp']
 
 
+def test_artwork_framing_is_shown(client, make_artwork):
+    make_artwork(slug='framed', is_published=True, framing='Framed in oak')
+
+    artwork = client.get('/work/framed', headers=INERTIA).json()['props']['artwork']
+
+    assert artwork['framing'] == 'Framed in oak'
+
+
 def test_artwork_images_carry_their_alt_text(client, make_artwork):
     artwork = make_artwork(slug='live', is_published=True)
     ArtworkImage.objects.create(

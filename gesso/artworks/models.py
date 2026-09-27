@@ -31,6 +31,7 @@ class Artwork(models.Model):
     medium = models.CharField(max_length=200)
     width_mm = models.PositiveIntegerField()
     height_mm = models.PositiveIntegerField()
+    framing = models.CharField(max_length=200, blank=True, help_text='For example "Framed in oak" or "Unframed, ready to hang".')
     status = models.CharField(
         max_length=20,
         choices=ArtworkStatus,

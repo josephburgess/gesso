@@ -19,6 +19,7 @@ export type ArtworkDetail = {
   year: number;
   medium: string;
   size: string;
+  framing: string;
   images: ImageProps[];
   status: string;
   available: boolean;

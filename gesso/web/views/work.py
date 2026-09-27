@@ -80,6 +80,7 @@ class ArtworkDetail(TypedDict):
     year: int
     medium: str
     size: str
+    framing: str
     images: list[ImageProps]
     status: str
     available: bool
@@ -93,6 +94,7 @@ def _artwork_detail(artwork: Artwork) -> ArtworkDetail:
         'year': artwork.year,
         'medium': artwork.medium,
         'size': dimensions(artwork.height_mm, artwork.width_mm),
+        'framing': artwork.framing,
         'status': artwork.display_status,
         'available': artwork.is_purchasable,
         'price': _price(artwork),
