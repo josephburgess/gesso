@@ -2,10 +2,6 @@ from django.db import migrations
 
 TERMS = """These terms apply when you buy a work through this website. Please read them before you buy.
 
-## Who we are
-
-[Your name, trading name if you have one, and studio address.] You can reach us through the contact page or by replying to your order email.
-
 ## Prices and payment
 
 Prices are in pounds sterling. Delivery is added at checkout. Payment is taken by Stripe, so we never see or store your card details.
@@ -16,7 +12,7 @@ Every work is an original, so only one person can buy it. When you start checkou
 
 ## Delivery
 
-We will be in touch after your order to arrange delivery, usually within [10] working days. The work is your responsibility once it has been delivered. See Delivery & returns for the details.
+We will be in touch after your order to arrange delivery, usually within 10 working days. The work is your responsibility once it has been delivered. See Delivery & returns for the details.
 
 ## Changing your mind
 
@@ -54,7 +50,7 @@ The right to cancel does not apply to commissions made to your specification, or
 
 If a work arrives damaged, tell us within 48 hours, with photos of the work and the packaging. We will arrange a repair, a return or a refund."""
 
-PRIVACY = """This page explains what we collect when you use this website and what we do with it. [Your name] is responsible for your data, and you can get in touch through the contact page.
+PRIVACY = """This page explains what we collect when you use this website and what we do with it. Elise Beer is responsible for your data, and you can get in touch through the contact page.
 
 ## What we collect
 
@@ -74,7 +70,7 @@ Stripe processes payments. Amazon Web Services sends our emails and stores image
 
 ## How long we keep it
 
-Order records for six years, as tax law requires. Enquiries for [two years]. Mailing list addresses until you ask to be removed.
+Order records for six years, as tax law requires. Enquiries for two years. Mailing list addresses until you ask to be removed.
 
 ## Your rights
 
