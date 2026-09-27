@@ -71,12 +71,21 @@ def test_appearance_page_shows_the_current_choices(admin_client):
 def test_appearance_page_saves_the_settings(admin_client):
     response = admin_client.post(
         '/admin/content/sitecontent/appearance/',
-        {'layout': 'top', 'work_layout': 'stack', 'headings': 'sans', 'about_layout': 'above'},
+        {'theme': 'slate', 'layout': 'top', 'work_layout': 'stack', 'headings': 'sans', 'about_layout': 'above'},
         follow=True,
     )
 
     content = SiteContent.load()
-    assert (content.layout, content.work_layout, content.headings, content.motion, content.show_index, content.about_layout) == (
+    assert (
+        content.theme,
+        content.layout,
+        content.work_layout,
+        content.headings,
+        content.motion,
+        content.show_index,
+        content.about_layout,
+    ) == (
+        'slate',
         'top',
         'stack',
         'sans',

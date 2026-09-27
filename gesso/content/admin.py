@@ -13,6 +13,9 @@ from gesso.content.forms import AppearanceForm, SiteContentAdminForm
 from gesso.content.models import AboutImage, Page, SiteContent, SocialLink
 
 NOTES = {
+    'paper': 'Warm off-white with an umber accent',
+    'gallery': 'Clean white with a terracotta accent',
+    'slate': 'Cool grey with a blue accent',
     'rail': 'Name, menu and details in a column',
     'top': 'Slim bar, wider pages',
     'grid': 'Even rows',
@@ -86,6 +89,7 @@ class SiteContentAdmin(ModelAdmin):
             **self.admin_site.each_context(request),
             'title': 'Appearance',
             'form': form,
+            'themes': [(choice, NOTES[choice.data['value']]) for choice in form['theme'].subwidgets],
             'layouts': [(choice, NOTES[choice.data['value']]) for choice in form['layout'].subwidgets],
             'work_layouts': [(choice, NOTES[choice.data['value']]) for choice in form['work_layout'].subwidgets],
             'about_layouts': [(choice, NOTES[choice.data['value']]) for choice in form['about_layout'].subwidgets],

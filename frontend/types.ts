@@ -67,6 +67,7 @@ export type Neighbour = { title: string; href: string };
 export type NavLink = { label: string; href: string; current: boolean };
 
 export type Appearance = {
+  theme: 'paper' | 'gallery' | 'slate';
   layout: 'rail' | 'top';
   work_layout: 'grid' | 'salon' | 'stack';
   headings: 'serif' | 'sans';

@@ -20,6 +20,12 @@ class AboutLayout(models.TextChoices):
     ABOVE = 'above', 'Portrait above'
 
 
+class Theme(models.TextChoices):
+    PAPER = 'paper', 'Paper'
+    GALLERY = 'gallery', 'Gallery'
+    SLATE = 'slate', 'Slate'
+
+
 class Headings(models.TextChoices):
     SERIF = 'serif', 'Classic serif'
     SANS = 'sans', 'Modern sans'
@@ -41,6 +47,12 @@ class SiteContent(models.Model):
     layout = models.CharField(max_length=20, choices=SiteLayout, default=SiteLayout.RAIL, help_text='Where the name and menu sit.')
     work_layout = models.CharField(
         max_length=20, choices=WorkLayout, default=WorkLayout.GRID, help_text='How the full list of works is arranged.'
+    )
+    theme = models.CharField(
+        max_length=20,
+        choices=Theme,
+        default=Theme.PAPER,
+        help_text='Colours for the whole site. Visitors can switch between its light and dark versions. Artwork is never tinted.',
     )
     headings = models.CharField(max_length=20, choices=Headings, default=Headings.SERIF)
     show_index = models.BooleanField(

@@ -3,10 +3,11 @@ from typing import TypedDict
 from django.db import models
 from django.http import HttpRequest, QueryDict
 
-from gesso.content.models import AboutLayout, Headings, SiteContent, SiteLayout, WorkLayout
+from gesso.content.models import AboutLayout, Headings, SiteContent, SiteLayout, Theme, WorkLayout
 
 
 class Appearance(TypedDict):
+    theme: str
     layout: str
     work_layout: str
     headings: str
@@ -35,6 +36,7 @@ def appearance(request: HttpRequest, content: SiteContent) -> Appearance:
         return value == 'on' if value in ('on', 'off') else saved
 
     return {
+        'theme': pick('theme', Theme),
         'layout': pick('layout', SiteLayout),
         'work_layout': pick('work_layout', WorkLayout),
         'headings': pick('headings', Headings),
