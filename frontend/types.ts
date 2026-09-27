@@ -34,7 +34,13 @@ export type Contact = {
   topic: string;
 };
 
-export type Purchase = { enquire_href: string; enquire_label: string; action: string | null; note: string };
+export type Purchase = {
+  enquire_href: string;
+  enquire_label: string;
+  action: string | null;
+  note: string;
+  notify: boolean;
+};
 
 export type ImageProps = {
   src: string;

@@ -3,6 +3,7 @@ import FlashMessages from '@/components/FlashMessages';
 import Lightbox from '@/components/Lightbox';
 import ResponsiveImage from '@/components/ResponsiveImage';
 import Reveal from '@/components/Reveal';
+import Signup from '@/components/Signup';
 import type { ArtworkDetail, Neighbour, Purchase } from '@/types';
 import SiteLayout from '@/layouts/SiteLayout';
 import { Link, useForm } from '@inertiajs/react';
@@ -31,6 +32,7 @@ function PurchasePanel({ purchase }: { purchase: Purchase }) {
         {purchase.enquire_label}
       </Link>
       {purchase.note && <p className="pt-0.5 text-meta-sm text-ink-dim">{purchase.note}</p>}
+      {purchase.notify && <Signup label="Similar work" text="Hear when similar work is available." className="mt-2" />}
     </div>
   );
 }

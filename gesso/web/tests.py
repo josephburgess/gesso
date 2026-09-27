@@ -32,7 +32,13 @@ def test_artwork_page_offers_an_enquiry(client, make_artwork):
 
     purchase = client.get('/work/live', headers=INERTIA).json()['props']['purchase']
 
-    assert purchase == {'enquire_href': '/contact?artwork=live', 'enquire_label': 'Enquire about this work', 'action': None, 'note': ''}
+    assert purchase == {
+        'enquire_href': '/contact?artwork=live',
+        'enquire_label': 'Enquire about this work',
+        'action': None,
+        'note': '',
+        'notify': False,
+    }
 
 
 def test_reserved_artwork_keeps_its_price(client, make_artwork):
@@ -61,12 +67,21 @@ def test_available_artwork_can_be_purchased(client, make_artwork):
     assert 'Plus £85 UK delivery.' in purchase['note']
 
 
-def test_sold_artwork_offers_similar_work(client, make_artwork):
+def test_sold_artwork_offers_a_commission_and_a_heads_up(client, make_artwork):
     make_artwork(slug='gone', is_published=True, status=ArtworkStatus.SOLD)
 
     purchase = client.get('/work/gone', headers=INERTIA).json()['props']['purchase']
 
-    assert (purchase['action'], purchase['enquire_label']) == (None, 'Enquire about similar work')
+    assert purchase['action'] is None
+    assert (purchase['enquire_href'], purchase['enquire_label']) == ('/contact?artwork=gone&topic=commission', 'Ask about a commission')
+    assert purchase['notify'] is True
+
+
+def test_contact_takes_the_topic_from_the_query(client, make_artwork):
+    make_artwork(slug='gone', is_published=True, status=ArtworkStatus.SOLD)
+
+    assert client.get('/contact?artwork=gone&topic=commission', headers=INERTIA).json()['props']['contact']['topic'] == 'commission'
+    assert client.get('/contact?artwork=gone&topic=nonsense', headers=INERTIA).json()['props']['contact']['topic'] == 'buying'
 
 
 def test_artwork_page_shows_every_processed_image_in_order(client, make_artwork):

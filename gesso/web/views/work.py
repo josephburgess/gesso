@@ -13,6 +13,7 @@ from inertia import render
 
 from gesso.artworks.models import Artwork, ArtworkStatus, ProcessedImage
 from gesso.content.models import SiteContent
+from gesso.enquiries.models import Topic
 from gesso.web.formatting import dimensions, paragraphs, price
 
 
@@ -131,6 +132,7 @@ class Purchase(TypedDict):
     note: str
     enquire_href: str
     enquire_label: str
+    notify: bool
 
 
 def _purchase(artwork: Artwork, content: SiteContent) -> Purchase:
@@ -141,11 +143,14 @@ def _purchase(artwork: Artwork, content: SiteContent) -> Purchase:
         note = 'Reserved pending payment.'
     else:
         note = ''
+    sold = artwork.status == ArtworkStatus.SOLD
+    query = {'artwork': artwork.slug} | ({'topic': Topic.COMMISSION} if sold else {})
     return {
         'action': reverse('checkout', args=[artwork.slug]) if artwork.is_purchasable else None,
         'note': note,
-        'enquire_href': reverse('contact') + '?' + urlencode({'artwork': artwork.slug}),
-        'enquire_label': 'Enquire about similar work' if artwork.status == ArtworkStatus.SOLD else 'Enquire about this work',
+        'enquire_href': reverse('contact') + '?' + urlencode(query),
+        'enquire_label': 'Ask about a commission' if sold else 'Enquire about this work',
+        'notify': sold,
     }
 
 

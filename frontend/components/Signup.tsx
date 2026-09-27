@@ -6,7 +6,13 @@ import SectionLabel from '@/components/SectionLabel';
 
 const csrfToken = () => document.cookie.match(/(?:^|; )csrftoken=([^;]*)/)?.[1] ?? '';
 
-export default function Signup({ className = '' }: { className?: string }) {
+type Props = { label?: string; text?: string; className?: string };
+
+export default function Signup({
+  label = 'Mailing list',
+  text = 'Occasional emails about new work. Unsubscribe any time.',
+  className = '',
+}: Props) {
   const { site } = usePage().props;
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
@@ -36,9 +42,9 @@ export default function Signup({ className = '' }: { className?: string }) {
 
   return (
     <section className={`max-w-[620px] border border-line bg-panel p-block ${className}`}>
-      <SectionLabel>Mailing list</SectionLabel>
+      <SectionLabel>{label}</SectionLabel>
       <p className="mt-3 mb-0 max-w-[46ch] text-meta text-ink-muted">
-        Occasional emails about new work. Unsubscribe any time.
+        {text}
         {site.privacy_href && (
           <>
             {' '}

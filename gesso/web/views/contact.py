@@ -56,12 +56,13 @@ def page(request: HttpRequest) -> HttpResponse:
 
     slug = (data or request.GET).get('artwork')
     artwork = Artwork.objects.published().filter(slug=slug).first()
+    topic = request.GET.get('topic', '')
     contact: Contact = {
         'details': SiteContent.load().contact_details,
         'action': reverse('contact'),
         'artwork': {'title': artwork.title, 'slug': artwork.slug} if artwork else None,
         'topics': [{'value': value, 'label': label} for value, label in Topic.choices],
-        'topic': Topic.BUYING if artwork else Topic.GENERAL,
+        'topic': topic if topic in Topic.values else Topic.BUYING if artwork else Topic.GENERAL,
     }
     return render(
         request,
