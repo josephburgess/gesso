@@ -9,7 +9,7 @@ from PIL import Image
 from gesso.artworks import processing
 from gesso.artworks.admin import ArtworkAdminForm
 from gesso.artworks.forms import PositionedForm
-from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus, FormerSlug
 from gesso.content.models import SocialLink
 
 
@@ -317,3 +317,22 @@ def test_works_can_be_dragged_into_order(admin_client, make_artwork):
     html = admin_client.get('/admin/artworks/artwork/').content.decode()
 
     assert 'name="form-0-position"' in html
+
+
+def test_renamed_work_redirects_from_its_old_address(admin_client, client, make_artwork):
+    artwork = make_artwork(slug='a', is_published=True)
+    ArtworkImage.objects.create(artwork=artwork, original='originals/a.png')
+
+    admin_client.post(f'/admin/artworks/artwork/{artwork.pk}/change/', ADMIN_ADD | {'slug': 'b', 'is_published': 'on'})
+    admin_client.post(f'/admin/artworks/artwork/{artwork.pk}/change/', ADMIN_ADD | {'slug': 'c', 'is_published': 'on'})
+
+    assert client.get('/work/a')['Location'] == '/work/c'
+    assert client.get('/work/b').status_code == 301
+    assert client.get('/work/c').status_code == 200
+
+
+def test_old_address_of_a_draft_stays_hidden(client, make_artwork):
+    artwork = make_artwork(slug='now-draft')
+    FormerSlug.objects.create(artwork=artwork, slug='old')
+
+    assert client.get('/work/old').status_code == 404

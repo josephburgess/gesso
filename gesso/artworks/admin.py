@@ -14,7 +14,7 @@ from unfold.decorators import action, display
 
 from gesso.artworks.forms import ArtworkAdminForm, HomePageForm
 from gesso.artworks.image_manager import PENDING, ImageManager
-from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus, FormerSlug
 from gesso.commerce.forms import SaleForm
 from gesso.commerce.services import record_sale
 
@@ -99,6 +99,8 @@ class ArtworkAdmin(ModelAdmin):
             obj.featured_order = None
         super().save_model(request, obj, form, change)
         form.attach_pending_images(obj)
+        if change and 'slug' in form.changed_data:
+            FormerSlug.objects.update_or_create(slug=form.initial['slug'], defaults={'artwork': obj})
 
     def view_on_site(self, obj):
         return obj.get_absolute_url() if obj.is_published else None
