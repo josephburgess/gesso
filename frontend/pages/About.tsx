@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import CV from '@/components/CV';
 import Figure from '@/components/Figure';
 import Reveal from '@/components/Reveal';
 import Statement from '@/components/Statement';
@@ -36,6 +37,11 @@ export default function About({ about }: { about: AboutProps }) {
               {p}
             </p>
           ))}
+        </Reveal>
+      )}
+      {about.cv.length > 0 && (
+        <Reveal className="mt-section">
+          <CV groups={about.cv} />
         </Reveal>
       )}
       {more.length > 0 && (

@@ -8,7 +8,7 @@ from django.contrib.messages import get_messages
 from django.utils import timezone
 
 from gesso.artworks.models import ArtworkImage, ArtworkStatus
-from gesso.content.models import AboutImage, Page, SiteContent
+from gesso.content.models import AboutImage, CVKind, Page, SiteContent
 from gesso.enquiries.models import Enquiry, Subscriber
 from gesso.web.formatting import dimensions, paragraphs, price
 from gesso.web.middleware import site_props
@@ -676,3 +676,23 @@ def test_work_page_follows_the_chosen_order(client, make_artwork):
     artworks = client.get('/work', headers=INERTIA).json()['props']['artworks']
 
     assert [a['title'] for a in artworks] == ['First', 'Second']
+
+
+def test_about_groups_the_cv_newest_first(client, db):
+    content = SiteContent.load()
+    content.cv_entries.create(year=2023, kind=CVKind.GROUP, title='Summer Show', venue='RA', place='London')
+    content.cv_entries.create(year=2025, kind=CVKind.GROUP, title='Tide', link='https://example.com/tide')
+    content.cv_entries.create(year=2024, kind=CVKind.SOLO, title='Salt')
+
+    cv = client.get('/about', headers=INERTIA).json()['props']['about']['cv']
+
+    assert cv == [
+        {'label': 'Solo exhibitions', 'entries': [{'year': 2024, 'title': 'Salt', 'where': '', 'link': ''}]},
+        {
+            'label': 'Group exhibitions',
+            'entries': [
+                {'year': 2025, 'title': 'Tide', 'where': '', 'link': 'https://example.com/tide'},
+                {'year': 2023, 'title': 'Summer Show', 'where': 'RA, London', 'link': ''},
+            ],
+        },
+    ]

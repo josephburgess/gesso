@@ -10,7 +10,7 @@ from gesso.artworks.forms import PositionedForm
 from gesso.artworks.image_manager import ImageManager
 from gesso.artworks.models import Artwork
 from gesso.content.forms import AppearanceForm, SiteContentAdminForm
-from gesso.content.models import AboutImage, Page, SiteContent, SocialLink
+from gesso.content.models import AboutImage, CVEntry, Page, SiteContent, SocialLink
 
 NOTES = {
     'rail': 'Name, menu and details in a column',
@@ -43,10 +43,17 @@ class SocialLinkInline(TabularInline):
     verbose_name_plural = 'Social links'
 
 
+class CVEntryInline(TabularInline):
+    model = CVEntry
+    extra = 1
+    fields = ('year', 'kind', 'title', 'venue', 'place', 'link')
+    verbose_name_plural = 'Exhibitions and CV'
+
+
 @admin.register(SiteContent)
 class SiteContentAdmin(ModelAdmin):
     form = SiteContentAdminForm
-    inlines = (SocialLinkInline,)
+    inlines = (CVEntryInline, SocialLinkInline)
     readonly_fields = ('about_photos',)
 
     def has_add_permission(self, request):

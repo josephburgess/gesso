@@ -1,6 +1,8 @@
 export type Photo = { image: ImageProps; caption: string };
 
-export type About = { statement: string; biography: string[]; photos: Photo[] };
+export type CVGroup = { label: string; entries: { year: number; title: string; where: string; link: string }[] };
+
+export type About = { statement: string; biography: string[]; photos: Photo[]; cv: CVGroup[] };
 
 export type ArtworkTile = {
   title: string;

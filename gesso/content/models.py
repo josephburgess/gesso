@@ -25,9 +25,18 @@ class Headings(models.TextChoices):
     SANS = 'sans', 'Modern sans'
 
 
+class CVKind(models.TextChoices):
+    SOLO = 'solo', 'Solo exhibitions'
+    GROUP = 'group', 'Group exhibitions'
+    AWARD = 'award', 'Awards'
+    COLLECTION = 'collection', 'Collections'
+    EDUCATION = 'education', 'Education'
+
+
 class SiteContent(models.Model):
     about_images: models.Manager[AboutImage]
     social_links: models.Manager[SocialLink]
+    cv_entries: models.Manager[CVEntry]
 
     site_name = models.CharField(max_length=100, default='Gesso', help_text='Shown in the header, browser tabs and the admin.')
     tagline = models.CharField(max_length=100, blank=True, help_text='Shown under the name in the header.')
@@ -95,6 +104,23 @@ class SocialLink(models.Model):
 
     def __str__(self):
         return self.label
+
+
+class CVEntry(models.Model):
+    site_content = models.ForeignKey(SiteContent, on_delete=models.CASCADE, related_name='cv_entries')
+    year = models.PositiveSmallIntegerField()
+    kind = models.CharField('type', max_length=20, choices=CVKind, default=CVKind.GROUP)
+    title = models.CharField(max_length=200)
+    venue = models.CharField(max_length=200, blank=True)
+    place = models.CharField(max_length=100, blank=True, help_text='Town or city.')
+    link = models.URLField(blank=True)
+
+    class Meta:
+        ordering = ('-year', 'pk')
+        verbose_name = verbose_name_plural = 'CV entry'
+
+    def __str__(self):
+        return self.title
 
 
 class Page(models.Model):
