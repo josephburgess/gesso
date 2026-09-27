@@ -8,7 +8,7 @@ from django.contrib.messages import get_messages
 from django.utils import timezone
 
 from gesso.artworks.models import ArtworkImage, ArtworkStatus
-from gesso.content.models import AboutImage, SiteContent
+from gesso.content.models import AboutImage, Page, SiteContent
 from gesso.enquiries.models import Enquiry, Subscriber
 from gesso.web.formatting import dimensions, paragraphs, price
 from gesso.web.middleware import site_props
@@ -342,6 +342,7 @@ def test_sitemap_lists_pages_and_published_works(client, make_artwork):
 
     assert '/work/live</loc>' in xml
     assert '/about</loc>' in xml
+    assert '/pages/privacy</loc>' in xml
     assert '/work/draft' not in xml
 
 
@@ -555,3 +556,40 @@ def test_subscribe_is_rate_limited(client, db):
 
     assert response.status_code == 429
     assert Subscriber.objects.count() == 5
+
+
+def test_legal_pages_are_ready_to_edit(db):
+    assert list(Page.objects.values_list('slug', flat=True)) == ['terms', 'delivery-and-returns', 'privacy']
+
+
+def test_page_splits_headings_from_paragraphs(client, db):
+    Page.objects.create(title='Care', slug='care', body='Keep it dry.\n\n## Hanging\n\nUse two hooks.\nLevel them.')
+
+    response = client.get('/pages/care', headers=INERTIA)
+
+    assert response.json()['component'] == 'Page'
+    assert response.json()['props']['page'] == {
+        'title': 'Care',
+        'blocks': [
+            {'heading': False, 'text': 'Keep it dry.'},
+            {'heading': True, 'text': 'Hanging'},
+            {'heading': False, 'text': 'Use two hooks.\nLevel them.'},
+        ],
+    }
+
+
+def test_unknown_page_404s(client, db):
+    assert client.get('/pages/nothing-here').status_code == 404
+
+
+def test_pages_are_shared_for_the_footer(client, db):
+    site = client.get('/about', headers=INERTIA).json()['props']['site']
+
+    assert [page['label'] for page in site['pages']] == ['Terms of sale', 'Delivery & returns', 'Privacy']
+    assert site['privacy_href'] == '/pages/privacy'
+
+
+def test_no_privacy_link_without_a_privacy_page(client, db):
+    Page.objects.filter(slug=Page.PRIVACY).delete()
+
+    assert client.get('/about', headers=INERTIA).json()['props']['site']['privacy_href'] is None

@@ -70,6 +70,10 @@ export type Appearance = {
 
 export type SocialLink = { label: string; href: string };
 
+export type PageLink = { label: string; href: string };
+
+export type Page = { title: string; blocks: { heading: boolean; text: string }[] };
+
 export type Site = {
   name: string;
   tagline: string;
@@ -77,6 +81,8 @@ export type Site = {
   nav: NavLink[];
   appearance: Appearance;
   social: SocialLink[];
+  pages: PageLink[];
+  privacy_href: string | null;
   subscribe_href: string;
 };
 

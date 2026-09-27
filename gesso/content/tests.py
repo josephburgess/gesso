@@ -103,3 +103,10 @@ def test_about_photos_upload_and_take_alt_text(admin_client, settings, tmp_path)
 
     photo = SiteContent.load().about_images.get()
     assert (photo.alt, bool(photo.variants)) == ('In the studio', True)
+
+
+def test_pages_admin_lists_the_legal_pages(admin_client):
+    html = admin_client.get('/admin/content/page/').content.decode()
+
+    assert 'Terms of sale' in html
+    assert 'Privacy' in html

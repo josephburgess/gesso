@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import Nav from '@/components/Nav';
+import SiteFooter from '@/components/SiteFooter';
 import SocialLinks from '@/components/SocialLinks';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -34,11 +35,9 @@ export default function SiteLayout({ title, rail, children }: Props) {
             </aside>
           )}
         </main>
-        {site.social.length > 0 && (
-          <footer className="mx-auto max-w-[1400px] px-gutter pb-block">
-            <SocialLinks links={site.social} className="border-t border-hair pt-slot" />
-          </footer>
-        )}
+        <div className="mx-auto max-w-[1400px] px-gutter pb-block">
+          <SiteFooter />
+        </div>
       </div>
     );
   }
@@ -66,7 +65,7 @@ export default function SiteLayout({ title, rail, children }: Props) {
       </header>
       <main className="min-w-0 flex-1 animate-page-enter px-gutter pt-block pb-section">
         {children}
-        <SocialLinks links={site.social} className="mt-section border-t border-hair pt-slot wide:hidden" />
+        <SiteFooter className="mt-section" socialClassName="wide:hidden" />
       </main>
     </div>
   );
