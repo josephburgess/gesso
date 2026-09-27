@@ -115,6 +115,14 @@ class Artwork(models.Model):
         return ArtworkStatus(self.status).label
 
 
+class FormerSlug(models.Model):
+    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE, related_name='former_slugs')
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.slug
+
+
 class ProcessedImage(models.Model):
     original = models.ImageField(upload_to='originals/')
     variants = models.JSONField(default=list, editable=False)
