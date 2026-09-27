@@ -27,7 +27,8 @@ class Theme(models.TextChoices):
 
 
 class Headings(models.TextChoices):
-    SERIF = 'serif', 'Classic serif'
+    SERIF = 'serif', 'Caslon'
+    GARAMOND = 'garamond', 'Garamond'
     SANS = 'sans', 'Modern sans'
 
 
@@ -61,6 +62,7 @@ class SiteContent(models.Model):
     about_layout = models.CharField(
         max_length=20, choices=AboutLayout, default=AboutLayout.BESIDE, help_text='How the About page is arranged.'
     )
+    italic_titles = models.BooleanField('italic artwork titles', default=False, help_text='Set work titles in italic, as in a catalogue.')
     motion = models.BooleanField(
         'gentle motion',
         default=True,

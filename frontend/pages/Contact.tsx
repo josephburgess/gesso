@@ -30,7 +30,7 @@ export default function Contact({ contact }: { contact: ContactProps }) {
       <FlashMessages />
       {contact.artwork && (
         <p className="text-meta text-ink-meta">
-          About <span className="font-serif text-ink">{contact.artwork.title}</span>
+          About <span className="work-title font-serif text-ink">{contact.artwork.title}</span>
         </p>
       )}
       <form onSubmit={submit} className="flex max-w-190 flex-col gap-5.5 pt-9.5">

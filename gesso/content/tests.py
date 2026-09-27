@@ -71,7 +71,7 @@ def test_appearance_page_shows_the_current_choices(admin_client):
 def test_appearance_page_saves_the_settings(admin_client):
     response = admin_client.post(
         '/admin/content/sitecontent/appearance/',
-        {'theme': 'slate', 'layout': 'top', 'work_layout': 'stack', 'headings': 'sans', 'about_layout': 'above'},
+        {'theme': 'slate', 'layout': 'top', 'work_layout': 'stack', 'headings': 'garamond', 'italic_titles': 'on', 'about_layout': 'above'},
         follow=True,
     )
 
@@ -81,6 +81,7 @@ def test_appearance_page_saves_the_settings(admin_client):
         content.layout,
         content.work_layout,
         content.headings,
+        content.italic_titles,
         content.motion,
         content.show_index,
         content.about_layout,
@@ -88,7 +89,8 @@ def test_appearance_page_saves_the_settings(admin_client):
         'slate',
         'top',
         'stack',
-        'sans',
+        'garamond',
+        True,
         False,
         False,
         'above',

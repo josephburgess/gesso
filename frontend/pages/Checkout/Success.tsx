@@ -8,7 +8,7 @@ export default function Success({ title, work_href }: { title: string | null; wo
       <p>
         {title ? (
           <>
-            Your order for <span className="font-serif text-ink">{title}</span> is confirmed.
+            Your order for <span className="work-title font-serif text-ink">{title}</span> is confirmed.
           </>
         ) : (
           'Your order is confirmed.'

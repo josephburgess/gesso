@@ -41,7 +41,7 @@ function NeighbourLink({ label, work, className = '' }: { label: string; work: N
   return (
     <Link href={work.href} className={`flex flex-col gap-1 border-0 ${className}`}>
       <span className="text-label text-ink-faint uppercase">{label}</span>
-      <span className="font-serif text-title text-ink">{work.title}</span>
+      <span className="work-title font-serif text-title text-ink">{work.title}</span>
     </Link>
   );
 }
@@ -57,7 +57,7 @@ export default function Show({ artwork, purchase, prev, next }: Props) {
 
   const rail = (
     <>
-      <h1 className="mb-0 text-title-lg leading-tight">{artwork.title}</h1>
+      <h1 className="work-title mb-0 text-title-lg leading-tight">{artwork.title}</h1>
       <p className="mt-1 mb-0 text-meta text-ink-meta tabular-nums">{artwork.year}</p>
       <dl className="mt-6 flex flex-col gap-2">
         {[

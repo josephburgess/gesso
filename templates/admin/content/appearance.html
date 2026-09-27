@@ -195,11 +195,19 @@
             <div class="appearance-label" style="margin-bottom: 14px">Headings</div>
             <div class="segmented">
                 {% for choice in form.headings %}
-                    <label style="font-family: {% if choice.data.value == 'serif' %}'Libre Caslon Text', Georgia, serif{% else %}'Public Sans', system-ui, sans-serif{% endif %}">
+                    <label style="font-family: {% if choice.data.value == 'serif' %}'Libre Caslon Text', Georgia, serif{% elif choice.data.value == 'garamond' %}'EB Garamond', Garamond, Georgia, serif{% else %}'Public Sans', system-ui, sans-serif{% endif %}">
                         {{ choice.tag }}{{ choice.choice_label }}
                     </label>
                 {% endfor %}
             </div>
+            <label class="switch">
+                {{ form.italic_titles }}
+                <span class="switch-track"></span>
+                <span>
+                    <span class="appearance-label block">Italic artwork titles</span>
+                    <span class="block" style="font-size: 13px; opacity: .75">{{ form.italic_titles.help_text }}</span>
+                </span>
+            </label>
             <label class="switch">
                 {{ form.motion }}
                 <span class="switch-track"></span>
@@ -236,8 +244,8 @@
     const box = document.getElementById('preview-frame');
     const frame = box.querySelector('iframe');
     const pills = [...document.querySelectorAll('.pill')];
-    const defaults = { theme: 'paper', layout: 'rail', work_layout: 'grid', headings: 'serif', about_layout: 'beside', motion: true, show_index: true };
-    const switches = ['motion', 'show_index'];
+    const defaults = { theme: 'paper', layout: 'rail', work_layout: 'grid', headings: 'serif', about_layout: 'beside', italic_titles: false, motion: true, show_index: true };
+    const switches = ['italic_titles', 'motion', 'show_index'];
     const reloads = { layout: null, work_layout: 'Work', about_layout: 'About', show_index: 'Home' };
     let page = pills[0].dataset.page;
     let loaded = null;
@@ -250,6 +258,7 @@
         work_layout: data.get('work_layout'),
         headings: data.get('headings'),
         about_layout: data.get('about_layout'),
+        italic_titles: data.has('italic_titles'),
         motion: data.has('motion'),
         show_index: data.has('show_index'),
       };
@@ -263,9 +272,10 @@
     };
 
     const load = (value) => {
-      const { show_index, ...rest } = value;
+      const { show_index, italic_titles, ...rest } = value;
       const query = new URLSearchParams({
         ...rest,
+        titles: italic_titles ? 'italic' : 'upright',
         motion: value.motion ? 'on' : 'off',
         index: show_index ? 'on' : 'off',
         preview: '1',

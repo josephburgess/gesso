@@ -11,6 +11,7 @@ class Appearance(TypedDict):
     layout: str
     work_layout: str
     headings: str
+    italic_titles: bool
     motion: bool
     show_index: bool
     about_layout: str
@@ -31,15 +32,16 @@ def appearance(request: HttpRequest, content: SiteContent) -> Appearance:
         value = query.get(field, '')
         return value if value in choices.values else getattr(content, field)
 
-    def switch(param: str, saved: bool) -> bool:
+    def switch(param: str, saved: bool, on: str = 'on', off: str = 'off') -> bool:
         value = query.get(param)
-        return value == 'on' if value in ('on', 'off') else saved
+        return value == on if value in (on, off) else saved
 
     return {
         'theme': pick('theme', Theme),
         'layout': pick('layout', SiteLayout),
         'work_layout': pick('work_layout', WorkLayout),
         'headings': pick('headings', Headings),
+        'italic_titles': switch('titles', content.italic_titles, 'italic', 'upright'),
         'motion': switch('motion', content.motion),
         'show_index': switch('index', content.show_index),
         'about_layout': pick('about_layout', AboutLayout),

@@ -2,6 +2,9 @@
 @import '@fontsource/libre-caslon-text/latin-400.css';
 @import '@fontsource/libre-caslon-text/latin-400-italic.css';
 @import '@fontsource/public-sans/latin-400.css';
+@import '@fontsource/public-sans/latin-400-italic.css';
+@import '@fontsource/eb-garamond/latin-400.css';
+@import '@fontsource/eb-garamond/latin-400-italic.css';
 
 @theme {
   --color-*: initial;
@@ -190,8 +193,22 @@
   color-scheme: dark;
 }
 
+[data-type='garamond'] {
+  --font-serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --text-title: 19.5px;
+  --text-title-lg: clamp(22px, 2.4vw, 28px);
+  --text-tile: 18px;
+  --text-display: clamp(23px, 2.9vw, 34px);
+  --text-wordmark: 27px;
+  --text-wordmark-sm: 24px;
+}
+
 [data-type='sans'] {
   --font-serif: 'Public Sans', system-ui, -apple-system, sans-serif;
+}
+
+html[data-titles='italic'] .work-title {
+  font-style: italic;
 }
 
 html[data-motion='off'] {

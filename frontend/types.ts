@@ -70,7 +70,8 @@ export type Appearance = {
   theme: 'paper' | 'gallery' | 'slate';
   layout: 'rail' | 'top';
   work_layout: 'grid' | 'salon' | 'stack';
-  headings: 'serif' | 'sans';
+  headings: 'serif' | 'garamond' | 'sans';
+  italic_titles: boolean;
   motion: boolean;
   show_index: boolean;
   about_layout: 'beside' | 'above';

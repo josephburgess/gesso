@@ -429,14 +429,17 @@ def test_appearance_is_shared_and_rendered_on_the_html_element(client, db):
         'layout': 'top',
         'work_layout': 'salon',
         'headings': 'sans',
+        'italic_titles': False,
         'motion': False,
         'show_index': False,
         'about_layout': 'above',
     }
-    assert '<html lang="en-GB" data-theme="gallery" data-mode="light" data-type="sans" data-motion="off">' in html
+    assert '<html lang="en-GB" data-theme="gallery" data-mode="light" data-type="sans" data-titles="upright" data-motion="off">' in html
 
 
-PREVIEW = '/about?preview=1&theme=slate&layout=top&work_layout=stack&headings=sans&motion=off&index=off&about_layout=above'
+PREVIEW = (
+    '/about?preview=1&theme=slate&layout=top&work_layout=stack&headings=garamond&titles=italic&motion=off&index=off&about_layout=above'
+)
 
 
 def test_staff_can_preview_appearance(admin_client):
@@ -446,7 +449,8 @@ def test_staff_can_preview_appearance(admin_client):
         'theme': 'slate',
         'layout': 'top',
         'work_layout': 'stack',
-        'headings': 'sans',
+        'headings': 'garamond',
+        'italic_titles': True,
         'motion': False,
         'show_index': False,
         'about_layout': 'above',
@@ -454,15 +458,18 @@ def test_staff_can_preview_appearance(admin_client):
     assert response.headers['X-Robots-Tag'] == 'noindex'
     assert response.headers['X-Frame-Options'] == 'SAMEORIGIN'
     assert 'no-store' in response.headers['Cache-Control']
-    assert 'data-theme="slate" data-mode="light" data-type="sans" data-motion="off"' in admin_client.get(PREVIEW).content.decode()
+    assert (
+        'data-theme="slate" data-mode="light" data-type="garamond" data-titles="italic" data-motion="off"'
+        in admin_client.get(PREVIEW).content.decode()
+    )
 
 
 def test_preview_ignores_unknown_values(admin_client):
-    appearance = admin_client.get('/about?preview=1&theme=neon&layout=sideways&motion=maybe', headers=INERTIA).json()['props']['site'][
-        'appearance'
-    ]
+    appearance = admin_client.get('/about?preview=1&theme=neon&layout=sideways&titles=slanted&motion=maybe', headers=INERTIA).json()[
+        'props'
+    ]['site']['appearance']
 
-    assert (appearance['theme'], appearance['layout'], appearance['motion']) == ('paper', 'rail', True)
+    assert (appearance['theme'], appearance['layout'], appearance['italic_titles'], appearance['motion']) == ('paper', 'rail', False, True)
 
 
 def test_visitors_cannot_preview_appearance(client, db):
@@ -470,7 +477,10 @@ def test_visitors_cannot_preview_appearance(client, db):
 
     assert response.json()['props']['site']['appearance']['layout'] == 'rail'
     assert response.headers['X-Frame-Options'] == 'DENY'
-    assert 'data-theme="paper" data-mode="light" data-type="serif" data-motion="on"' in client.get(PREVIEW).content.decode()
+    assert (
+        'data-theme="paper" data-mode="light" data-type="serif" data-titles="upright" data-motion="on"'
+        in client.get(PREVIEW).content.decode()
+    )
 
 
 def test_artwork_page_links_neighbours_and_wraps_around(client, make_artwork):
