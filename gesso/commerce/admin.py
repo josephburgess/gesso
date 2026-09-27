@@ -3,12 +3,14 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
+from django.utils.timezone import localtime
 from unfold.admin import ModelAdmin
 from unfold.decorators import action, display
 
-from gesso.commerce.forms import ShipForm
+from gesso.commerce.forms import RefundForm, ShipForm
 from gesso.commerce.models import Order, OrderStatus
 from gesso.commerce.services import send_shipped
 from gesso.web.formatting import price
@@ -30,11 +32,12 @@ class OrderAdmin(ModelAdmin):
         'shipped_at',
         'courier',
         'tracking_link',
+        'refund',
         'stripe_link',
     )
     readonly_fields = fields
     actions = ('mark_shipped',)
-    actions_detail = ('ship',)
+    actions_detail = ('ship', 'refund_order')
 
     def has_add_permission(self, request):
         return False
@@ -45,11 +48,25 @@ class OrderAdmin(ModelAdmin):
     def has_ship_permission(self, request, object_id=None):
         return object_id is not None and Order.objects.to_ship().filter(pk=object_id).exists()
 
+    def has_refund_order_permission(self, request, object_id=None):
+        return (
+            object_id is not None
+            and Order.objects.filter(pk=object_id, status__in=(OrderStatus.PAID, OrderStatus.SHIPPED), refunded_at=None).exists()
+        )
+
     @display(description='Total')
     def total(self, obj):
-        return price(obj.amount_pence + obj.delivery_pence)
+        return price(obj.total_pence)
 
-    @display(description='Status', ordering='status', label={'Paid': 'warning', 'Shipped': 'success', 'Pending': 'info'})
+    @display(description='Refund')
+    def refund(self, obj):
+        if obj.refunded_at is None:
+            return ''
+        return f'{price(obj.refund_pence or 0)} on {date_format(localtime(obj.refunded_at), "j M Y")}'
+
+    @display(
+        description='Status', ordering='status', label={'Paid': 'warning', 'Shipped': 'success', 'Pending': 'info', 'Refunded': 'danger'}
+    )
     def status_label(self, obj):
         return OrderStatus(obj.status).label
 
@@ -93,6 +110,24 @@ class OrderAdmin(ModelAdmin):
             'intro': f'To {order.buyer_name}. The buyer gets an email with the tracking link if you add one.',
             'form': form,
             'submit_label': 'Mark shipped',
+            'back_url': reverse('admin:commerce_order_change', args=[object_id]),
+        }
+        return TemplateResponse(request, 'admin/action_form.html', context)
+
+    @action(description='Record refund', url_path='refund', icon='undo', permissions=['refund_order'])
+    def refund_order(self, request, object_id):
+        order = get_object_or_404(Order.objects.select_related('artwork'), pk=object_id)
+        form = RefundForm(request.POST or None, total_pence=order.total_pence)
+        if form.is_valid():
+            order.record_refund(form.cleaned_data['amount'], form.cleaned_data['relist'])
+            self.message_user(request, f'Refund recorded for {order.artwork}.')
+            return redirect('admin:commerce_order_change', object_id)
+        context = {
+            **self.admin_site.each_context(request),
+            'title': f'Refund {order.artwork}',
+            'intro': 'Make the refund in Stripe first, using the link on the order, then record it here.',
+            'form': form,
+            'submit_label': 'Record refund',
             'back_url': reverse('admin:commerce_order_change', args=[object_id]),
         }
         return TemplateResponse(request, 'admin/action_form.html', context)

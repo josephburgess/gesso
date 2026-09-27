@@ -12,6 +12,7 @@ class OrderStatus(models.TextChoices):
     PAID = 'paid', 'Paid'
     SHIPPED = 'shipped', 'Shipped'
     EXPIRED = 'expired', 'Expired'
+    REFUNDED = 'refunded', 'Refunded'
 
 
 class OrderQuerySet(models.QuerySet['Order']):
@@ -35,6 +36,8 @@ class Order(models.Model):
     shipped_at = models.DateTimeField(null=True, blank=True)
     courier = models.CharField(max_length=100, blank=True)
     tracking_url = models.URLField('tracking link', blank=True)
+    refund_pence = models.PositiveIntegerField(null=True, blank=True)
+    refunded_at = models.DateTimeField(null=True, blank=True)
 
     objects = OrderQuerySet.as_manager()
 
@@ -61,6 +64,19 @@ class Order(models.Model):
         self.courier = courier
         self.tracking_url = tracking_url
         self.save(update_fields=['status', 'shipped_at', 'courier', 'tracking_url'])
+
+    @property
+    def total_pence(self) -> int:
+        return self.amount_pence + self.delivery_pence
+
+    def record_refund(self, pence: int, relist: bool) -> None:
+        self.refund_pence = pence
+        self.refunded_at = timezone.now()
+        if pence >= self.total_pence:
+            self.status = OrderStatus.REFUNDED
+        self.save(update_fields=['refund_pence', 'refunded_at', 'status'])
+        if relist:
+            self.artwork.relist()
 
     def mark_expired(self) -> None:
         if self.status != OrderStatus.PENDING:

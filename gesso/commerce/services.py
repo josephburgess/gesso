@@ -87,7 +87,7 @@ def notify_sale(order: Order) -> None:
     if not recipient:
         return
     EmailMessage(
-        subject=f'{order.artwork.title} sold, {price(order.amount_pence + order.delivery_pence)}',
+        subject=f'{order.artwork.title} sold, {price(order.total_pence)}',
         body=f'{order.buyer_name} <{order.buyer_email}>\n\n{order.shipping_address}',
         to=[recipient],
         reply_to=[order.buyer_email],
@@ -112,7 +112,7 @@ def confirm_to_buyer(order: Order) -> None:
         subject=f'Your order: {order.artwork.title}',
         body=(
             f'Thank you for buying {order.artwork.title}.\n\n'
-            f'Total paid: {price(order.amount_pence + order.delivery_pence)}, including UK delivery.\n'
+            f'Total paid: {price(order.total_pence)}, including UK delivery.\n'
             f"We'll be in touch shortly to arrange delivery. Reply to this email with any questions."
         ),
         to=[order.buyer_email],

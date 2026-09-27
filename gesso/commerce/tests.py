@@ -303,3 +303,44 @@ def test_stripe_shows_the_note_above_the_pay_button(for_sale, monkeypatch, note,
     stripe_client.create_checkout_session(order, 'https://site/ok', 'https://site/cancel', note=note)
 
     assert sent[0].get('custom_text') == custom_text
+
+
+def test_admin_full_refund_marks_the_order_refunded_and_can_relist(admin_client, for_sale, stripe_sessions):
+    order = _paid(for_sale)
+
+    form = admin_client.get(f'/admin/commerce/order/{order.pk}/refund/').content.decode()
+    response = admin_client.post(f'/admin/commerce/order/{order.pk}/refund/', {'amount': '3400.00', 'relist': 'on'})
+
+    order.refresh_from_db()
+    for_sale.refresh_from_db()
+    assert 'value="3400"' in form
+    assert response.status_code == 302
+    assert (order.status, order.refund_pence) == (OrderStatus.REFUNDED, 340000)
+    assert order.refunded_at is not None
+    assert for_sale.status == ArtworkStatus.AVAILABLE
+
+
+def test_partial_refund_keeps_the_order_and_the_sale(for_sale, stripe_sessions):
+    order = _paid(for_sale)
+
+    order.record_refund(5000, relist=False)
+
+    for_sale.refresh_from_db()
+    assert (order.status, order.refund_pence) == (OrderStatus.PAID, 5000)
+    assert for_sale.status == ArtworkStatus.SOLD
+
+
+def test_refund_cannot_exceed_what_was_paid(admin_client, for_sale, stripe_sessions):
+    order = _paid(for_sale)
+
+    response = admin_client.post(f'/admin/commerce/order/{order.pk}/refund/', {'amount': '9999.00'})
+
+    order.refresh_from_db()
+    assert 'more than the buyer paid' in response.content.decode()
+    assert order.refunded_at is None
+
+
+def test_refund_is_refused_for_an_unpaid_order(admin_client, for_sale, stripe_sessions):
+    order = _checkout(for_sale)
+
+    assert admin_client.get(f'/admin/commerce/order/{order.pk}/refund/').status_code == 403
