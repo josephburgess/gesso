@@ -17,7 +17,13 @@
     <meta name="sentry-dsn" content="{{ sentry_frontend_dsn }}">
     <meta name="sentry-environment" content="{{ sentry_environment }}">
     {% endif %}
+    <meta property="og:site_name" content="{{ site_name }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ page_url }}">
+    <meta property="og:title" content="{{ title|default:site_name }}">
+    <meta property="og:description" content="{{ description|default:site_description }}">
     {% if image %}<meta property="og:image" content="{{ image }}">{% endif %}
+    <meta name="twitter:card" content="{% if image %}summary_large_image{% else %}summary{% endif %}">
     {% if structured_data %}<script type="application/ld+json">{{ structured_data }}</script>{% endif %}
     {% vite_hmr_client %}
     {% vite_react_refresh %}

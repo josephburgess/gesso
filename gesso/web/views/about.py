@@ -1,6 +1,7 @@
 from typing import TypedDict
 
 from django.http import HttpRequest, HttpResponse
+from django.utils.text import Truncator
 from django.views.decorators.http import require_GET
 from inertia import render
 
@@ -30,4 +31,14 @@ def page(request: HttpRequest) -> HttpResponse:
             {'image': image, 'caption': photo.caption} for photo in content.about_images.all() if (image := responsive_image(photo))
         ],
     }
-    return render(request, 'About', {'about': about}, template_data={'title': 'About'})
+    portrait = about['photos'][0]['image']['src'] if about['photos'] else None
+    return render(
+        request,
+        'About',
+        {'about': about},
+        template_data={
+            'title': 'About',
+            'description': Truncator(about['statement'] or next(iter(about['biography']), '')).chars(155),
+            'image': request.build_absolute_uri(portrait) if portrait else '',
+        },
+    )

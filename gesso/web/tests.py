@@ -616,3 +616,31 @@ def test_no_privacy_link_without_a_privacy_page(client, db):
     Page.objects.filter(slug=Page.PRIVACY).delete()
 
     assert client.get('/about', headers=INERTIA).json()['props']['site']['privacy_href'] is None
+
+
+def test_work_link_preview_falls_back_to_the_details(client, make_artwork):
+    artwork = make_artwork(title='Port of Dover', slug='dover', is_published=True, medium='Oil on board', year=2025)
+    _image(artwork, 'dover')
+
+    html = client.get('/work/dover?ref=share').content.decode()
+
+    assert '<meta property="og:title" content="Port of Dover">' in html
+    assert '<meta property="og:description" content="Oil on board, 70 × 50 cm, 2025.">' in html
+    assert '<meta property="og:url" content="http://testserver/work/dover">' in html
+    assert '<meta property="og:image" content="http://testserver/media/variants/dover/480.webp">' in html
+    assert '<meta name="twitter:card" content="summary_large_image">' in html
+
+
+def test_home_link_preview_uses_the_lead_work(client, make_artwork):
+    _image(make_artwork(is_published=True, featured_order=1), 'lead')
+
+    html = client.get('/').content.decode()
+
+    assert '<meta property="og:image" content="http://testserver/media/variants/lead/480.webp">' in html
+
+
+def test_pages_without_an_image_get_a_small_card(client, db):
+    html = client.get('/contact').content.decode()
+
+    assert '<meta name="twitter:card" content="summary">' in html
+    assert 'og:image' not in html

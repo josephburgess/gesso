@@ -107,7 +107,7 @@ def _artwork_meta(request: HttpRequest, detail: ArtworkDetail) -> dict[str, str]
     description, images = detail['description'], detail['images']
     return {
         'title': detail['title'],
-        'description': Truncator(description[0]).chars(155) if description else '',
+        'description': Truncator(description[0]).chars(155) if description else f'{detail["medium"]}, {detail["size"]}, {detail["year"]}.',
         'image': request.build_absolute_uri(images[0]['src']) if images else '',
     }
 
