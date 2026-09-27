@@ -1,6 +1,7 @@
 from django.core.mail import EmailMessage
 from django.db import transaction
 
+from gesso.content.mail import from_email
 from gesso.content.models import SiteContent
 from gesso.enquiries.forms import EnquiryForm
 from gesso.enquiries.models import Enquiry, Topic
@@ -18,6 +19,7 @@ def notify(enquiry: Enquiry) -> None:
         return
     about = f' about {enquiry.artwork.title}' if enquiry.artwork else ''
     EmailMessage(
+        from_email=from_email(),
         subject=f'New enquiry from {enquiry.name}{about} ({Topic(enquiry.topic).label})',
         body=f'{enquiry.message}\n\n{enquiry.name} <{enquiry.email}>',
         to=[recipient],

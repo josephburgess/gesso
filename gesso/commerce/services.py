@@ -9,6 +9,7 @@ from django.utils import timezone
 from gesso.artworks.models import Artwork
 from gesso.commerce import stripe_client
 from gesso.commerce.models import Order, OrderSource, OrderStatus, StripeEvent
+from gesso.content.mail import from_email
 from gesso.content.models import Page, SiteContent
 from gesso.web.formatting import price
 
@@ -118,6 +119,7 @@ def notify_sale(order: Order) -> None:
     if not recipient:
         return
     EmailMessage(
+        from_email=from_email(),
         subject=f'{order.artwork.title} sold, {price(order.total_pence)}',
         body=f'{order.buyer_name} <{order.buyer_email}>\n\n{order.shipping_address}',
         to=[recipient],
@@ -130,6 +132,7 @@ def send_shipped(order: Order) -> None:
     courier = f' with {order.courier}' if order.courier else ''
     tracking = f'\n\nTrack it here: {order.tracking_url}' if order.tracking_url else ''
     EmailMessage(
+        from_email=from_email(),
         subject=f'{order.artwork.title} is on its way',
         body=f'{order.artwork.title} has been sent{courier}.{tracking}\n\nReply to this email with any questions.',
         to=[order.buyer_email],
@@ -140,6 +143,7 @@ def send_shipped(order: Order) -> None:
 def confirm_to_buyer(order: Order) -> None:
     recipient = SiteContent.load().notification_email
     EmailMessage(
+        from_email=from_email(),
         subject=f'Your order: {order.artwork.title}',
         body=(
             f'Thank you for buying {order.artwork.title}.\n\n'

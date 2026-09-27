@@ -9,7 +9,7 @@ from django.utils import timezone
 from gesso.artworks.models import Artwork, ArtworkStatus
 from gesso.commerce import stripe_client
 from gesso.commerce.models import Order, OrderStatus, StripeEvent
-from gesso.commerce.services import NotAvailable, cancel_checkout, handle_event, start_checkout
+from gesso.commerce.services import NotAvailable, cancel_checkout, handle_event, send_shipped, start_checkout
 from gesso.content.models import Page, SiteContent
 
 SITE_URL = 'http://testserver/'
@@ -391,3 +391,15 @@ def test_order_notes_are_editable(admin_client, for_sale, stripe_sessions):
 
     order.refresh_from_db()
     assert order.notes == 'Wrapped twice'
+
+
+def test_emails_come_from_the_site_name(for_sale, stripe_sessions, mailoutbox, settings):
+    settings.DEFAULT_FROM_EMAIL = 'Gesso <studio@example.com>'
+    content = SiteContent.load()
+    content.site_name = 'Elise Beer'
+    content.save()
+    order = _paid(for_sale)
+
+    send_shipped(order)
+
+    assert mailoutbox[0].from_email == 'Elise Beer <studio@example.com>'
