@@ -179,6 +179,7 @@ UNFOLD = {
                         'active': 'config.dashboard.site_text_active',
                     },
                     {'title': 'Appearance', 'icon': 'brush', 'link': reverse_lazy('admin:content_appearance')},
+                    {'title': 'Pages', 'icon': 'gavel', 'link': reverse_lazy('admin:content_page_changelist')},
                 ],
             },
             {

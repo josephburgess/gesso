@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 
 from gesso.artworks.models import ProcessedImage
 
@@ -94,3 +95,25 @@ class SocialLink(models.Model):
 
     def __str__(self):
         return self.label
+
+
+class Page(models.Model):
+    TERMS = 'terms'
+    RETURNS = 'delivery-and-returns'
+    PRIVACY = 'privacy'
+
+    title = models.CharField(max_length=100)
+    slug = models.SlugField(
+        unique=True, help_text='The end of the web address. Checkout links to "terms" and the mailing list to "privacy".'
+    )
+    body = models.TextField(help_text='Blank lines start new paragraphs. Start a paragraph with ## to make it a heading.')
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ('position', 'pk')
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self) -> str:
+        return reverse('page', args=[self.slug])

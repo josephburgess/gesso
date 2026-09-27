@@ -175,7 +175,7 @@ def test_image_manager_uploads_with_variants(admin_client, make_artwork, setting
     tile = admin_client.post(f'/admin/artworks/artwork/{artwork.pk}/images/upload/', {'file': _upload()}).json()
 
     image = artwork.images.get()
-    assert tile == {'id': image.pk, 'thumb': image.thumbnail_url, 'caption': '', 'is_process': False}
+    assert tile == {'id': image.pk, 'thumb': image.thumbnail_url, 'alt': '', 'caption': '', 'is_process': False}
     assert image.variants
 
 

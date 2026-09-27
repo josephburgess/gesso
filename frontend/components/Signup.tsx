@@ -1,4 +1,4 @@
-import { usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { useState, type SubmitEvent } from 'react';
 import Button from '@/components/Button';
 import Honeypot from '@/components/Honeypot';
@@ -39,6 +39,12 @@ export default function Signup({ className = '' }: { className?: string }) {
       <SectionLabel>Mailing list</SectionLabel>
       <p className="mt-3 mb-0 max-w-[46ch] text-meta text-ink-muted">
         Occasional emails about new work. Unsubscribe any time.
+        {site.privacy_href && (
+          <>
+            {' '}
+            <Link href={site.privacy_href}>How we use your email</Link>
+          </>
+        )}
       </p>
       {thanks ? (
         <p role="status" className="mt-4 mb-0 text-body-sm text-ink">

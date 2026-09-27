@@ -111,6 +111,7 @@ class Artwork(models.Model):
 class ProcessedImage(models.Model):
     original = models.ImageField(upload_to='originals/')
     variants = models.JSONField(default=list, editable=False)
+    alt = models.CharField('alt text', max_length=200, blank=True, help_text='Describe the image for people using screen readers.')
 
     variants_dir = 'variants'
 

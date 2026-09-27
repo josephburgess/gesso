@@ -10,7 +10,7 @@ from gesso.artworks.forms import PositionedForm
 from gesso.artworks.image_manager import ImageManager
 from gesso.artworks.models import Artwork
 from gesso.content.forms import AppearanceForm, SiteContentAdminForm
-from gesso.content.models import AboutImage, SiteContent, SocialLink
+from gesso.content.models import AboutImage, Page, SiteContent, SocialLink
 
 NOTES = {
     'rail': 'Name, menu and details in a column',
@@ -92,3 +92,12 @@ class SiteContentAdmin(ModelAdmin):
             'pages': pages,
         }
         return TemplateResponse(request, 'admin/content/appearance.html', context)
+
+
+@admin.register(Page)
+class PageAdmin(ModelAdmin):
+    list_display = ('title', 'slug')
+    fields = ('title', 'slug', 'body')
+    prepopulated_fields = {'slug': ('title',)}
+    ordering_field = 'position'
+    hide_ordering_field = True

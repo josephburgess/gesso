@@ -17,7 +17,6 @@ export default function About({ about }: { about: AboutProps }) {
           <div className={`min-w-0 ${above ? 'max-w-[900px]' : 'max-w-[560px] flex-[1_1_300px]'}`}>
             <Figure
               image={portrait.image}
-              alt={portrait.alt}
               caption={portrait.caption}
               sizes={above ? '(min-width: 1000px) 900px, 92vw' : '(min-width: 1000px) 40vw, 92vw'}
               eager
@@ -43,12 +42,7 @@ export default function About({ about }: { about: AboutProps }) {
         <div className="mt-section flex flex-wrap gap-block">
           {more.map((photo) => (
             <Reveal key={photo.image.src} className="max-w-[420px] min-w-0 flex-[1_1_280px]">
-              <Figure
-                image={photo.image}
-                alt={photo.alt}
-                caption={photo.caption}
-                sizes="(min-width: 1000px) 30vw, 92vw"
-              />
+              <Figure image={photo.image} caption={photo.caption} sizes="(min-width: 1000px) 30vw, 92vw" />
             </Reveal>
           ))}
         </div>

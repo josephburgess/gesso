@@ -22,6 +22,7 @@ class ImageProps(TypedDict):
     width: int
     height: int
     thumb: str
+    alt: str
 
 
 def responsive_image(image: ProcessedImage) -> ImageProps | None:
@@ -35,6 +36,7 @@ def responsive_image(image: ProcessedImage) -> ImageProps | None:
         'width': largest['width'],
         'height': largest['height'],
         'thumb': url(image.variants[0]['name']),
+        'alt': image.alt,
     }
 
 

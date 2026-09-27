@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils.cache import add_never_cache_headers
 from inertia import share
 
-from gesso.content.models import SiteContent
+from gesso.content.models import Page, SiteContent
 from gesso.web.appearance import Appearance, appearance, is_preview
 
 
@@ -21,6 +21,11 @@ class SocialLink(TypedDict):
     href: str
 
 
+class PageLink(TypedDict):
+    label: str
+    href: str
+
+
 class Site(TypedDict):
     name: str
     tagline: str
@@ -28,11 +33,14 @@ class Site(TypedDict):
     nav: list[NavLink]
     appearance: Appearance
     social: list[SocialLink]
+    pages: list[PageLink]
+    privacy_href: str | None
     subscribe_href: str
 
 
 def site_props(request: HttpRequest, content: SiteContent) -> Site:
     nav = [('Work', reverse('work')), ('About', reverse('about')), ('Contact', reverse('contact'))]
+    pages = list(Page.objects.only('title', 'slug'))
     return {
         'name': content.site_name,
         'tagline': content.tagline,
@@ -40,6 +48,8 @@ def site_props(request: HttpRequest, content: SiteContent) -> Site:
         'nav': [{'label': label, 'href': href, 'current': _in_section(request.path, href)} for label, href in nav],
         'appearance': appearance(request, content),
         'social': [{'label': link.label, 'href': link.url} for link in content.social_links.all()],
+        'pages': [{'label': page.title, 'href': page.get_absolute_url()} for page in pages],
+        'privacy_href': next((page.get_absolute_url() for page in pages if page.slug == Page.PRIVACY), None),
         'subscribe_href': reverse('subscribe'),
     }
 

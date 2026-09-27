@@ -11,7 +11,7 @@ class CheckoutSession(NamedTuple):
     url: str
 
 
-def create_checkout_session(order: Order, success_url: str, cancel_url: str) -> CheckoutSession:
+def create_checkout_session(order: Order, success_url: str, cancel_url: str, note: str = '') -> CheckoutSession:
     client = stripe.StripeClient(settings.STRIPE_SECRET_KEY)
     cover_url = order.artwork.cover_url
     session = client.v1.checkout.sessions.create(
@@ -44,6 +44,7 @@ def create_checkout_session(order: Order, success_url: str, cancel_url: str) -> 
             'success_url': success_url + '?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url': cancel_url,
             'expires_at': int(order.expires_at.timestamp()),
+            **({'custom_text': {'submit': {'message': note}}} if note else {}),
         },
         {'idempotency_key': str(order.pk)},
     )

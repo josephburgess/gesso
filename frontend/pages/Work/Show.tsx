@@ -50,7 +50,8 @@ export default function Show({ artwork, purchase, prev, next }: Props) {
   const [open, setOpen] = useState<number | null>(null);
   const [first, ...rest] = artwork.images;
   const alt = (index: number) =>
-    artwork.images.length > 1 ? `${artwork.title}, image ${index + 1} of ${artwork.images.length}` : artwork.title;
+    artwork.images[index].alt ||
+    (artwork.images.length > 1 ? `${artwork.title}, image ${index + 1} of ${artwork.images.length}` : artwork.title);
 
   const rail = (
     <>

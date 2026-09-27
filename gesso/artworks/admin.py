@@ -19,7 +19,7 @@ from gesso.artworks.models import Artwork, ArtworkImage
 
 class ArtworkImages(ImageManager):
     model = ArtworkImage
-    fields = (('caption', 'Caption'), ('is_process', 'Studio / process photo'))
+    fields = (('alt', 'Alt text'), ('caption', 'Caption'), ('is_process', 'Studio / process photo'))
     name = 'artworks_artworkimage'
     prefix = '<str:key>/images/'
 

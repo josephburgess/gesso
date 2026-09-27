@@ -8,7 +8,7 @@ from django.contrib.messages import get_messages
 from django.utils import timezone
 
 from gesso.artworks.models import ArtworkImage, ArtworkStatus
-from gesso.content.models import AboutImage, SiteContent
+from gesso.content.models import AboutImage, Page, SiteContent
 from gesso.enquiries.models import Enquiry, Subscriber
 from gesso.web.formatting import dimensions, paragraphs, price
 from gesso.web.middleware import site_props
@@ -85,6 +85,20 @@ def test_artwork_page_shows_every_processed_image_in_order(client, make_artwork)
     assert [image['src'] for image in images] == ['/media/variants/first/480.webp', '/media/variants/second/480.webp']
 
 
+def test_artwork_images_carry_their_alt_text(client, make_artwork):
+    artwork = make_artwork(slug='live', is_published=True)
+    ArtworkImage.objects.create(
+        artwork=artwork,
+        original='originals/a.png',
+        alt='A grey harbour at dusk',
+        variants=[{'width': 480, 'height': 320, 'name': 'variants/a/480.webp'}],
+    )
+
+    images = client.get('/work/live', headers=INERTIA).json()['props']['artwork']['images']
+
+    assert [image['alt'] for image in images] == ['A grey harbour at dusk']
+
+
 def test_draft_artwork_404s(client, make_artwork):
     make_artwork(slug='draft')
 
@@ -118,6 +132,7 @@ def test_responsive_image():
         'width': 960,
         'height': 480,
         'thumb': '/media/variants/1/480.webp',
+        'alt': '',
     }
 
 
@@ -307,7 +322,7 @@ def test_about_page_shows_processed_photos_in_order(client, db):
 
     photos = client.get('/about', headers=INERTIA).json()['props']['about']['photos']
 
-    assert [(p['alt'], p['caption'], p['image']['src']) for p in photos] == [
+    assert [(p['image']['alt'], p['caption'], p['image']['src']) for p in photos] == [
         ('first photo', 'first caption', '/media/about/variants/first/480.webp'),
         ('second photo', 'second caption', '/media/about/variants/second/480.webp'),
     ]
@@ -327,6 +342,7 @@ def test_sitemap_lists_pages_and_published_works(client, make_artwork):
 
     assert '/work/live</loc>' in xml
     assert '/about</loc>' in xml
+    assert '/pages/privacy</loc>' in xml
     assert '/work/draft' not in xml
 
 
@@ -469,6 +485,7 @@ def test_process_photos_follow_the_finished_views(client, make_artwork):
                 'width': 480,
                 'height': 360,
                 'thumb': '/media/variants/yard/480.webp',
+                'alt': '',
             },
             'caption': 'Drying in the yard',
             'title': 'Harbour',
@@ -539,3 +556,40 @@ def test_subscribe_is_rate_limited(client, db):
 
     assert response.status_code == 429
     assert Subscriber.objects.count() == 5
+
+
+def test_legal_pages_are_ready_to_edit(db):
+    assert list(Page.objects.values_list('slug', flat=True)) == ['terms', 'delivery-and-returns', 'privacy']
+
+
+def test_page_splits_headings_from_paragraphs(client, db):
+    Page.objects.create(title='Care', slug='care', body='Keep it dry.\n\n## Hanging\n\nUse two hooks.\nLevel them.')
+
+    response = client.get('/pages/care', headers=INERTIA)
+
+    assert response.json()['component'] == 'Page'
+    assert response.json()['props']['page'] == {
+        'title': 'Care',
+        'blocks': [
+            {'heading': False, 'text': 'Keep it dry.'},
+            {'heading': True, 'text': 'Hanging'},
+            {'heading': False, 'text': 'Use two hooks.\nLevel them.'},
+        ],
+    }
+
+
+def test_unknown_page_404s(client, db):
+    assert client.get('/pages/nothing-here').status_code == 404
+
+
+def test_pages_are_shared_for_the_footer(client, db):
+    site = client.get('/about', headers=INERTIA).json()['props']['site']
+
+    assert [page['label'] for page in site['pages']] == ['Terms of sale', 'Delivery & returns', 'Privacy']
+    assert site['privacy_href'] == '/pages/privacy'
+
+
+def test_no_privacy_link_without_a_privacy_page(client, db):
+    Page.objects.filter(slug=Page.PRIVACY).delete()
+
+    assert client.get('/about', headers=INERTIA).json()['props']['site']['privacy_href'] is None

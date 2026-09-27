@@ -11,7 +11,6 @@ from gesso.web.views.work import ImageProps, responsive_image
 
 class Photo(TypedDict):
     image: ImageProps
-    alt: str
     caption: str
 
 
@@ -28,9 +27,7 @@ def page(request: HttpRequest) -> HttpResponse:
         'statement': content.statement,
         'biography': paragraphs(content.biography),
         'photos': [
-            {'image': image, 'alt': photo.alt, 'caption': photo.caption}
-            for photo in content.about_images.all()
-            if (image := responsive_image(photo))
+            {'image': image, 'caption': photo.caption} for photo in content.about_images.all() if (image := responsive_image(photo))
         ],
     }
     return render(request, 'About', {'about': about}, template_data={'title': 'About'})

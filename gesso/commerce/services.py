@@ -9,7 +9,7 @@ from django.utils import timezone
 from gesso.artworks.models import Artwork
 from gesso.commerce import stripe_client
 from gesso.commerce.models import Order, OrderStatus, StripeEvent
-from gesso.content.models import SiteContent
+from gesso.content.models import Page, SiteContent
 from gesso.web.formatting import price
 
 RESERVATION = timedelta(minutes=31)
@@ -37,10 +37,17 @@ def start_checkout(artwork: Artwork, site_url: str) -> str:
         order,
         success_url=urljoin(site_url, reverse('checkout_success')),
         cancel_url=urljoin(site_url, reverse('checkout_cancel', args=[order.pk])),
+        note=_policy_note(site_url),
     )
     order.stripe_session_id = session.id
     order.save(update_fields=['stripe_session_id'])
     return session.url
+
+
+def _policy_note(site_url: str) -> str:
+    pages = Page.objects.filter(slug__in=(Page.TERMS, Page.RETURNS)).order_by('position')
+    links = [f'[{page.title.lower()}]({urljoin(site_url, page.get_absolute_url())})' for page in pages]
+    return f'By paying you agree to our {" and ".join(links)}.' if links else ''
 
 
 @transaction.atomic

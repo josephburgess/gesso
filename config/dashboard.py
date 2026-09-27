@@ -92,6 +92,7 @@ def dashboard_callback(request: HttpRequest, context: dict) -> dict:
         ],
     }
     context['without_images'] = [_artwork_link(a) for a in Artwork.objects.filter(images__isnull=True)]
+    context['without_alt'] = [_artwork_link(a) for a in Artwork.objects.filter(images__alt='').distinct()]
     context['actions'] = [
         {'label': 'Add a work', 'href': reverse('admin:artworks_artwork_add')},
         {'label': 'Edit site text', 'href': reverse('admin:content_sitecontent_changelist')},

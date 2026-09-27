@@ -54,7 +54,7 @@
                     <a href="{% url 'admin:artworks_homepage' %}" class="mt-4 inline-block text-primary-600 underline">Change the home page</a>
                 {% endcomponent %}
             </div>
-            <div class="lg:w-1/2">
+            <div class="flex flex-col gap-6 lg:w-1/2">
                 {% component "unfold/components/card.html" with title="Works without images" %}
                     {% if without_images %}
                         <div class="flex flex-col gap-3">
@@ -62,6 +62,15 @@
                         </div>
                     {% else %}
                         {% component "unfold/components/text.html" %}Every work has an image.{% endcomponent %}
+                    {% endif %}
+                {% endcomponent %}
+                {% component "unfold/components/card.html" with title="Photos without alt text" %}
+                    {% if without_alt %}
+                        <div class="flex flex-col gap-3">
+                            {% for link in without_alt %}<div>{{ link }}</div>{% endfor %}
+                        </div>
+                    {% else %}
+                        {% component "unfold/components/text.html" %}Every photo has alt text.{% endcomponent %}
                     {% endif %}
                 {% endcomponent %}
             </div>
