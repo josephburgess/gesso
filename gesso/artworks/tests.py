@@ -408,3 +408,36 @@ def test_generating_a_wall_view_replaces_the_last_one_for_that_scene(make_artwor
     assert (second.position, second.alt, bool(second.variants)) == (1, f'{artwork.title} hanging on a wall', True)
     assert not any((tmp_path / variant['name']).exists() for variant in first.variants)
     assert artwork.cover.scene is None
+
+
+def test_admin_generates_a_wall_view(admin_client, make_artwork, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    artwork = make_artwork()
+    ArtworkImage.objects.create(artwork=artwork, original=_upload('front.png', (100, 140)))
+    scene = _scene()
+    url = f'/admin/artworks/artwork/{artwork.pk}/wall-view/'
+
+    assert admin_client.get(url).status_code == 200
+    response = admin_client.post(url, {'scene': scene.pk, 'frame': 'walnut'})
+
+    assert response.status_code == 302
+    assert artwork.images.filter(scene=scene).count() == 1
+
+
+def test_admin_wall_view_reports_a_work_too_large(admin_client, make_artwork, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    artwork = make_artwork(width_mm=3000)
+    ArtworkImage.objects.create(artwork=artwork, original=_upload('front.png', (100, 140)))
+
+    response = admin_client.post(f'/admin/artworks/artwork/{artwork.pk}/wall-view/', {'scene': _scene().pk, 'frame': 'black'})
+
+    assert b'too large' in response.content
+    assert not artwork.images.exclude(scene=None).exists()
+
+
+def test_scene_admin_previews_the_calibration(admin_client, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+
+    response = admin_client.get(f'/admin/artworks/roomscene/{_scene().pk}/change/')
+
+    assert b'data:image/jpeg;base64,' in response.content

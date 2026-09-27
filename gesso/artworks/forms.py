@@ -5,7 +5,7 @@ from django.db import transaction
 from django.db.models import Q
 from unfold.widgets import UnfoldAdminDecimalFieldWidget, UnfoldAdminSelectWidget
 
-from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus, FrameColour, RoomScene
 
 
 class PositionedForm(forms.ModelForm):
@@ -98,3 +98,8 @@ class HomePageForm(forms.Form):
         ArtworkImage.objects.exclude(home_position=None).update(home_position=None)
         for position, pk in enumerate(self.cleaned_data['studio']):
             ArtworkImage.objects.filter(pk=pk).update(home_position=position)
+
+
+class WallViewForm(forms.Form):
+    scene = forms.ModelChoiceField(RoomScene.objects.all(), empty_label=None, widget=UnfoldAdminSelectWidget)
+    frame = forms.ChoiceField(choices=FrameColour.choices, widget=UnfoldAdminSelectWidget)
