@@ -2,6 +2,10 @@ from django.db import migrations
 
 TERMS = """These terms apply when you buy a work through this website. Please read them before you buy.
 
+## Who we are
+
+Elise Beer, an independent artist. Post: PO Box 4821, London, W1A 9ZZ. You can also reach us through the contact page or by replying to your order email.
+
 ## Prices and payment
 
 Prices are in pounds sterling. Delivery is added at checkout. Payment is taken by Stripe, so we never see or store your card details.
