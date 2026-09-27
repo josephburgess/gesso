@@ -11,8 +11,8 @@ from gesso.artworks.models import ArtworkImage, ArtworkStatus
 from gesso.content.models import AboutImage, Page, SiteContent
 from gesso.enquiries.models import Enquiry, Subscriber
 from gesso.web.formatting import dimensions, paragraphs, price
+from gesso.web.images import responsive_image
 from gesso.web.middleware import site_props
-from gesso.web.views.work import responsive_image
 
 INERTIA = {'X-Inertia': 'true'}
 

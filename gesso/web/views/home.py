@@ -7,7 +7,8 @@ from inertia import render
 
 from gesso.artworks.models import Artwork, ArtworkImage
 from gesso.content.models import SiteContent
-from gesso.web.views.work import ArtworkTile, ImageProps, artwork_tile, responsive_image
+from gesso.web.images import ImageProps, responsive_image
+from gesso.web.views.work import ArtworkTile, artwork_tile
 
 
 class ProcessPhoto(TypedDict):

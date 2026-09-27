@@ -11,34 +11,11 @@ from django.utils.text import Truncator
 from django.views.decorators.http import require_GET
 from inertia import render
 
-from gesso.artworks.models import Artwork, ArtworkStatus, ProcessedImage
+from gesso.artworks.models import Artwork, ArtworkStatus
 from gesso.content.models import SiteContent
 from gesso.enquiries.models import Topic
 from gesso.web.formatting import dimensions, paragraphs, price
-
-
-class ImageProps(TypedDict):
-    src: str
-    srcset: str
-    width: int
-    height: int
-    thumb: str
-    alt: str
-
-
-def responsive_image(image: ProcessedImage) -> ImageProps | None:
-    if not image.variants:
-        return None
-    url = image.original.storage.url
-    largest = image.variants[-1]
-    return {
-        'src': url(largest['name']),
-        'srcset': ', '.join(f'{url(v["name"])} {v["width"]}w' for v in image.variants),
-        'width': largest['width'],
-        'height': largest['height'],
-        'thumb': url(image.variants[0]['name']),
-        'alt': image.alt,
-    }
+from gesso.web.images import ImageProps, responsive_image
 
 
 def _cover(artwork: Artwork) -> ImageProps | None:
