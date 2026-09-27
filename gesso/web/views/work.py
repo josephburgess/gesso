@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.cache import add_never_cache_headers
 from django.utils.safestring import SafeString, mark_safe
 from django.utils.text import Truncator
 from django.views.decorators.http import require_GET
@@ -195,13 +196,20 @@ def _structured_data(request: HttpRequest, artwork: Artwork, detail: ArtworkDeta
 
 @require_GET
 def show(request: HttpRequest, slug: str) -> HttpResponse:
-    artwork = get_object_or_404(Artwork.objects.published(), slug=slug)
+    works = Artwork.objects.all() if request.user.is_staff else Artwork.objects.published()
+    artwork = get_object_or_404(works, slug=slug)
     content = SiteContent.load()
     detail = _artwork_detail(artwork)
-    prev, next_ = _neighbours(artwork)
-    return render(
+    draft = not artwork.is_published
+    prev, next_ = (None, None) if draft else _neighbours(artwork)
+    purchase = _purchase(artwork, content) | ({'action': None} if draft else {})
+    response = render(
         request,
         'Work/Show',
-        {'artwork': detail, 'purchase': _purchase(artwork, content), 'prev': prev, 'next': next_},
+        {'artwork': detail, 'purchase': purchase, 'prev': prev, 'next': next_, 'draft': draft},
         template_data=_artwork_meta(request, detail) | {'structured_data': _structured_data(request, artwork, detail, content)},
     )
+    if draft:
+        response['X-Robots-Tag'] = 'noindex'
+        add_never_cache_headers(response)
+    return response

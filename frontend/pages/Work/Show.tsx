@@ -46,9 +46,15 @@ function NeighbourLink({ label, work, className = '' }: { label: string; work: N
   );
 }
 
-type Props = { artwork: ArtworkDetail; purchase: Purchase; prev: Neighbour | null; next: Neighbour | null };
+type Props = {
+  artwork: ArtworkDetail;
+  purchase: Purchase;
+  prev: Neighbour | null;
+  next: Neighbour | null;
+  draft: boolean;
+};
 
-export default function Show({ artwork, purchase, prev, next }: Props) {
+export default function Show({ artwork, purchase, prev, next, draft }: Props) {
   const [open, setOpen] = useState<number | null>(null);
   const [first, ...rest] = artwork.images;
   const alt = (index: number) =>
@@ -88,6 +94,11 @@ export default function Show({ artwork, purchase, prev, next }: Props) {
 
   return (
     <SiteLayout title={artwork.title} rail={rail}>
+      {draft && (
+        <p role="status" className="mb-4 max-w-none border border-accent bg-accent-tint px-4 py-2.5 text-meta text-ink">
+          Draft. Only you can see this page until the work is published.
+        </p>
+      )}
       {first && (
         <button
           type="button"

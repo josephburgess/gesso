@@ -300,3 +300,11 @@ def test_admin_list_shows_status_badges(admin_client, make_artwork):
     assert 'Held' in html
     assert 'Reserved' in html
     assert 'bg-orange-100' in html
+
+
+def test_admin_links_drafts_to_their_preview(admin_client, make_artwork):
+    draft = make_artwork(slug='draft')
+
+    html = admin_client.get(f'/admin/artworks/artwork/{draft.pk}/change/').content.decode()
+
+    assert 'View on site' in html

@@ -131,6 +131,29 @@ def test_draft_artwork_404s(client, make_artwork):
     assert response.json()['component'] == 'NotFound'
 
 
+def test_staff_can_preview_a_draft(admin_client, make_artwork):
+    make_artwork(slug='published', is_published=True)
+    make_artwork(slug='draft', status=ArtworkStatus.AVAILABLE, price_pence=100000)
+
+    response = admin_client.get('/work/draft', headers=INERTIA)
+    props = response.json()['props']
+
+    assert response.status_code == 200
+    assert props['draft'] is True
+    assert (props['purchase']['action'], props['prev'], props['next']) == (None, None, None)
+    assert response['X-Robots-Tag'] == 'noindex'
+    assert 'no-cache' in response['Cache-Control']
+
+
+def test_published_work_is_not_a_draft(admin_client, make_artwork):
+    make_artwork(slug='live', is_published=True)
+
+    response = admin_client.get('/work/live', headers=INERTIA)
+
+    assert response.json()['props']['draft'] is False
+    assert 'X-Robots-Tag' not in response
+
+
 def test_noindex_header_when_enabled(client, db, settings):
     settings.NOINDEX = True
 

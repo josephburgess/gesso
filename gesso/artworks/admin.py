@@ -97,7 +97,7 @@ class ArtworkAdmin(ModelAdmin):
         form.attach_pending_images(obj)
 
     def view_on_site(self, obj):
-        return obj.get_absolute_url() if obj.is_published else None
+        return obj.get_absolute_url()
 
     @display(description='')
     def images_manager(self, obj):
