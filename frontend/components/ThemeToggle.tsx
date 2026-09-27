@@ -1,25 +1,39 @@
 import { useState } from 'react';
 
-export default function ThemeToggle({ className = '' }: { className?: string }) {
-  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === 'charcoal');
+type Mode = 'light' | 'dark';
 
-  function toggle() {
-    const theme = dark ? 'paper' : 'charcoal';
-    document.documentElement.dataset.theme = theme;
+export default function ThemeToggle({ className = '' }: { className?: string }) {
+  const [mode, setMode] = useState<Mode>(() => (document.documentElement.dataset.mode === 'dark' ? 'dark' : 'light'));
+
+  function choose(next: Mode) {
+    if (next === mode) return;
+    document.documentElement.dataset.mode = next;
     try {
-      localStorage.setItem('theme', theme);
+      localStorage.setItem('mode', next);
     } catch {}
-    setDark(!dark);
+    setMode(next);
   }
 
-  return (
+  const button = (value: Mode, label: string) => (
     <button
       type="button"
-      onClick={toggle}
-      aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className={`cursor-pointer py-1 text-meta text-ink-meta transition-colors duration-(--d-ui) ease-io hover:text-accent ${className}`}
+      onClick={() => choose(value)}
+      aria-pressed={mode === value}
+      className={`cursor-pointer border-b py-1 transition-colors duration-(--d-ui) ease-io ${
+        mode === value ? 'border-accent text-ink' : 'border-transparent text-ink-dim hover:text-accent'
+      }`}
     >
-      {dark ? 'Light' : 'Dark'}
+      {label}
     </button>
+  );
+
+  return (
+    <div role="group" aria-label="Colour mode" className={`flex items-baseline gap-1.5 text-meta ${className}`}>
+      {button('light', 'Light')}
+      <span aria-hidden="true" className="text-ink-faint">
+        /
+      </span>
+      {button('dark', 'Dark')}
+    </div>
   );
 }

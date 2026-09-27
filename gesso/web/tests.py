@@ -432,7 +432,7 @@ def test_appearance_is_shared_and_rendered_on_the_html_element(client, db):
         'show_index': False,
         'about_layout': 'above',
     }
-    assert '<html lang="en-GB" data-theme="paper" data-type="sans" data-motion="off">' in html
+    assert '<html lang="en-GB" data-theme="paper" data-mode="light" data-type="sans" data-motion="off">' in html
 
 
 PREVIEW = '/about?preview=1&layout=top&work_layout=stack&headings=sans&motion=off&index=off&about_layout=above'

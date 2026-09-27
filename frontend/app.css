@@ -84,7 +84,7 @@
   --zoom-tile: 1.03;
 }
 
-[data-theme='charcoal'] {
+[data-mode='dark'] {
   --color-paper: #151412;
   --color-panel: #1c1b18;
   --color-panel-hair: #2b2925;

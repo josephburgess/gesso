@@ -1,13 +1,21 @@
 {% load django_vite static %}<!doctype html>
-<html lang="en-GB" data-theme="paper" data-type="{{ site_headings }}" data-motion="{{ site_motion|yesno:'on,off' }}">
+<html lang="en-GB" data-theme="paper" data-mode="light" data-type="{{ site_headings }}" data-motion="{{ site_motion|yesno:'on,off' }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script>
       try {
-        if (localStorage.getItem('theme') === 'charcoal') document.documentElement.dataset.theme = 'charcoal';
+        var mode = localStorage.getItem('mode');
+        if (!mode && localStorage.getItem('theme') === 'charcoal') {
+          mode = 'dark';
+          localStorage.setItem('mode', mode);
+          localStorage.removeItem('theme');
+        }
+        if (mode === 'dark') document.documentElement.dataset.mode = 'dark';
       } catch (e) {}
     </script>
+    <meta name="theme-color" content="#fdfbf6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#151412" media="(prefers-color-scheme: dark)">
     <link rel="icon" href="{% static 'web/favicon.ico' %}" sizes="48x48">
     <link rel="icon" href="{% static 'web/icon-192.png' %}" type="image/png" sizes="192x192">
     <link rel="apple-touch-icon" href="{% static 'web/apple-touch-icon.png' %}">
