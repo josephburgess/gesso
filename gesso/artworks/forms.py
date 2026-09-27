@@ -24,7 +24,7 @@ class ArtworkAdminForm(forms.ModelForm):
 
     class Meta:
         model = Artwork
-        exclude = ('height_mm', 'width_mm', 'price_pence', 'featured_order')  # noqa: DJ006
+        exclude = ('height_mm', 'width_mm', 'price_pence', 'featured_order', 'position')  # noqa: DJ006
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

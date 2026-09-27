@@ -667,3 +667,12 @@ def test_pages_without_an_image_get_a_small_card(client, db):
 
     assert '<meta name="twitter:card" content="summary">' in html
     assert 'og:image' not in html
+
+
+def test_work_page_follows_the_chosen_order(client, make_artwork):
+    make_artwork(title='Second', year=2026, position=1, is_published=True)
+    make_artwork(title='First', year=2020, position=0, is_published=True)
+
+    artworks = client.get('/work', headers=INERTIA).json()['props']['artworks']
+
+    assert [a['title'] for a in artworks] == ['First', 'Second']
