@@ -110,8 +110,9 @@ UNFOLD = {
     'SITE_SUBHEADER': 'Studio',
     'SITE_SYMBOL': 'palette',
     'SITE_FAVICONS': [
-        {'rel': 'icon', 'sizes': '48x48', 'href': lambda request: static('web/favicon.ico')},
-        {'rel': 'apple-touch-icon', 'href': lambda request: static('web/apple-touch-icon.png')},
+        {'rel': 'icon', 'type': 'image/svg+xml', 'href': lambda request: static('web/admin-icon.svg')},
+        {'rel': 'icon', 'sizes': '48x48', 'type': 'image/png', 'href': lambda request: static('web/admin-icon-48.png')},
+        {'rel': 'apple-touch-icon', 'href': lambda request: static('web/admin-apple-touch-icon.png')},
     ],
     'SITE_URL': '/',
     'DASHBOARD_CALLBACK': 'config.dashboard.dashboard_callback',
