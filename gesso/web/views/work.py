@@ -4,7 +4,7 @@ from typing import TypedDict
 from urllib.parse import urlencode
 
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.safestring import SafeString, mark_safe
 from django.utils.text import Truncator
@@ -195,7 +195,11 @@ def _structured_data(request: HttpRequest, artwork: Artwork, detail: ArtworkDeta
 
 @require_GET
 def show(request: HttpRequest, slug: str) -> HttpResponse:
-    artwork = get_object_or_404(Artwork.objects.published(), slug=slug)
+    works = Artwork.objects.published()
+    artwork = works.filter(slug=slug).first()
+    if artwork is None:
+        renamed = get_object_or_404(works, former_slugs__slug=slug)
+        return redirect(renamed, permanent=True)
     content = SiteContent.load()
     detail = _artwork_detail(artwork)
     prev, next_ = _neighbours(artwork)

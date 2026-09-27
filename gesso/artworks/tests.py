@@ -9,7 +9,7 @@ from PIL import Image
 from gesso.artworks import processing
 from gesso.artworks.admin import ArtworkAdminForm
 from gesso.artworks.forms import PositionedForm
-from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus, FormerSlug
 from gesso.content.models import SocialLink
 
 
@@ -300,3 +300,54 @@ def test_admin_list_shows_status_badges(admin_client, make_artwork):
     assert 'Held' in html
     assert 'Reserved' in html
     assert 'bg-orange-100' in html
+
+
+def test_new_work_goes_to_the_top_of_the_work_page(admin_client, make_artwork):
+    make_artwork(title='Older', position=0)
+    make_artwork(title='Oldest', position=1)
+
+    admin_client.post('/admin/artworks/artwork/add/', ADMIN_ADD)
+
+    assert [a.title for a in Artwork.objects.all()] == ['A', 'Older', 'Oldest']
+
+
+def test_works_can_be_dragged_into_order(admin_client, make_artwork):
+    first = make_artwork(title='First', position=0)
+    second = make_artwork(title='Second', position=1)
+
+    html = admin_client.get('/admin/artworks/artwork/').content.decode()
+    response = admin_client.post(
+        '/admin/artworks/artwork/',
+        {
+            'form-TOTAL_FORMS': '2',
+            'form-INITIAL_FORMS': '2',
+            'form-0-id': str(first.pk),
+            'form-0-position': '1',
+            'form-1-id': str(second.pk),
+            'form-1-position': '0',
+            '_save': 'Save',
+        },
+    )
+
+    assert 'name="form-0-position"' in html
+    assert response.status_code == 302
+    assert [a.title for a in Artwork.objects.all()] == ['Second', 'First']
+
+
+def test_renamed_work_redirects_from_its_old_address(admin_client, client, make_artwork):
+    artwork = make_artwork(slug='a', is_published=True)
+    ArtworkImage.objects.create(artwork=artwork, original='originals/a.png')
+
+    admin_client.post(f'/admin/artworks/artwork/{artwork.pk}/change/', ADMIN_ADD | {'slug': 'b', 'is_published': 'on'})
+    admin_client.post(f'/admin/artworks/artwork/{artwork.pk}/change/', ADMIN_ADD | {'slug': 'c', 'is_published': 'on'})
+
+    assert client.get('/work/a')['Location'] == '/work/c'
+    assert client.get('/work/b').status_code == 301
+    assert client.get('/work/c').status_code == 200
+
+
+def test_old_address_of_a_draft_stays_hidden(client, make_artwork):
+    artwork = make_artwork(slug='now-draft')
+    FormerSlug.objects.create(artwork=artwork, slug='old')
+
+    assert client.get('/work/old').status_code == 404

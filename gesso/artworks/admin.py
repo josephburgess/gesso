@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
-from django.db.models import F
+from django.db.models import F, Min
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -14,7 +14,7 @@ from unfold.decorators import action, display
 
 from gesso.artworks.forms import ArtworkAdminForm, HomePageForm
 from gesso.artworks.image_manager import PENDING, ImageManager
-from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus, FormerSlug
 from gesso.commerce.forms import SaleForm
 from gesso.commerce.services import record_sale
 
@@ -53,6 +53,8 @@ class ArtworkAdmin(ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('images_manager', 'home_page')
     actions_detail = ('record_sale',)
+    ordering_field = 'position'
+    hide_ordering_field = True
     fieldsets = (
         (None, {'fields': ('title', 'slug', 'year', 'medium', 'height_cm', 'width_cm', 'framing', 'description')}),
         ('Images', {'fields': ('images_manager',)}),
@@ -91,10 +93,16 @@ class ArtworkAdmin(ModelAdmin):
         return super().get_queryset(request).prefetch_related('images')
 
     def save_model(self, request, obj, form, change):
+        if not change:
+            obj.position = (Artwork.objects.aggregate(first=Min('position'))['first'] or 0) - 1
         if not obj.is_published:
             obj.featured_order = None
         super().save_model(request, obj, form, change)
+        if not isinstance(form, ArtworkAdminForm):
+            return
         form.attach_pending_images(obj)
+        if change and 'slug' in form.changed_data:
+            FormerSlug.objects.update_or_create(slug=form.initial['slug'], defaults={'artwork': obj})
 
     def view_on_site(self, obj):
         return obj.get_absolute_url() if obj.is_published else None
