@@ -98,6 +98,8 @@ class ArtworkAdmin(ModelAdmin):
         if not obj.is_published:
             obj.featured_order = None
         super().save_model(request, obj, form, change)
+        if not isinstance(form, ArtworkAdminForm):
+            return
         form.attach_pending_images(obj)
         if change and 'slug' in form.changed_data:
             FormerSlug.objects.update_or_create(slug=form.initial['slug'], defaults={'artwork': obj})
