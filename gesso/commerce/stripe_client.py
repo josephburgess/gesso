@@ -12,6 +12,8 @@ class CheckoutSession(NamedTuple):
 
 
 def create_checkout_session(order: Order, success_url: str, cancel_url: str, note: str = '') -> CheckoutSession:
+    if order.expires_at is None:
+        raise ValueError(f'Order {order.pk} has no checkout expiry')
     client = stripe.StripeClient(settings.STRIPE_SECRET_KEY)
     cover_url = order.artwork.cover_url
     session = client.v1.checkout.sessions.create(

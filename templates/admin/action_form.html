@@ -1,0 +1,25 @@
+{% extends 'admin/base.html' %}
+{% load unfold %}
+
+{% block title %}{{ title }} | {{ site_title }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<form method="post" class="flex max-w-2xl flex-col gap-6">
+    {% csrf_token %}
+    {% component "unfold/components/card.html" %}
+        {% if intro %}<p class="mb-6 text-sm">{{ intro }}</p>{% endif %}
+        {% for error in form.non_field_errors %}<p class="mb-4 text-sm text-red-600">{{ error }}</p>{% endfor %}
+        {% for field in form %}
+            {% include "unfold/helpers/field.html" with field=field %}
+        {% endfor %}
+    {% endcomponent %}
+    <div class="flex items-center justify-end gap-4">
+        <a href="{{ back_url }}" class="text-sm underline">Cancel</a>
+        {% component "unfold/components/button.html" with submit=1 %}{{ submit_label }}{% endcomponent %}
+    </div>
+</form>
+{% endblock %}

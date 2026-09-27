@@ -68,7 +68,7 @@ def dashboard_callback(request: HttpRequest, context: dict) -> dict:
             [
                 _link(reverse('admin:commerce_order_change', args=[order.pk]), order.artwork.title),
                 order.buyer_name,
-                price(order.amount_pence + order.delivery_pence),
+                price(order.total_pence),
                 date_format(localtime(order.paid_at), 'j M') if order.paid_at else '',
             ]
             for order in to_ship

@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, datetime, time, timedelta
 from urllib.parse import urljoin
 
 from django.core.mail import EmailMessage
@@ -8,7 +8,8 @@ from django.utils import timezone
 
 from gesso.artworks.models import Artwork
 from gesso.commerce import stripe_client
-from gesso.commerce.models import Order, OrderStatus, StripeEvent
+from gesso.commerce.models import Order, OrderSource, OrderStatus, StripeEvent
+from gesso.content.mail import from_email
 from gesso.content.models import Page, SiteContent
 from gesso.web.formatting import price
 
@@ -42,6 +43,37 @@ def start_checkout(artwork: Artwork, site_url: str) -> str:
     order.stripe_session_id = session.id
     order.save(update_fields=['stripe_session_id'])
     return session.url
+
+
+@transaction.atomic
+def record_sale(
+    artwork: Artwork,
+    *,
+    price_pence: int,
+    sold_on: date,
+    source: OrderSource,
+    venue: str,
+    buyer_name: str,
+    buyer_email: str,
+    notes: str,
+    to_deliver: bool,
+) -> Order:
+    paid_at = timezone.make_aware(datetime.combine(sold_on, time(12)))
+    order = Order.objects.create(
+        artwork=artwork,
+        source=source,
+        venue=venue,
+        status=OrderStatus.PAID if to_deliver else OrderStatus.SHIPPED,
+        amount_pence=price_pence,
+        delivery_pence=0,
+        buyer_name=buyer_name,
+        buyer_email=buyer_email,
+        notes=notes,
+        paid_at=paid_at,
+        shipped_at=None if to_deliver else paid_at,
+    )
+    artwork.mark_sold()
+    return order
 
 
 def _policy_note(site_url: str) -> str:
@@ -87,20 +119,35 @@ def notify_sale(order: Order) -> None:
     if not recipient:
         return
     EmailMessage(
-        subject=f'{order.artwork.title} sold, {price(order.amount_pence + order.delivery_pence)}',
+        from_email=from_email(),
+        subject=f'{order.artwork.title} sold, {price(order.total_pence)}',
         body=f'{order.buyer_name} <{order.buyer_email}>\n\n{order.shipping_address}',
         to=[recipient],
         reply_to=[order.buyer_email],
     ).send()
 
 
+def send_shipped(order: Order) -> None:
+    recipient = SiteContent.load().notification_email
+    courier = f' with {order.courier}' if order.courier else ''
+    tracking = f'\n\nTrack it here: {order.tracking_url}' if order.tracking_url else ''
+    EmailMessage(
+        from_email=from_email(),
+        subject=f'{order.artwork.title} is on its way',
+        body=f'{order.artwork.title} has been sent{courier}.{tracking}\n\nReply to this email with any questions.',
+        to=[order.buyer_email],
+        reply_to=[recipient] if recipient else None,
+    ).send()
+
+
 def confirm_to_buyer(order: Order) -> None:
     recipient = SiteContent.load().notification_email
     EmailMessage(
+        from_email=from_email(),
         subject=f'Your order: {order.artwork.title}',
         body=(
             f'Thank you for buying {order.artwork.title}.\n\n'
-            f'Total paid: {price(order.amount_pence + order.delivery_pence)}, including UK delivery.\n'
+            f'Total paid: {price(order.total_pence)}, including UK delivery.\n'
             f"We'll be in touch shortly to arrange delivery. Reply to this email with any questions."
         ),
         to=[order.buyer_email],

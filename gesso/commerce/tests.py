@@ -9,7 +9,7 @@ from django.utils import timezone
 from gesso.artworks.models import Artwork, ArtworkStatus
 from gesso.commerce import stripe_client
 from gesso.commerce.models import Order, OrderStatus, StripeEvent
-from gesso.commerce.services import NotAvailable, cancel_checkout, handle_event, start_checkout
+from gesso.commerce.services import NotAvailable, cancel_checkout, handle_event, send_shipped, start_checkout
 from gesso.content.models import Page, SiteContent
 
 SITE_URL = 'http://testserver/'
@@ -169,18 +169,42 @@ def _paid(artwork) -> Order:
     return order
 
 
-def test_admin_ship_button_marks_a_paid_order_shipped(admin_client, for_sale, stripe_sessions):
+def test_admin_ship_button_asks_for_tracking_first(admin_client, for_sale, stripe_sessions):
     order = _paid(for_sale)
 
     page = admin_client.get(f'/admin/commerce/order/{order.pk}/change/').content.decode()
-    response = admin_client.get(f'/admin/commerce/order/{order.pk}/ship/')
+    form = admin_client.get(f'/admin/commerce/order/{order.pk}/ship/')
 
     order.refresh_from_db()
     assert 'Mark shipped' in page
     assert '1 Quay St<br>Dover' in page
+    assert 'Tracking link' in form.content.decode()
+    assert order.status == OrderStatus.PAID
+
+
+def test_admin_ship_records_tracking_and_emails_the_buyer(admin_client, for_sale, stripe_sessions, mailoutbox):
+    order = _paid(for_sale)
+    data = {'courier': 'Artsy Couriers', 'tracking_url': 'https://track.example/123', 'notify': 'on'}
+
+    response = admin_client.post(f'/admin/commerce/order/{order.pk}/ship/', data)
+
+    order.refresh_from_db()
     assert response.status_code == 302
-    assert order.status == OrderStatus.SHIPPED
+    assert (order.status, order.courier, order.tracking_url) == (OrderStatus.SHIPPED, 'Artsy Couriers', 'https://track.example/123')
     assert order.shipped_at is not None
+    assert [(m.to, m.subject) for m in mailoutbox] == [(['b@example.com'], f'{for_sale.title} is on its way')]
+    assert 'with Artsy Couriers' in mailoutbox[0].body
+    assert 'https://track.example/123' in mailoutbox[0].body
+
+
+def test_admin_ship_can_skip_the_email(admin_client, for_sale, stripe_sessions, mailoutbox):
+    order = _paid(for_sale)
+
+    admin_client.post(f'/admin/commerce/order/{order.pk}/ship/', {'courier': '', 'tracking_url': ''})
+
+    order.refresh_from_db()
+    assert order.status == OrderStatus.SHIPPED
+    assert mailoutbox == []
 
 
 def test_admin_ship_button_is_refused_for_an_unpaid_order(admin_client, for_sale, stripe_sessions):
@@ -279,3 +303,103 @@ def test_stripe_shows_the_note_above_the_pay_button(for_sale, monkeypatch, note,
     stripe_client.create_checkout_session(order, 'https://site/ok', 'https://site/cancel', note=note)
 
     assert sent[0].get('custom_text') == custom_text
+
+
+def test_admin_full_refund_marks_the_order_refunded_and_can_relist(admin_client, for_sale, stripe_sessions):
+    order = _paid(for_sale)
+
+    form = admin_client.get(f'/admin/commerce/order/{order.pk}/refund/').content.decode()
+    response = admin_client.post(f'/admin/commerce/order/{order.pk}/refund/', {'amount': '3400.00', 'relist': 'on'})
+
+    order.refresh_from_db()
+    for_sale.refresh_from_db()
+    assert 'value="3400"' in form
+    assert response.status_code == 302
+    assert (order.status, order.refund_pence) == (OrderStatus.REFUNDED, 340000)
+    assert order.refunded_at is not None
+    assert for_sale.status == ArtworkStatus.AVAILABLE
+
+
+def test_partial_refund_keeps_the_order_and_the_sale(for_sale, stripe_sessions):
+    order = _paid(for_sale)
+
+    order.record_refund(5000, relist=False)
+
+    for_sale.refresh_from_db()
+    assert (order.status, order.refund_pence) == (OrderStatus.PAID, 5000)
+    assert for_sale.status == ArtworkStatus.SOLD
+
+
+def test_refund_cannot_exceed_what_was_paid(admin_client, for_sale, stripe_sessions):
+    order = _paid(for_sale)
+
+    response = admin_client.post(f'/admin/commerce/order/{order.pk}/refund/', {'amount': '9999.00'})
+
+    order.refresh_from_db()
+    assert 'more than the buyer paid' in response.content.decode()
+    assert order.refunded_at is None
+
+
+def test_refund_is_refused_for_an_unpaid_order(admin_client, for_sale, stripe_sessions):
+    order = _checkout(for_sale)
+
+    assert admin_client.get(f'/admin/commerce/order/{order.pk}/refund/').status_code == 403
+
+
+def test_admin_records_an_exhibition_sale(admin_client, for_sale):
+    data = {
+        'price': '3200',
+        'sold_on': '2026-09-20',
+        'source': 'exhibition',
+        'venue': 'Bermondsey Open',
+        'buyer_name': 'C Collector',
+        'buyer_email': '',
+        'notes': 'Paid by bank transfer',
+    }
+
+    form = admin_client.get(f'/admin/artworks/artwork/{for_sale.pk}/record-sale/').content.decode()
+    response = admin_client.post(f'/admin/artworks/artwork/{for_sale.pk}/record-sale/', data)
+
+    order = Order.objects.get()
+    for_sale.refresh_from_db()
+    assert 'value="3400"' in form
+    assert response['Location'] == f'/admin/commerce/order/{order.pk}/change/'
+    assert (order.source, order.venue, order.amount_pence, order.buyer_name) == ('exhibition', 'Bermondsey Open', 320000, 'C Collector')
+    assert order.status == OrderStatus.SHIPPED
+    assert timezone.localdate(order.paid_at).isoformat() == '2026-09-20'
+    assert for_sale.status == ArtworkStatus.SOLD
+
+
+def test_sale_still_to_deliver_goes_to_orders_to_ship(admin_client, for_sale):
+    data = {'price': '3400', 'sold_on': '2026-09-20', 'source': 'private', 'to_deliver': 'on'}
+
+    admin_client.post(f'/admin/artworks/artwork/{for_sale.pk}/record-sale/', data)
+
+    assert list(Order.objects.to_ship()) == [Order.objects.get(source='private')]
+
+
+def test_sold_work_has_no_record_sale_button(admin_client, make_artwork):
+    sold = make_artwork(status=ArtworkStatus.SOLD)
+
+    assert admin_client.get(f'/admin/artworks/artwork/{sold.pk}/record-sale/').status_code == 403
+
+
+def test_order_notes_are_editable(admin_client, for_sale, stripe_sessions):
+    order = _paid(for_sale)
+
+    admin_client.post(f'/admin/commerce/order/{order.pk}/change/', {'notes': 'Wrapped twice'})
+
+    order.refresh_from_db()
+    assert order.notes == 'Wrapped twice'
+
+
+def test_emails_come_from_the_site_name(for_sale, stripe_sessions, mailoutbox, settings):
+    settings.DEFAULT_FROM_EMAIL = 'Gesso <studio@example.com>'
+    content = SiteContent.load()
+    content.site_name = 'Elise Beer'
+    content.save()
+    order = _paid(for_sale)
+
+    send_shipped(order)
+
+    assert mailoutbox[0].from_email == 'Elise Beer <studio@example.com>'

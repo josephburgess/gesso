@@ -74,6 +74,10 @@ class Artwork(models.Model):
     def release(self, until: datetime) -> None:
         Artwork.objects.filter(pk=self.pk, reserved_until=until).update(reserved_until=None)
 
+    def relist(self) -> None:
+        self.status = ArtworkStatus.AVAILABLE if self.price_pence is not None else ArtworkStatus.NOT_FOR_SALE
+        self.save(update_fields=['status'])
+
     def mark_sold(self) -> None:
         self.status = ArtworkStatus.SOLD
         self.reserved_until = None

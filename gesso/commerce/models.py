@@ -12,6 +12,13 @@ class OrderStatus(models.TextChoices):
     PAID = 'paid', 'Paid'
     SHIPPED = 'shipped', 'Shipped'
     EXPIRED = 'expired', 'Expired'
+    REFUNDED = 'refunded', 'Refunded'
+
+
+class OrderSource(models.TextChoices):
+    ONLINE = 'online', 'Online'
+    EXHIBITION = 'exhibition', 'Exhibition'
+    PRIVATE = 'private', 'Private sale'
 
 
 class OrderQuerySet(models.QuerySet['Order']):
@@ -23,6 +30,8 @@ class Order(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     artwork = models.ForeignKey(Artwork, on_delete=models.PROTECT, related_name='orders')
     status = models.CharField(max_length=20, choices=OrderStatus, default=OrderStatus.PENDING)
+    source = models.CharField(max_length=20, choices=OrderSource, default=OrderSource.ONLINE)
+    venue = models.CharField(max_length=200, blank=True)
     amount_pence = models.PositiveIntegerField()
     delivery_pence = models.PositiveIntegerField()
     stripe_session_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
@@ -30,9 +39,14 @@ class Order(models.Model):
     buyer_email = models.EmailField(blank=True)
     shipping_address = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
+    expires_at = models.DateTimeField(null=True, blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
     shipped_at = models.DateTimeField(null=True, blank=True)
+    courier = models.CharField(max_length=100, blank=True)
+    tracking_url = models.URLField('tracking link', blank=True)
+    refund_pence = models.PositiveIntegerField(null=True, blank=True)
+    refunded_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
 
     objects = OrderQuerySet.as_manager()
 
@@ -51,19 +65,35 @@ class Order(models.Model):
         self.save()
         self.artwork.mark_sold()
 
-    def mark_shipped(self) -> None:
+    def mark_shipped(self, courier: str = '', tracking_url: str = '') -> None:
         if self.status != OrderStatus.PAID:
             return
         self.status = OrderStatus.SHIPPED
         self.shipped_at = timezone.now()
-        self.save(update_fields=['status', 'shipped_at'])
+        self.courier = courier
+        self.tracking_url = tracking_url
+        self.save(update_fields=['status', 'shipped_at', 'courier', 'tracking_url'])
+
+    @property
+    def total_pence(self) -> int:
+        return self.amount_pence + self.delivery_pence
+
+    def record_refund(self, pence: int, relist: bool) -> None:
+        self.refund_pence = pence
+        self.refunded_at = timezone.now()
+        if pence >= self.total_pence:
+            self.status = OrderStatus.REFUNDED
+        self.save(update_fields=['refund_pence', 'refunded_at', 'status'])
+        if relist:
+            self.artwork.relist()
 
     def mark_expired(self) -> None:
         if self.status != OrderStatus.PENDING:
             return
         self.status = OrderStatus.EXPIRED
         self.save(update_fields=['status'])
-        self.artwork.release(until=self.expires_at)
+        if self.expires_at:
+            self.artwork.release(until=self.expires_at)
 
 
 class StripeEvent(models.Model):
