@@ -52,4 +52,5 @@ def page(request: HttpRequest) -> HttpResponse:
         'index': [artwork_tile(a) for a in artworks],
         'process': _process(),
     }
-    return render(request, 'Home', {'home': home})
+    lead = home['featured'][0]['cover'] if home['featured'] else None
+    return render(request, 'Home', {'home': home}, template_data={'image': request.build_absolute_uri(lead['src']) if lead else ''})

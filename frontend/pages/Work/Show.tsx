@@ -3,6 +3,7 @@ import FlashMessages from '@/components/FlashMessages';
 import Lightbox from '@/components/Lightbox';
 import ResponsiveImage from '@/components/ResponsiveImage';
 import Reveal from '@/components/Reveal';
+import Signup from '@/components/Signup';
 import type { ArtworkDetail, Neighbour, Purchase } from '@/types';
 import SiteLayout from '@/layouts/SiteLayout';
 import { Link, useForm } from '@inertiajs/react';
@@ -31,6 +32,7 @@ function PurchasePanel({ purchase }: { purchase: Purchase }) {
         {purchase.enquire_label}
       </Link>
       {purchase.note && <p className="pt-0.5 text-meta-sm text-ink-dim">{purchase.note}</p>}
+      {purchase.notify && <Signup label="Similar work" text="Hear when similar work is available." className="mt-2" />}
     </div>
   );
 }
@@ -61,12 +63,15 @@ export default function Show({ artwork, purchase, prev, next }: Props) {
         {[
           ['Medium', artwork.medium],
           ['Size', artwork.size],
-        ].map(([label, value]) => (
-          <div key={label} className="flex gap-3.5">
-            <dt className="w-20 shrink-0 pt-0.5 text-micro tracking-[0.06em] text-ink-dim uppercase">{label}</dt>
-            <dd className="text-ink-muted tabular-nums">{value}</dd>
-          </div>
-        ))}
+          ['Framing', artwork.framing],
+        ]
+          .filter(([, value]) => value)
+          .map(([label, value]) => (
+            <div key={label} className="flex gap-3.5">
+              <dt className="w-20 shrink-0 pt-0.5 text-micro tracking-[0.06em] text-ink-dim uppercase">{label}</dt>
+              <dd className="text-ink-muted tabular-nums">{value}</dd>
+            </div>
+          ))}
       </dl>
       <div className="mt-6 flex items-baseline justify-between gap-3 text-body-sm">
         <span className="flex items-center gap-2 text-ink-muted">

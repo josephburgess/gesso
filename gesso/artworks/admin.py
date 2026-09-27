@@ -51,7 +51,7 @@ class ArtworkAdmin(ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('images_manager', 'home_page')
     fieldsets = (
-        (None, {'fields': ('title', 'slug', 'year', 'medium', 'height_cm', 'width_cm', 'description')}),
+        (None, {'fields': ('title', 'slug', 'year', 'medium', 'height_cm', 'width_cm', 'framing', 'description')}),
         ('Images', {'fields': ('images_manager',)}),
         ('Sale', {'fields': ('status', 'price')}),
         ('On the site', {'fields': ('is_published', 'home_page')}),
