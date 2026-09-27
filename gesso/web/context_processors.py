@@ -12,7 +12,9 @@ def site(request: HttpRequest) -> dict[str, str | bool]:
         'site_name': content.site_name,
         'page_url': request.build_absolute_uri(request.path),
         'site_description': content.site_description,
+        'site_theme': look['theme'],
         'site_headings': look['headings'],
+        'site_titles': 'italic' if look['italic_titles'] else 'upright',
         'site_motion': look['motion'],
     }
 

@@ -22,7 +22,7 @@ const fitWidth = (height: number | null, tile: ArtworkTile, scale = 1) =>
 function Caption({ tile, large, ref }: { tile: ArtworkTile; large?: boolean; ref?: Ref<HTMLDivElement> }) {
   return (
     <div ref={ref} className="flex flex-wrap items-baseline justify-between gap-x-5.5 gap-y-1.5 pt-4">
-      <span className={`font-serif text-ink ${large ? 'text-title-lg' : 'text-title'}`}>{tile.title}</span>
+      <span className={`work-title font-serif text-ink ${large ? 'text-title-lg' : 'text-title'}`}>{tile.title}</span>
       <span className="flex flex-wrap gap-4.5 text-meta text-ink-meta">
         <span>{tile.year}</span>
         <span>{tile.medium}</span>

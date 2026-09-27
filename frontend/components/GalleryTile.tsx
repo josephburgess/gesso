@@ -18,7 +18,7 @@ export default function GalleryTile({ tile }: { tile: ArtworkTile }) {
           )}
         </div>
         <figcaption className="grid grid-cols-[1fr_auto] gap-x-3 pt-3">
-          <span className="font-serif text-tile text-ink transition-colors duration-(--d-ui) ease-io group-hover:text-accent">
+          <span className="work-title font-serif text-tile text-ink transition-colors duration-(--d-ui) ease-io group-hover:text-accent">
             {tile.title}
           </span>
           <span className={`row-span-2 self-end text-meta-sm ${tile.available ? 'text-accent' : 'text-ink-dim'}`}>

@@ -7,7 +7,7 @@ from inertia import render
 
 from gesso.content.models import SiteContent
 from gesso.web.formatting import paragraphs
-from gesso.web.views.work import ImageProps, responsive_image
+from gesso.web.images import ImageProps, responsive_image
 
 
 class Photo(TypedDict):

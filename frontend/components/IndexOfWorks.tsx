@@ -34,7 +34,7 @@ export default function IndexOfWorks({ works }: { works: ArtworkTile[] }) {
           className="grid grid-cols-[26px_minmax(0,1fr)_44px_auto] items-baseline gap-x-3.5 border-b border-hair-light px-1 py-3.25 text-meta-sm text-ink-meta transition-colors duration-(--d-ui) ease-io hover:bg-accent-tint wide:grid-cols-[26px_minmax(0,1.1fr)_44px_minmax(0,1.2fr)_104px]"
         >
           <span className="text-micro text-ink-faint tabular-nums">{pad(i + 1)}</span>
-          <span className="truncate font-serif text-title text-ink">{tile.title}</span>
+          <span className="work-title truncate font-serif text-title text-ink">{tile.title}</span>
           <span className="tabular-nums">{tile.year}</span>
           <span className="hidden truncate wide:block">{tile.medium}</span>
           <Status status={tile.status} available={tile.available} />

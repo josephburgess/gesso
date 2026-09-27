@@ -1,3 +1,5 @@
+import base64
+import io
 from datetime import timedelta
 
 from django.contrib import admin, messages
@@ -9,12 +11,14 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
+from PIL import Image
 from unfold.admin import ModelAdmin
 from unfold.decorators import action, display
 
-from gesso.artworks.forms import ArtworkAdminForm, HomePageForm
+from gesso.artworks import mockups
+from gesso.artworks.forms import ArtworkAdminForm, HomePageForm, WallViewForm
 from gesso.artworks.image_manager import PENDING, ImageManager
-from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus, FormerSlug
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus, FormerSlug, FrameColour, RoomScene
 from gesso.commerce.forms import SaleForm
 from gesso.commerce.services import record_sale
 
@@ -52,7 +56,7 @@ class ArtworkAdmin(ModelAdmin):
     search_fields = ('title', 'medium')
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('images_manager', 'home_page')
-    actions_detail = ('record_sale',)
+    actions_detail = ('wall_view', 'record_sale')
     ordering_field = 'position'
     hide_ordering_field = True
     fieldsets = (
@@ -130,6 +134,35 @@ class ArtworkAdmin(ModelAdmin):
     def status_label(self, obj):
         return obj.display_status
 
+    def has_wall_view_permission(self, request, object_id=None):
+        return (
+            object_id is not None
+            and RoomScene.objects.exists()
+            and ArtworkImage.objects.filter(artwork_id=object_id, is_process=False, scene=None).exists()
+        )
+
+    @action(description='Generate wall view', url_path='wall-view', icon='wallpaper', permissions=['wall_view'])
+    def wall_view(self, request, object_id):
+        artwork = get_object_or_404(Artwork, pk=object_id)
+        form = WallViewForm(request.POST or None)
+        if form.is_valid():
+            try:
+                mockups.generate_wall_view(artwork, form.cleaned_data['scene'], FrameColour(form.cleaned_data['frame']))
+            except ValueError as error:
+                form.add_error(None, str(error))
+            else:
+                self.message_user(request, 'Wall view added to the images.')
+                return redirect('admin:artworks_artwork_change', object_id)
+        context = {
+            **self.admin_site.each_context(request),
+            'title': f'Wall view of {artwork}',
+            'intro': 'Hangs the first image at its real size in a room. Run it again after changing the size or image to replace it.',
+            'form': form,
+            'submit_label': 'Generate',
+            'back_url': reverse('admin:artworks_artwork_change', args=[object_id]),
+        }
+        return TemplateResponse(request, 'admin/action_form.html', context)
+
     def has_record_sale_permission(self, request, object_id=None):
         return object_id is not None and Artwork.objects.filter(pk=object_id).exclude(status=ArtworkStatus.SOLD).exists()
 
@@ -151,3 +184,23 @@ class ArtworkAdmin(ModelAdmin):
             'back_url': reverse('admin:artworks_artwork_change', args=[object_id]),
         }
         return TemplateResponse(request, 'admin/action_form.html', context)
+
+
+@admin.register(RoomScene)
+class RoomSceneAdmin(ModelAdmin):
+    list_display = ('name', 'px_per_cm')
+    readonly_fields = ('preview',)
+    fields = ('name', 'photo', 'px_per_cm', 'anchor_x', 'anchor_y', 'preview')
+
+    @display(description='Preview with a 60 × 80cm canvas')
+    def preview(self, obj):
+        if not obj or not obj.pk:
+            return 'Save to see a preview.'
+        placeholder = io.BytesIO()
+        Image.new('RGB', (60, 80), '#8a8f94').save(placeholder, 'PNG')
+        placeholder.seek(0)
+        try:
+            data = mockups.render_wall_view(placeholder, obj, 600, 800, FrameColour.BLACK)
+        except ValueError as error:
+            return str(error)
+        return format_html('<img src="data:image/jpeg;base64,{}" alt="" style="max-width:100%">', base64.b64encode(data).decode())

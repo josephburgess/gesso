@@ -1,21 +1,22 @@
 import io
 from datetime import timedelta
 
+import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import modelform_factory
 from django.utils import timezone
 from PIL import Image
 
-from gesso.artworks import processing
+from gesso.artworks import mockups, processing
 from gesso.artworks.admin import ArtworkAdminForm
 from gesso.artworks.forms import PositionedForm
-from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus, FormerSlug
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus, FormerSlug, FrameColour, RoomScene
 from gesso.content.models import SocialLink
 
 
-def _png(width, height):
+def _png(width, height, colour='black'):
     buffer = io.BytesIO()
-    Image.new('RGB', (width, height)).save(buffer, 'PNG')
+    Image.new('RGB', (width, height), colour).save(buffer, 'PNG')
     buffer.seek(0)
     return buffer
 
@@ -99,6 +100,19 @@ def test_process_photos_are_never_the_cover(make_artwork):
 
     assert (artwork.cover, artwork.cover_url, artwork.thumbnail_url) == (None, None, None)
 
+    ArtworkImage.objects.create(
+        artwork=artwork, original='originals/f.jpg', position=5, variants=[{'width': 480, 'height': 360, 'name': 'variants/f/480.webp'}]
+    )
+
+    assert artwork.cover_url == '/media/variants/f/480.webp'
+
+
+def test_wall_views_are_never_the_cover(make_artwork):
+    artwork = make_artwork()
+    scene = RoomScene.objects.create(name='Lounge', photo='scenes/lounge.jpg', px_per_cm=4)
+    ArtworkImage.objects.create(
+        artwork=artwork, original='originals/w.jpg', scene=scene, variants=[{'width': 480, 'height': 360, 'name': 'variants/w/480.webp'}]
+    )
     ArtworkImage.objects.create(
         artwork=artwork, original='originals/f.jpg', position=5, variants=[{'width': 480, 'height': 360, 'name': 'variants/f/480.webp'}]
     )
@@ -351,3 +365,79 @@ def test_old_address_of_a_draft_stays_hidden(client, make_artwork):
     FormerSlug.objects.create(artwork=artwork, slug='old')
 
     assert client.get('/work/old').status_code == 404
+
+
+def _scene(**fields):
+    photo = SimpleUploadedFile('wall.png', _png(1000, 800, (200, 200, 200)).getvalue(), content_type='image/png')
+    return RoomScene.objects.create(**({'name': 'Lounge', 'photo': photo, 'px_per_cm': 4, 'anchor_x': 50, 'anchor_y': 50} | fields))
+
+
+def _close(pixel, expected):
+    return all(abs(a - b) < 12 for a, b in zip(pixel, expected, strict=True))
+
+
+def test_wall_view_is_framed_at_true_scale(db, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    data = mockups.render_wall_view(_png(100, 140, (220, 30, 30)), _scene(), 500, 700, FrameColour.OAK)
+
+    with Image.open(io.BytesIO(data)) as view:
+        assert view.size == (1000, 800)
+        assert _close(view.getpixel((500, 400)), (220, 30, 30))
+        assert _close(view.getpixel((396, 400)), (181, 138, 90))
+        assert _close(view.getpixel((380, 400)), (200, 200, 200))
+        assert _close(view.getpixel((500, 255)), (181, 138, 90))
+
+
+def test_wall_view_too_large_for_scene(db, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+
+    with pytest.raises(ValueError, match='too large'):
+        mockups.render_wall_view(_png(10, 10), _scene(), 3000, 1000, FrameColour.BLACK)
+
+
+def test_generating_a_wall_view_replaces_the_last_one_for_that_scene(make_artwork, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    artwork = make_artwork()
+    ArtworkImage.objects.create(artwork=artwork, original=_upload('front.png', (100, 140)))
+    scene = _scene()
+
+    first = mockups.generate_wall_view(artwork, scene, FrameColour.BLACK)
+    second = mockups.generate_wall_view(artwork, scene, FrameColour.WHITE)
+
+    assert list(artwork.images.filter(scene=scene)) == [second]
+    assert (second.position, second.alt, bool(second.variants)) == (1, f'{artwork.title} hanging on a wall', True)
+    assert not any((tmp_path / variant['name']).exists() for variant in first.variants)
+    assert artwork.cover.scene is None
+
+
+def test_admin_generates_a_wall_view(admin_client, make_artwork, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    artwork = make_artwork()
+    ArtworkImage.objects.create(artwork=artwork, original=_upload('front.png', (100, 140)))
+    scene = _scene()
+    url = f'/admin/artworks/artwork/{artwork.pk}/wall-view/'
+
+    assert admin_client.get(url).status_code == 200
+    response = admin_client.post(url, {'scene': scene.pk, 'frame': 'walnut'})
+
+    assert response.status_code == 302
+    assert artwork.images.filter(scene=scene).count() == 1
+
+
+def test_admin_wall_view_reports_a_work_too_large(admin_client, make_artwork, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    artwork = make_artwork(width_mm=3000)
+    ArtworkImage.objects.create(artwork=artwork, original=_upload('front.png', (100, 140)))
+
+    response = admin_client.post(f'/admin/artworks/artwork/{artwork.pk}/wall-view/', {'scene': _scene().pk, 'frame': 'black'})
+
+    assert b'too large' in response.content
+    assert not artwork.images.exclude(scene=None).exists()
+
+
+def test_scene_admin_previews_the_calibration(admin_client, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+
+    response = admin_client.get(f'/admin/artworks/roomscene/{_scene().pk}/change/')
+
+    assert b'data:image/jpeg;base64,' in response.content

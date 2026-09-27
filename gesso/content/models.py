@@ -20,8 +20,15 @@ class AboutLayout(models.TextChoices):
     ABOVE = 'above', 'Portrait above'
 
 
+class Theme(models.TextChoices):
+    PAPER = 'paper', 'Paper'
+    GALLERY = 'gallery', 'Gallery'
+    SLATE = 'slate', 'Slate'
+
+
 class Headings(models.TextChoices):
-    SERIF = 'serif', 'Classic serif'
+    SERIF = 'serif', 'Caslon'
+    GARAMOND = 'garamond', 'Garamond'
     SANS = 'sans', 'Modern sans'
 
 
@@ -42,6 +49,12 @@ class SiteContent(models.Model):
     work_layout = models.CharField(
         max_length=20, choices=WorkLayout, default=WorkLayout.GRID, help_text='How the full list of works is arranged.'
     )
+    theme = models.CharField(
+        max_length=20,
+        choices=Theme,
+        default=Theme.PAPER,
+        help_text='Colours for the whole site. Visitors can switch between its light and dark versions. Artwork is never tinted.',
+    )
     headings = models.CharField(max_length=20, choices=Headings, default=Headings.SERIF)
     show_index = models.BooleanField(
         'index of works on the home page', default=True, help_text='A list of every work under the featured ones.'
@@ -49,6 +62,7 @@ class SiteContent(models.Model):
     about_layout = models.CharField(
         max_length=20, choices=AboutLayout, default=AboutLayout.BESIDE, help_text='How the About page is arranged.'
     )
+    italic_titles = models.BooleanField('italic artwork titles', default=False, help_text='Set work titles in italic, as in a catalogue.')
     motion = models.BooleanField(
         'gentle motion',
         default=True,

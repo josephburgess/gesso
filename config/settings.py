@@ -159,6 +159,7 @@ UNFOLD = {
                         'active': 'config.dashboard.works_active',
                     },
                     {'title': 'Home page', 'icon': 'home', 'link': reverse_lazy('admin:artworks_homepage')},
+                    {'title': 'Wall scenes', 'icon': 'wallpaper', 'link': reverse_lazy('admin:artworks_roomscene_changelist')},
                     {
                         'title': 'Orders',
                         'icon': 'local_shipping',

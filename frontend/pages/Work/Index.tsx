@@ -45,7 +45,7 @@ function Exhibit({ tile, i }: { tile: ArtworkTile; i: number }) {
           className={`flex min-w-0 flex-col items-start gap-2.5 @min-[640px]:flex-[0_1_280px] ${flip ? '@min-[640px]:items-end @min-[640px]:text-right' : ''}`}
         >
           <span className="text-micro text-ink-faint tabular-nums">{String(i + 1).padStart(2, '0')}</span>
-          <span className="font-serif text-h2 leading-tight text-ink">{tile.title}</span>
+          <span className="work-title font-serif text-h2 leading-tight text-ink">{tile.title}</span>
           <span className="text-meta text-ink-meta">
             {tile.year} · {tile.medium}
             <br />
