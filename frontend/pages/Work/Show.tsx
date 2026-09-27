@@ -1,31 +1,28 @@
+import Button from '@/components/Button';
+import FlashMessages from '@/components/FlashMessages';
 import Lightbox from '@/components/Lightbox';
 import ResponsiveImage from '@/components/ResponsiveImage';
 import Reveal from '@/components/Reveal';
 import type { ArtworkDetail, Neighbour, Purchase } from '@/types';
 import SiteLayout from '@/layouts/SiteLayout';
-import { Link, useForm, usePage } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
 function PurchasePanel({ purchase }: { purchase: Purchase }) {
-  const { flash } = usePage();
   const checkout = useForm({});
 
   return (
     <div className="mt-6 flex flex-col gap-2.25">
-      {flash.messages?.map((m, i) => (
-        <p key={i} role="status" className="text-body-sm text-ink">
-          {m.message}
-        </p>
-      ))}
+      <FlashMessages className="text-body-sm" />
       {purchase.action && (
-        <button
+        <Button
           type="button"
           disabled={checkout.processing}
           onClick={() => checkout.post(purchase.action!)}
-          className="bg-ink px-4.5 py-3.25 text-center text-body-sm tracking-[0.03em] text-paper transition-colors duration-(--d-state) hover:bg-accent active:translate-y-px disabled:opacity-60"
+          className="px-4.5 py-3.25 text-center text-body-sm active:translate-y-px"
         >
           Purchase
-        </button>
+        </Button>
       )}
       <Link
         href={purchase.enquire_href}
