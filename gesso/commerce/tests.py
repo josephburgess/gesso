@@ -1,14 +1,16 @@
 from datetime import timedelta
 from itertools import count
+from types import SimpleNamespace
 
 import pytest
+import stripe
 from django.utils import timezone
 
 from gesso.artworks.models import Artwork, ArtworkStatus
 from gesso.commerce import stripe_client
 from gesso.commerce.models import Order, OrderStatus, StripeEvent
 from gesso.commerce.services import NotAvailable, cancel_checkout, handle_event, start_checkout
-from gesso.content.models import SiteContent
+from gesso.content.models import Page, SiteContent
 
 SITE_URL = 'http://testserver/'
 
@@ -243,3 +245,37 @@ def test_events_for_sessions_from_elsewhere_are_ignored(db):
     handle_event(event)
 
     assert StripeEvent.objects.filter(id='evt_elsewhere').exists()
+
+
+def test_checkout_links_the_terms_and_returns_pages(for_sale, stripe_sessions):
+    start_checkout(for_sale, SITE_URL)
+
+    assert stripe_sessions[0]['note'] == (
+        'By paying you agree to our [terms of sale](http://testserver/pages/terms)'
+        ' and [delivery & returns](http://testserver/pages/delivery-and-returns).'
+    )
+
+
+def test_checkout_has_no_note_without_the_pages(for_sale, stripe_sessions):
+    Page.objects.all().delete()
+
+    start_checkout(for_sale, SITE_URL)
+
+    assert stripe_sessions[0]['note'] == ''
+
+
+@pytest.mark.parametrize(('note', 'custom_text'), [('Read the terms.', {'submit': {'message': 'Read the terms.'}}), ('', None)])
+def test_stripe_shows_the_note_above_the_pay_button(for_sale, monkeypatch, note, custom_text):
+    sent = []
+
+    def create(params, options):
+        sent.append(params)
+        return SimpleNamespace(id='cs_test_1', url='https://checkout.stripe.test/pay')
+
+    client = SimpleNamespace(v1=SimpleNamespace(checkout=SimpleNamespace(sessions=SimpleNamespace(create=create))))
+    monkeypatch.setattr(stripe, 'StripeClient', lambda key: client)
+    order = Order.objects.create(artwork=for_sale, amount_pence=340000, delivery_pence=0, expires_at=timezone.now())
+
+    stripe_client.create_checkout_session(order, 'https://site/ok', 'https://site/cancel', note=note)
+
+    assert sent[0].get('custom_text') == custom_text
