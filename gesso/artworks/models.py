@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import Self
 
 from django.core.files.base import ContentFile
@@ -95,7 +96,7 @@ class Artwork(models.Model):
 
     @property
     def cover(self) -> ArtworkImage | None:
-        return next((image for image in self.images.all() if not image.is_process), None)
+        return next((image for image in self.images.all() if not image.is_process and image.scene_id is None), None)
 
     @property
     def thumbnail_url(self) -> str | None:
@@ -121,6 +122,29 @@ class FormerSlug(models.Model):
 
     def __str__(self):
         return self.slug
+
+
+class FrameColour(models.TextChoices):
+    BLACK = 'black', 'Black'
+    WHITE = 'white', 'White'
+    OAK = 'oak', 'Oak'
+    WALNUT = 'walnut', 'Walnut'
+
+
+class RoomScene(models.Model):
+    name = models.CharField(max_length=100)
+    photo = models.ImageField(upload_to='scenes/', help_text='A front-on photo of a wall, ideally at least 2400px wide.')
+    px_per_cm = models.DecimalField(
+        'pixels per cm', max_digits=6, decimal_places=2, help_text='Measure something of known size on the wall in the full-size photo.'
+    )
+    anchor_x = models.DecimalField('centre across (%)', max_digits=5, decimal_places=2, default=Decimal(50))
+    anchor_y = models.DecimalField('centre down (%)', max_digits=5, decimal_places=2, default=Decimal(40))
+
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
 
 
 class ProcessedImage(models.Model):
@@ -180,6 +204,8 @@ class ProcessedImage(models.Model):
 
 
 class ArtworkImage(ProcessedImage):
+    scene_id: int | None
+
     artwork = models.ForeignKey(Artwork, null=True, blank=True, on_delete=models.CASCADE, related_name='images')
     position = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
@@ -190,6 +216,7 @@ class ArtworkImage(ProcessedImage):
         default=False,
         help_text='Show in "In the studio" rather than as a view of the finished work.',
     )
+    scene = models.ForeignKey(RoomScene, null=True, blank=True, editable=False, on_delete=models.PROTECT, related_name='wall_views')
 
     class Meta:
         ordering = ('is_process', 'position', 'pk')

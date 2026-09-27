@@ -9,7 +9,7 @@ from PIL import Image
 from gesso.artworks import processing
 from gesso.artworks.admin import ArtworkAdminForm
 from gesso.artworks.forms import PositionedForm
-from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus, FormerSlug
+from gesso.artworks.models import Artwork, ArtworkImage, ArtworkStatus, FormerSlug, RoomScene
 from gesso.content.models import SocialLink
 
 
@@ -99,6 +99,19 @@ def test_process_photos_are_never_the_cover(make_artwork):
 
     assert (artwork.cover, artwork.cover_url, artwork.thumbnail_url) == (None, None, None)
 
+    ArtworkImage.objects.create(
+        artwork=artwork, original='originals/f.jpg', position=5, variants=[{'width': 480, 'height': 360, 'name': 'variants/f/480.webp'}]
+    )
+
+    assert artwork.cover_url == '/media/variants/f/480.webp'
+
+
+def test_wall_views_are_never_the_cover(make_artwork):
+    artwork = make_artwork()
+    scene = RoomScene.objects.create(name='Lounge', photo='scenes/lounge.jpg', px_per_cm=4)
+    ArtworkImage.objects.create(
+        artwork=artwork, original='originals/w.jpg', scene=scene, variants=[{'width': 480, 'height': 360, 'name': 'variants/w/480.webp'}]
+    )
     ArtworkImage.objects.create(
         artwork=artwork, original='originals/f.jpg', position=5, variants=[{'width': 480, 'height': 360, 'name': 'variants/f/480.webp'}]
     )
