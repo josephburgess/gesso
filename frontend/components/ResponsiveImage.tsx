@@ -3,14 +3,14 @@ import type { ImageProps } from '@/types';
 
 type Props = {
   image: ImageProps;
-  alt: string;
+  alt?: string;
   sizes: string;
   eager?: boolean;
   reveal?: boolean;
   className?: string;
 };
 
-export default function ResponsiveImage({ image, alt, sizes, eager, reveal, className = '' }: Props) {
+export default function ResponsiveImage({ image, alt = '', sizes, eager, reveal, className = '' }: Props) {
   const ref = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -29,7 +29,7 @@ export default function ResponsiveImage({ image, alt, sizes, eager, reveal, clas
       sizes={sizes}
       width={image.width}
       height={image.height}
-      alt={alt}
+      alt={image.alt || alt}
       loading={eager ? 'eager' : 'lazy'}
       fetchPriority={eager ? 'high' : undefined}
       onLoad={() => setLoaded(true)}

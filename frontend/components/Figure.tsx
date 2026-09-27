@@ -1,7 +1,7 @@
 import ResponsiveImage from '@/components/ResponsiveImage';
 import type { ImageProps } from '@/types';
 
-type Props = { image: ImageProps; alt: string; caption?: string; sizes: string; eager?: boolean };
+type Props = { image: ImageProps; alt?: string; caption?: string; sizes: string; eager?: boolean };
 
 export default function Figure({ image, alt, caption, sizes, eager }: Props) {
   return (

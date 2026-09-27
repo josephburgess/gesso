@@ -85,6 +85,20 @@ def test_artwork_page_shows_every_processed_image_in_order(client, make_artwork)
     assert [image['src'] for image in images] == ['/media/variants/first/480.webp', '/media/variants/second/480.webp']
 
 
+def test_artwork_images_carry_their_alt_text(client, make_artwork):
+    artwork = make_artwork(slug='live', is_published=True)
+    ArtworkImage.objects.create(
+        artwork=artwork,
+        original='originals/a.png',
+        alt='A grey harbour at dusk',
+        variants=[{'width': 480, 'height': 320, 'name': 'variants/a/480.webp'}],
+    )
+
+    images = client.get('/work/live', headers=INERTIA).json()['props']['artwork']['images']
+
+    assert [image['alt'] for image in images] == ['A grey harbour at dusk']
+
+
 def test_draft_artwork_404s(client, make_artwork):
     make_artwork(slug='draft')
 
@@ -118,6 +132,7 @@ def test_responsive_image():
         'width': 960,
         'height': 480,
         'thumb': '/media/variants/1/480.webp',
+        'alt': '',
     }
 
 
@@ -307,7 +322,7 @@ def test_about_page_shows_processed_photos_in_order(client, db):
 
     photos = client.get('/about', headers=INERTIA).json()['props']['about']['photos']
 
-    assert [(p['alt'], p['caption'], p['image']['src']) for p in photos] == [
+    assert [(p['image']['alt'], p['caption'], p['image']['src']) for p in photos] == [
         ('first photo', 'first caption', '/media/about/variants/first/480.webp'),
         ('second photo', 'second caption', '/media/about/variants/second/480.webp'),
     ]
@@ -469,6 +484,7 @@ def test_process_photos_follow_the_finished_views(client, make_artwork):
                 'width': 480,
                 'height': 360,
                 'thumb': '/media/variants/yard/480.webp',
+                'alt': '',
             },
             'caption': 'Drying in the yard',
             'title': 'Harbour',

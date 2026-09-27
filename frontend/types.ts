@@ -1,4 +1,4 @@
-export type Photo = { image: ImageProps; alt: string; caption: string };
+export type Photo = { image: ImageProps; caption: string };
 
 export type About = { statement: string; biography: string[]; photos: Photo[] };
 
@@ -42,6 +42,7 @@ export type ImageProps = {
   width: number;
   height: number;
   thumb: string;
+  alt: string;
 };
 
 export type Home = {
