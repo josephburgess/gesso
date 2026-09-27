@@ -94,6 +94,18 @@ def notify_sale(order: Order) -> None:
     ).send()
 
 
+def send_shipped(order: Order) -> None:
+    recipient = SiteContent.load().notification_email
+    courier = f' with {order.courier}' if order.courier else ''
+    tracking = f'\n\nTrack it here: {order.tracking_url}' if order.tracking_url else ''
+    EmailMessage(
+        subject=f'{order.artwork.title} is on its way',
+        body=f'{order.artwork.title} has been sent{courier}.{tracking}\n\nReply to this email with any questions.',
+        to=[order.buyer_email],
+        reply_to=[recipient] if recipient else None,
+    ).send()
+
+
 def confirm_to_buyer(order: Order) -> None:
     recipient = SiteContent.load().notification_email
     EmailMessage(

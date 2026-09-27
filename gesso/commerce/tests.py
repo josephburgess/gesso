@@ -169,18 +169,42 @@ def _paid(artwork) -> Order:
     return order
 
 
-def test_admin_ship_button_marks_a_paid_order_shipped(admin_client, for_sale, stripe_sessions):
+def test_admin_ship_button_asks_for_tracking_first(admin_client, for_sale, stripe_sessions):
     order = _paid(for_sale)
 
     page = admin_client.get(f'/admin/commerce/order/{order.pk}/change/').content.decode()
-    response = admin_client.get(f'/admin/commerce/order/{order.pk}/ship/')
+    form = admin_client.get(f'/admin/commerce/order/{order.pk}/ship/')
 
     order.refresh_from_db()
     assert 'Mark shipped' in page
     assert '1 Quay St<br>Dover' in page
+    assert 'Tracking link' in form.content.decode()
+    assert order.status == OrderStatus.PAID
+
+
+def test_admin_ship_records_tracking_and_emails_the_buyer(admin_client, for_sale, stripe_sessions, mailoutbox):
+    order = _paid(for_sale)
+    data = {'courier': 'Artsy Couriers', 'tracking_url': 'https://track.example/123', 'notify': 'on'}
+
+    response = admin_client.post(f'/admin/commerce/order/{order.pk}/ship/', data)
+
+    order.refresh_from_db()
     assert response.status_code == 302
-    assert order.status == OrderStatus.SHIPPED
+    assert (order.status, order.courier, order.tracking_url) == (OrderStatus.SHIPPED, 'Artsy Couriers', 'https://track.example/123')
     assert order.shipped_at is not None
+    assert [(m.to, m.subject) for m in mailoutbox] == [(['b@example.com'], f'{for_sale.title} is on its way')]
+    assert 'with Artsy Couriers' in mailoutbox[0].body
+    assert 'https://track.example/123' in mailoutbox[0].body
+
+
+def test_admin_ship_can_skip_the_email(admin_client, for_sale, stripe_sessions, mailoutbox):
+    order = _paid(for_sale)
+
+    admin_client.post(f'/admin/commerce/order/{order.pk}/ship/', {'courier': '', 'tracking_url': ''})
+
+    order.refresh_from_db()
+    assert order.status == OrderStatus.SHIPPED
+    assert mailoutbox == []
 
 
 def test_admin_ship_button_is_refused_for_an_unpaid_order(admin_client, for_sale, stripe_sessions):

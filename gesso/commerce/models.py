@@ -33,6 +33,8 @@ class Order(models.Model):
     expires_at = models.DateTimeField()
     paid_at = models.DateTimeField(null=True, blank=True)
     shipped_at = models.DateTimeField(null=True, blank=True)
+    courier = models.CharField(max_length=100, blank=True)
+    tracking_url = models.URLField('tracking link', blank=True)
 
     objects = OrderQuerySet.as_manager()
 
@@ -51,12 +53,14 @@ class Order(models.Model):
         self.save()
         self.artwork.mark_sold()
 
-    def mark_shipped(self) -> None:
+    def mark_shipped(self, courier: str = '', tracking_url: str = '') -> None:
         if self.status != OrderStatus.PAID:
             return
         self.status = OrderStatus.SHIPPED
         self.shipped_at = timezone.now()
-        self.save(update_fields=['status', 'shipped_at'])
+        self.courier = courier
+        self.tracking_url = tracking_url
+        self.save(update_fields=['status', 'shipped_at', 'courier', 'tracking_url'])
 
     def mark_expired(self) -> None:
         if self.status != OrderStatus.PENDING:
