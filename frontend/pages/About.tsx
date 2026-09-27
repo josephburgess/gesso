@@ -14,11 +14,11 @@ export default function About({ about }: { about: AboutProps }) {
     <SiteLayout title="About">
       <div className={`mb-section flex gap-x-section gap-y-block ${above ? 'flex-col' : 'flex-wrap items-end'}`}>
         {portrait && (
-          <div className={`min-w-0 ${above ? 'max-w-[900px]' : 'max-w-[560px] flex-[1_1_300px]'}`}>
+          <div className={`min-w-0 ${above ? 'max-w-[900px]' : 'flex-[0_1_520px]'}`}>
             <Figure
               image={portrait.image}
               caption={portrait.caption}
-              sizes={above ? '(min-width: 1000px) 900px, 92vw' : '(min-width: 1000px) 40vw, 92vw'}
+              sizes={above ? '(min-width: 1000px) 900px, 92vw' : '(min-width: 1000px) 520px, 92vw'}
               eager
             />
           </div>
