@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { useState, type SubmitEvent } from 'react';
+import Button from '@/components/Button';
 import Honeypot from '@/components/Honeypot';
 import SectionLabel from '@/components/SectionLabel';
 
@@ -54,17 +55,13 @@ export default function Signup({ className = '' }: { className?: string }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               aria-invalid={!!error}
-              className="border-b border-line bg-transparent py-2 text-body-sm text-ink transition-colors duration-(--d-state) outline-none placeholder:text-ink-faint focus:border-accent"
+              className="border-b input-line border-line py-2 placeholder:text-ink-faint"
             />
           </label>
           <Honeypot value={website} onChange={setWebsite} />
-          <button
-            type="submit"
-            disabled={sending}
-            className="cursor-pointer bg-ink px-5 py-2.5 text-[13.5px] tracking-[0.03em] text-paper transition-colors duration-(--d-state) hover:bg-accent disabled:opacity-60"
-          >
+          <Button type="submit" disabled={sending} className="cursor-pointer px-5 py-2.5 text-[13.5px]">
             Sign up
-          </button>
+          </Button>
           {error && <span className="basis-full text-meta-sm text-accent">{error}</span>}
         </form>
       )}

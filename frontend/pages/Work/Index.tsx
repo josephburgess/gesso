@@ -17,14 +17,17 @@ function Tile({ tile, i }: { tile: ArtworkTile; i: number }) {
 
 function Exhibit({ tile, i }: { tile: ArtworkTile; i: number }) {
   const ratio = tile.cover ? tile.cover.width / tile.cover.height : 1;
+  const flip = i % 2 === 1;
 
   return (
     <Reveal>
-      <div className={`flex flex-wrap items-end gap-x-section gap-y-block ${i % 2 ? 'wide:flex-row-reverse' : ''}`}>
+      <div
+        className={`flex flex-col gap-x-section gap-y-block @min-[640px]:flex-row @min-[640px]:items-end ${flip ? '@min-[640px]:flex-row-reverse' : ''}`}
+      >
         <Link
           href={tile.href}
           style={{ maxWidth: `calc(72vh * ${ratio})` }}
-          className="min-w-0 flex-[1_1_340px] border-0"
+          className="min-w-0 border-0 @min-[640px]:flex-[1_1_340px]"
         >
           {tile.cover && (
             <Zoom>
@@ -38,7 +41,9 @@ function Exhibit({ tile, i }: { tile: ArtworkTile; i: number }) {
             </Zoom>
           )}
         </Link>
-        <div className="flex min-w-0 flex-[0_1_280px] flex-col gap-2.5">
+        <div
+          className={`flex min-w-0 flex-col items-start gap-2.5 @min-[640px]:flex-[0_1_280px] ${flip ? '@min-[640px]:items-end @min-[640px]:text-right' : ''}`}
+        >
           <span className="text-micro text-ink-faint tabular-nums">{String(i + 1).padStart(2, '0')}</span>
           <span className="font-serif text-h2 leading-tight text-ink">{tile.title}</span>
           <span className="text-meta text-ink-meta">
@@ -52,7 +57,7 @@ function Exhibit({ tile, i }: { tile: ArtworkTile; i: number }) {
               <span className="font-serif text-title text-ink tabular-nums">{tile.price}</span>
             )}
           </span>
-          <Link href={tile.href} className="mt-1.5 self-start text-meta">
+          <Link href={tile.href} className="mt-1.5 text-meta">
             View work
           </Link>
         </div>
@@ -68,7 +73,7 @@ export default function Index({ artworks }: { artworks: ArtworkTile[] }) {
   return (
     <SiteLayout title="Work">
       {layout === 'stack' && (
-        <div className="flex flex-col gap-section">
+        <div className="@container flex flex-col gap-section">
           {artworks.map((tile, i) => (
             <Exhibit key={tile.href} tile={tile} i={i} />
           ))}

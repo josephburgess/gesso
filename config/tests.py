@@ -48,3 +48,10 @@ def test_sidebar_uses_studio_names(admin_client, db):
     html = admin_client.get('/admin/').content.decode()
 
     assert all(label in html for label in ('Works', 'Orders', 'Enquiries', 'Site text'))
+
+
+def test_admin_uses_the_palette_favicon(client, db):
+    html = client.get('/admin/login/').content.decode()
+
+    assert '/static/web/admin-icon.svg' in html
+    assert '/static/web/favicon.ico' not in html

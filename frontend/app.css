@@ -129,6 +129,10 @@ body {
   color: var(--color-ink);
 }
 
+@utility input-line {
+  @apply bg-transparent text-body-sm text-ink transition-colors duration-(--d-state) outline-none focus:border-accent;
+}
+
 @utility transition-reveal {
   transition:
     opacity var(--d-enter) var(--ease-out),
