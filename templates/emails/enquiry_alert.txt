@@ -1,0 +1,3 @@
+{{ enquiry.message }}
+
+{{ enquiry.name }} <{{ enquiry.email }}>

@@ -1,0 +1,1 @@
+New enquiry from {{ enquiry.name }}{% if enquiry.artwork %} about {{ enquiry.artwork.title }}{% endif %} ({{ enquiry.get_topic_display }})
