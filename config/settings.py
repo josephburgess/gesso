@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'gesso.commerce',
     'gesso.content',
     'gesso.enquiries',
+    'gesso.stats',
     'gesso.web',
 ]
 
@@ -81,6 +82,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'inertia.middleware.InertiaMiddleware',
     'gesso.web.middleware.share_site',
+    'gesso.stats.middleware.count_views',
     'gesso.web.middleware.noindex',
     'gesso.web.middleware.preview',
 ]
