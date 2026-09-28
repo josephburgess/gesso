@@ -1,0 +1,4 @@
+Thank you for buying {{ order.artwork.title }}.
+
+Total paid: {{ total }}, including UK delivery.
+We'll be in touch shortly to arrange delivery. Reply to this email with any questions.

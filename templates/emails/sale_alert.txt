@@ -1,0 +1,3 @@
+{{ order.buyer_name }} <{{ order.buyer_email }}>
+
+{{ order.shipping_address }}

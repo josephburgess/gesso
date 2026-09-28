@@ -39,6 +39,18 @@ def test_enquiry_topic_is_saved_and_in_the_subject(db, mailoutbox, django_captur
     assert mailoutbox[0].subject == 'New enquiry from A (Commission)'
 
 
+def test_enquiry_email_is_not_html_escaped(db, mailoutbox, django_capture_on_commit_callbacks):
+    content = SiteContent.load()
+    content.notification_email = 'studio@example.com'
+    content.save()
+
+    with django_capture_on_commit_callbacks(execute=True):
+        submit_enquiry(_form(name="O'Brien & Co", message='Is <this> available?'))
+
+    assert mailoutbox[0].subject == "New enquiry from O'Brien & Co (General)"
+    assert mailoutbox[0].body.startswith('Is <this> available?')
+
+
 def test_enquiry_without_a_topic_is_general(db):
     assert _form(topic='').save().topic == 'general'
 

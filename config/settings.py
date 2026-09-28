@@ -102,6 +102,12 @@ TEMPLATES = [
             ],
         },
     },
+    {
+        'NAME': 'email',
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates' / 'emails'],
+        'OPTIONS': {'autoescape': False},
+    },
 ]
 
 UNFOLD = {
@@ -273,14 +279,18 @@ WHITENOISE_IMMUTABLE_FILE_TEST = r'^.+-[0-9a-zA-Z_-]{8}\.[a-z0-9]+$'
 
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Joe Burgess <hello@joeburgess.dev>')
 
-EMAIL_VIA_SES = env.bool('EMAIL_VIA_SES', default=False)
+MAILGUN_API_KEY = env('MAILGUN_API_KEY', default='')
 
 MAILERS = {
     'default': {
-        'BACKEND': 'anymail.backends.amazon_ses.EmailBackend',
-        'OPTIONS': {'client_params': {'region_name': 'eu-west-2'}},
+        'BACKEND': 'anymail.backends.mailgun.EmailBackend',
+        'OPTIONS': {
+            'api_key': MAILGUN_API_KEY,
+            'sender_domain': env('MAILGUN_SENDER_DOMAIN', default='mail.elisebeer.art'),
+            'api_url': 'https://api.eu.mailgun.net/v3',
+        },
     }
-    if EMAIL_VIA_SES
+    if MAILGUN_API_KEY
     else {'BACKEND': 'django.core.mail.backends.console.EmailBackend'},
 }
 

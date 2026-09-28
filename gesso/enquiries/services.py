@@ -1,10 +1,9 @@
-from django.core.mail import EmailMessage
 from django.db import transaction
 
-from gesso.content.mail import from_email
+from gesso.content.mail import send_templated
 from gesso.content.models import SiteContent
 from gesso.enquiries.forms import EnquiryForm
-from gesso.enquiries.models import Enquiry, Topic
+from gesso.enquiries.models import Enquiry
 
 
 def submit_enquiry(form: EnquiryForm) -> Enquiry:
@@ -17,11 +16,4 @@ def notify(enquiry: Enquiry) -> None:
     recipient = SiteContent.load().notification_email
     if not recipient:
         return
-    about = f' about {enquiry.artwork.title}' if enquiry.artwork else ''
-    EmailMessage(
-        from_email=from_email(),
-        subject=f'New enquiry from {enquiry.name}{about} ({Topic(enquiry.topic).label})',
-        body=f'{enquiry.message}\n\n{enquiry.name} <{enquiry.email}>',
-        to=[recipient],
-        reply_to=[enquiry.email],
-    ).send()
+    send_templated('enquiry_alert', {'enquiry': enquiry}, to=[recipient], reply_to=[enquiry.email])
