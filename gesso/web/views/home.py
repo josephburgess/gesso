@@ -31,7 +31,7 @@ def _process() -> list[ProcessPhoto]:
         ArtworkImage.objects.filter(artwork__is_published=True)
         .exclude(home_position=None)
         .select_related('artwork')
-        .order_by('home_position')[:2]
+        .order_by('home_position')[:3]
     )
     return [
         {'image': image, 'caption': photo.caption, 'title': photo.artwork.title}

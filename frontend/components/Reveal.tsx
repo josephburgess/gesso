@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 
-type Props = { delay?: number; className?: string; children: ReactNode };
+type Props = { delay?: number; className?: string; style?: CSSProperties; children: ReactNode };
 
-export default function Reveal({ delay = 0, className = '', children }: Props) {
+export default function Reveal({ delay = 0, className = '', style, children }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
 
@@ -24,7 +24,7 @@ export default function Reveal({ delay = 0, className = '', children }: Props) {
   return (
     <div
       ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
+      style={{ ...style, transitionDelay: `${delay}ms` }}
       className={`transition-reveal ${shown ? 'opacity-100' : 'translate-y-3.5 opacity-0'} ${className}`}
     >
       {children}
