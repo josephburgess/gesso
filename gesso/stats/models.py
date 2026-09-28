@@ -4,6 +4,11 @@ from django.db.models import F
 from gesso.artworks.models import Artwork
 
 
+def increment(model: type[models.Model], field: str, defaults: dict | None = None, **key) -> None:
+    model.objects.get_or_create(**key, defaults=defaults or {})
+    model.objects.filter(**key).update(**{field: F(field) + 1})
+
+
 class DailyView(models.Model):
     day = models.DateField()
     path = models.CharField(max_length=255)
@@ -15,12 +20,6 @@ class DailyView(models.Model):
 
     def __str__(self):
         return f'{self.path} on {self.day}'
-
-    @classmethod
-    def record(cls, day, path: str, artwork: Artwork | None = None) -> None:
-        if not cls.objects.filter(day=day, path=path).update(views=F('views') + 1):
-            cls.objects.get_or_create(day=day, path=path, defaults={'artwork': artwork})
-            cls.objects.filter(day=day, path=path).update(views=F('views') + 1)
 
 
 class DailyReferrer(models.Model):
@@ -34,12 +33,6 @@ class DailyReferrer(models.Model):
     def __str__(self):
         return f'{self.host} on {self.day}'
 
-    @classmethod
-    def record(cls, day, host: str) -> None:
-        if not cls.objects.filter(day=day, host=host).update(visits=F('visits') + 1):
-            cls.objects.get_or_create(day=day, host=host)
-            cls.objects.filter(day=day, host=host).update(visits=F('visits') + 1)
-
 
 class DailyVisitors(models.Model):
     day = models.DateField(unique=True)
@@ -50,22 +43,3 @@ class DailyVisitors(models.Model):
 
     def __str__(self):
         return f'{self.visitors} on {self.day}'
-
-    @classmethod
-    def record(cls, day) -> None:
-        if not cls.objects.filter(day=day).update(visitors=F('visitors') + 1):
-            Visit.objects.filter(day__lt=day).delete()
-            cls.objects.get_or_create(day=day)
-            cls.objects.filter(day=day).update(visitors=F('visitors') + 1)
-
-
-class Visit(models.Model):
-    day = models.DateField()
-    visitor = models.CharField(max_length=64)
-    path = models.CharField(max_length=255)
-
-    class Meta:
-        constraints = (models.UniqueConstraint(fields=('day', 'visitor', 'path'), name='unique_visit'),)
-
-    def __str__(self):
-        return f'{self.path} on {self.day}'

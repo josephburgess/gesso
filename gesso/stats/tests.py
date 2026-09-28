@@ -1,9 +1,6 @@
-from datetime import timedelta
-
 import pytest
-from django.utils import timezone
 
-from gesso.stats.models import DailyReferrer, DailyView, DailyVisitors, Visit
+from gesso.stats.models import DailyReferrer, DailyView, DailyVisitors
 
 INERTIA = {'X-Inertia': 'true'}
 
@@ -20,14 +17,6 @@ def test_counts_each_visitor_once_per_page_per_day(client, db):
 
     assert _views() == {'/about': 2, '/work': 1}
     assert DailyVisitors.objects.get().visitors == 2
-
-
-def test_clears_earlier_days_visits(client, db):
-    Visit.objects.create(day=timezone.localdate() - timedelta(days=1), visitor='yesterday', path='/about')
-
-    client.get('/about')
-
-    assert list(Visit.objects.values_list('day', flat=True)) == [timezone.localdate()]
 
 
 def test_work_views_belong_to_the_artwork(client, make_artwork):
