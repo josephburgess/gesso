@@ -76,6 +76,46 @@ jobs:
           echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
       - name: Copy Compose and Caddy config
         run: scp -p compose.prod.yaml Caddyfile deploy/backup.sh "$HOST:/srv/gesso/"
+      - name: Write .env
+        env:
+          SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+          DEBUG: ${{ vars.DEBUG }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ALLOWED_HOSTS: ${{ vars.ALLOWED_HOSTS }}
+          CSRF_TRUSTED_ORIGINS: ${{ vars.CSRF_TRUSTED_ORIGINS }}
+          SECURE_SSL_REDIRECT: ${{ vars.SECURE_SSL_REDIRECT }}
+          SECURE_HSTS_SECONDS: ${{ vars.SECURE_HSTS_SECONDS }}
+          NOINDEX: ${{ vars.NOINDEX }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AWS_STORAGE_BUCKET_NAME: ${{ vars.AWS_STORAGE_BUCKET_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          DEFAULT_FROM_EMAIL: ${{ vars.DEFAULT_FROM_EMAIL }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_FRONTEND_DSN: ${{ vars.SENTRY_FRONTEND_DSN }}
+          REDIS_URL: ${{ vars.REDIS_URL }}
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+        run: |
+          keys="SITE_DOMAIN POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB DEBUG SECRET_KEY ALLOWED_HOSTS CSRF_TRUSTED_ORIGINS
+            SECURE_SSL_REDIRECT SECURE_HSTS_SECONDS NOINDEX DATABASE_URL AWS_STORAGE_BUCKET_NAME AWS_ACCESS_KEY_ID
+            AWS_SECRET_ACCESS_KEY DEFAULT_FROM_EMAIL STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET SENTRY_DSN SENTRY_FRONTEND_DSN
+            REDIS_URL MAILGUN_API_KEY"
+          for k in SECRET_KEY DATABASE_URL POSTGRES_PASSWORD; do
+            test -n "${!k}" || { echo "::error::$k is not set in the production environment"; exit 1; }
+          done
+          for k in $keys; do
+            case "${!k}" in *"'"*) echo "::error::$k contains a single quote"; exit 1 ;; esac
+          done
+          for k in $keys; do
+            test -z "${!k}" || printf "%s='%s'\n" "$k" "${!k}"
+          done > env
+          ssh "$HOST" "cd /srv/gesso && umask 077 && cp -p .env .env.bak && cat > .env.new && mv .env.new .env" < env
+          rm env
       - name: Pull, migrate and restart
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
