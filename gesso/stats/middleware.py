@@ -32,7 +32,7 @@ def is_visit(request: HttpRequest, response: HttpResponse) -> bool:
 
 def visitor_id(request: HttpRequest, day) -> str:
     ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '')).split(',')[0].strip()
-    return salted_hmac(f'gesso.stats.visitor.{day}', ip + request.headers.get('User-Agent', ''), algorithm='sha256').hexdigest()
+    return salted_hmac(f'gesso.stats.visitor.{day}', ip + request.headers.get('User-Agent', '')).hexdigest()
 
 
 def first_time(*parts) -> bool:
