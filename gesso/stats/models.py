@@ -39,3 +39,33 @@ class DailyReferrer(models.Model):
         if not cls.objects.filter(day=day, host=host).update(visits=F('visits') + 1):
             cls.objects.get_or_create(day=day, host=host)
             cls.objects.filter(day=day, host=host).update(visits=F('visits') + 1)
+
+
+class DailyVisitors(models.Model):
+    day = models.DateField(unique=True)
+    visitors = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name_plural = 'daily visitors'
+
+    def __str__(self):
+        return f'{self.visitors} on {self.day}'
+
+    @classmethod
+    def record(cls, day) -> None:
+        if not cls.objects.filter(day=day).update(visitors=F('visitors') + 1):
+            Visit.objects.filter(day__lt=day).delete()
+            cls.objects.get_or_create(day=day)
+            cls.objects.filter(day=day).update(visitors=F('visitors') + 1)
+
+
+class Visit(models.Model):
+    day = models.DateField()
+    visitor = models.CharField(max_length=64)
+    path = models.CharField(max_length=255)
+
+    class Meta:
+        constraints = (models.UniqueConstraint(fields=('day', 'visitor', 'path'), name='unique_visit'),)
+
+    def __str__(self):
+        return f'{self.path} on {self.day}'

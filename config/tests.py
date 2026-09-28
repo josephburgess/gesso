@@ -6,7 +6,7 @@ from config.dashboard import orders_to_ship, unread_enquiries
 from gesso.artworks.models import ArtworkImage
 from gesso.commerce.models import Order, OrderSource, OrderStatus
 from gesso.enquiries.models import Enquiry
-from gesso.stats.models import DailyReferrer, DailyView
+from gesso.stats.models import DailyReferrer, DailyView, DailyVisitors
 
 
 def _paid_order(artwork) -> Order:
@@ -95,12 +95,13 @@ def test_sales_this_year_count_offline_sales_and_refunds(admin_client, make_artw
     assert '£8,085' in html
 
 
-def test_dashboard_shows_views_and_where_they_came_from(admin_client, make_artwork):
+def test_dashboard_shows_visitors_and_where_they_came_from(admin_client, make_artwork):
     today = timezone.localdate()
     artwork = make_artwork(title='Harbour at Dusk', slug='harbour')
     DailyView.objects.create(day=today, path='/work/harbour', artwork=artwork, views=12)
-    DailyView.objects.create(day=today - timedelta(days=1), path='/', views=30)
-    DailyView.objects.create(day=today - timedelta(days=45), path='/', views=21)
+    DailyVisitors.objects.create(day=today, visitors=12)
+    DailyVisitors.objects.create(day=today - timedelta(days=1), visitors=30)
+    DailyVisitors.objects.create(day=today - timedelta(days=45), visitors=21)
     DailyReferrer.objects.create(day=today, host='instagram.com', visits=5)
 
     html = admin_client.get('/admin/').content.decode()

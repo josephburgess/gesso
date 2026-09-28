@@ -1,6 +1,9 @@
-import pytest
+from datetime import timedelta
 
-from gesso.stats.models import DailyReferrer, DailyView
+import pytest
+from django.utils import timezone
+
+from gesso.stats.models import DailyReferrer, DailyView, DailyVisitors, Visit
 
 INERTIA = {'X-Inertia': 'true'}
 
@@ -9,11 +12,22 @@ def _views() -> dict[str, int]:
     return dict(DailyView.objects.values_list('path', 'views'))
 
 
-def test_counts_public_pages(client, db):
+def test_counts_each_visitor_once_per_page_per_day(client, db):
     client.get('/about')
     client.get('/about', headers=INERTIA)
+    client.get('/work')
+    client.get('/about', REMOTE_ADDR='203.0.113.9')
 
-    assert _views() == {'/about': 2}
+    assert _views() == {'/about': 2, '/work': 1}
+    assert DailyVisitors.objects.get().visitors == 2
+
+
+def test_clears_earlier_days_visits(client, db):
+    Visit.objects.create(day=timezone.localdate() - timedelta(days=1), visitor='yesterday', path='/about')
+
+    client.get('/about')
+
+    assert list(Visit.objects.values_list('day', flat=True)) == [timezone.localdate()]
 
 
 def test_work_views_belong_to_the_artwork(client, make_artwork):
@@ -36,6 +50,7 @@ def test_ignores_bots_and_background_requests(client, db, headers):
     client.get('/about', headers=headers)
 
     assert _views() == {}
+    assert not DailyVisitors.objects.exists()
 
 
 def test_ignores_staff_admin_and_missing_pages(admin_client, client, db):
@@ -44,6 +59,7 @@ def test_ignores_staff_admin_and_missing_pages(admin_client, client, db):
     client.get('/work/nothing-here')
 
     assert _views() == {}
+    assert not DailyVisitors.objects.exists()
 
 
 def test_records_where_visitors_came_from(client, db):

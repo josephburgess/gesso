@@ -14,7 +14,7 @@ from gesso.artworks.models import Artwork
 from gesso.commerce.models import Order, OrderStatus
 from gesso.content.models import SiteContent
 from gesso.enquiries.models import Enquiry, Subscriber
-from gesso.stats.models import DailyReferrer, DailyView
+from gesso.stats.models import DailyReferrer, DailyView, DailyVisitors
 from gesso.web.formatting import price
 
 DAYS = 30
@@ -48,10 +48,8 @@ def _artwork_link(artwork: Artwork) -> str:
     return _link(reverse('admin:artworks_artwork_change', args=[artwork.pk]), artwork.title)
 
 
-def _views_by_day(since: date, until: date) -> dict[date, int]:
-    totals = dict(
-        DailyView.objects.filter(day__gte=since, day__lte=until).values('day').annotate(total=Sum('views')).values_list('day', 'total')
-    )
+def _visitors_by_day(since: date, until: date) -> dict[date, int]:
+    totals = dict(DailyVisitors.objects.filter(day__gte=since, day__lte=until).values_list('day', 'visitors'))
     return {since + timedelta(days=n): totals.get(since + timedelta(days=n), 0) for n in range((until - since).days + 1)}
 
 
@@ -92,13 +90,17 @@ def dashboard_callback(request: HttpRequest, context: dict) -> dict:
     today = timezone.localdate()
     since = today - timedelta(days=DAYS - 1)
     before = since - timedelta(days=DAYS)
-    views = _views_by_day(since, today)
-    previous_views = DailyView.objects.filter(day__gte=before, day__lt=since).aggregate(total=Sum('views'))['total'] or 0
+    visitors = _visitors_by_day(since, today)
+    previous_visitors = DailyVisitors.objects.filter(day__gte=before, day__lt=since).aggregate(total=Sum('visitors'))['total'] or 0
     enquiries = Enquiry.objects.filter(created_at__date__gte=since).count()
     previous_enquiries = Enquiry.objects.filter(created_at__date__gte=before, created_at__date__lt=since).count()
 
     context['stats'] = [
-        {'label': f'Views, last {DAYS} days', 'value': f'{sum(views.values()):,}', 'note': _change(sum(views.values()), previous_views)},
+        {
+            'label': f'Visitors, last {DAYS} days',
+            'value': f'{sum(visitors.values()):,}',
+            'note': _change(sum(visitors.values()), previous_visitors),
+        },
         {
             'label': f'Sales in {today.year}',
             'value': price(_takings(today.year)),
@@ -118,13 +120,13 @@ def dashboard_callback(request: HttpRequest, context: dict) -> dict:
             'href': reverse('admin:enquiries_subscriber_changelist'),
         },
     ]
-    context['views_chart'] = json.dumps(
+    context['visitors_chart'] = json.dumps(
         {
-            'labels': [date_format(day, 'j M') for day in views],
+            'labels': [date_format(day, 'j M') for day in visitors],
             'datasets': [
                 {
-                    'label': 'Views',
-                    'data': list(views.values()),
+                    'label': 'Visitors',
+                    'data': list(visitors.values()),
                     'borderColor': 'var(--color-primary-600)',
                     'backgroundColor': 'var(--color-primary-600)',
                     'pointRadius': 0,
@@ -135,7 +137,7 @@ def dashboard_callback(request: HttpRequest, context: dict) -> dict:
         }
     )
     context['works_table'] = {
-        'headers': ['Work', 'Views'],
+        'headers': ['Work', 'Visitors'],
         'rows': [[_artwork_link(artwork), f'{total:,}'] for artwork, total in _most_viewed(since)],
     }
     context['referrers_table'] = {

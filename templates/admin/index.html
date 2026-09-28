@@ -44,8 +44,8 @@
 
         <div class="flex flex-col lg:flex-row gap-6">
             <div class="min-w-0 lg:w-2/3">
-                {% component "unfold/components/card.html" with title="Views, last 30 days" %}
-                    {% component "unfold/components/chart/line.html" with data=views_chart height=260 %}{% endcomponent %}
+                {% component "unfold/components/card.html" with title="Visitors, last 30 days" %}
+                    {% component "unfold/components/chart/line.html" with data=visitors_chart height=260 %}{% endcomponent %}
                 {% endcomponent %}
             </div>
             <div class="lg:w-1/3">
