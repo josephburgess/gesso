@@ -7,6 +7,17 @@
     {% include "unfold/helpers/site_branding.html" %}
 {% endblock %}
 
+{% block extrastyle %}
+<style>
+  .home-spots { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .home-spot { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+  .home-spot-image { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 4px; background: var(--color-base-100); }
+  .dark .home-spot-image { background: var(--color-base-800); }
+  .home-spot-empty { display: flex; align-items: center; justify-content: center; opacity: .6; }
+  .home-spot-label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
+</style>
+{% endblock %}
+
 {% block content %}
     <div class="flex flex-col gap-8">
         <div class="flex flex-wrap gap-3">
@@ -50,8 +61,26 @@
         <div class="flex flex-col lg:flex-row gap-6">
             <div class="lg:w-1/2">
                 {% component "unfold/components/card.html" with title="Home page" %}
-                    {% component "unfold/components/table.html" with table=home_page_table card_included=1 %}{% endcomponent %}
-                    <a href="{% url 'admin:artworks_homepage' %}" class="mt-4 inline-block text-primary-600 underline">Change the home page</a>
+                    <div class="home-spots">
+                        {% for spot in home_page %}
+                            <div class="home-spot">
+                                <span class="home-spot-label">{{ spot.label }}</span>
+                                {% if spot.artwork %}
+                                    <a href="{{ spot.href }}">
+                                        {% if spot.artwork.thumbnail_url %}
+                                            <img class="home-spot-image" src="{{ spot.artwork.thumbnail_url }}" alt="">
+                                        {% else %}
+                                            <div class="home-spot-image home-spot-empty">No image</div>
+                                        {% endif %}
+                                    </a>
+                                    <a href="{{ spot.href }}" class="text-primary-600 underline">{{ spot.artwork.title }}</a>
+                                {% else %}
+                                    <div class="home-spot-image home-spot-empty">Empty</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'admin:artworks_homepage' %}" class="mt-4 inline-block text-primary-600 underline">Choose featured works</a>
                 {% endcomponent %}
             </div>
             <div class="flex flex-col gap-6 lg:w-1/2">

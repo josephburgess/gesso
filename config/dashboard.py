@@ -42,7 +42,7 @@ def _artwork_link(artwork: Artwork) -> str:
 def dashboard_callback(request: HttpRequest, context: dict) -> dict:
     to_ship = Order.objects.to_ship().select_related('artwork').order_by('paid_at')
     unread = Enquiry.objects.unread().select_related('artwork')
-    featured = {a.featured_order: a for a in Artwork.objects.exclude(featured_order=None)}
+    featured = {a.featured_order: a for a in Artwork.objects.exclude(featured_order=None).prefetch_related('images')}
 
     context['stats'] = [
         {
@@ -85,12 +85,14 @@ def dashboard_callback(request: HttpRequest, context: dict) -> dict:
             for enquiry in unread[:8]
         ],
     }
-    context['home_page_table'] = {
-        'headers': ['Spot', 'Work'],
-        'rows': [
-            [label, _artwork_link(featured[spot]) if spot in featured else 'Empty'] for spot, label in ((1, '1 (large hero)'), (2, '2'))
-        ],
-    }
+    context['home_page'] = [
+        {
+            'label': label,
+            'artwork': featured.get(spot),
+            'href': reverse('admin:artworks_artwork_change', args=[featured[spot].pk]) if spot in featured else None,
+        }
+        for spot, label in ((1, 'Hero'), (2, 'Second'))
+    ]
     context['without_images'] = [_artwork_link(a) for a in Artwork.objects.filter(images__isnull=True)]
     context['without_alt'] = [_artwork_link(a) for a in Artwork.objects.filter(images__alt='').distinct()]
     context['actions'] = [

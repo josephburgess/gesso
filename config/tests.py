@@ -31,7 +31,7 @@ def test_dashboard_shows_what_needs_attention(admin_client, make_artwork):
     assert 'B Buyer' in html
     assert '£3,485' in html
     assert 'Ann Enquirer' in html
-    assert '1 (large hero)' in html
+    assert 'Hero' in html
     assert 'Works without images' in html
 
 
