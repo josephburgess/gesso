@@ -6,8 +6,8 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 
-from gesso.content.forms import SiteContentAdminForm
-from gesso.content.models import AboutImage, SiteContent
+from gesso.content.forms import SettingsForm
+from gesso.content.models import AboutImage, SiteContent, SocialLink
 
 
 def test_load_is_a_singleton(db):
@@ -19,16 +19,45 @@ def test_load_is_a_singleton(db):
     assert SiteContent.objects.count() == 1
 
 
-def test_admin_form_edits_delivery_in_pounds(db):
+def test_settings_form_edits_delivery_in_pounds(db):
     content = SiteContent.load()
     content.delivery_pence = 8500
     content.save()
 
-    form = SiteContentAdminForm({'site_name': 'Studio', 'delivery': '92.50'}, instance=content)
+    form = SettingsForm({'site_name': 'Studio', 'delivery': '92.50'}, instance=content)
 
     assert form.initial['delivery'] == 85
     assert form.is_valid(), form.errors
     assert form.save().delivery_pence == 9250
+
+
+def test_settings_page_saves_email_and_social_links(admin_client):
+    SocialLink.objects.create(site_content=SiteContent.load(), label='Instagram', url='https://instagram.com/studio')
+    url = '/admin/content/sitesettings/1/change/'
+
+    html = admin_client.get('/admin/content/sitesettings/', follow=True).content.decode()
+    response = admin_client.post(
+        url,
+        {
+            'site_name': 'Studio',
+            'notification_email': 'studio@example.com',
+            'delivery': '85',
+            'social_links-TOTAL_FORMS': '0',
+            'social_links-INITIAL_FORMS': '0',
+        },
+    )
+
+    assert 'Instagram' in html
+    assert response.status_code == 302
+    assert SiteContent.load().notification_email == 'studio@example.com'
+
+
+def test_site_text_is_only_copy(admin_client):
+    html = admin_client.get('/admin/content/sitecontent/', follow=True).content.decode()
+
+    assert 'name="biography"' in html
+    assert not any(f'name="{field}"' in html for field in ('site_name', 'notification_email', 'delivery'))
+    assert 'Social links' not in html
 
 
 def _png(width=1200, height=800) -> SimpleUploadedFile:

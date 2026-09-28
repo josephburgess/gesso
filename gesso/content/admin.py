@@ -9,8 +9,8 @@ from unfold.decorators import display
 from gesso.artworks.forms import PositionedForm
 from gesso.artworks.image_manager import ImageManager
 from gesso.artworks.models import Artwork
-from gesso.content.forms import AppearanceForm, SiteContentAdminForm
-from gesso.content.models import AboutImage, Page, SiteContent, SocialLink
+from gesso.content.forms import AppearanceForm, SettingsForm, SiteContentAdminForm
+from gesso.content.models import AboutImage, Page, SiteContent, SiteSettings, SocialLink
 
 NOTES = {
     'paper': 'Warm off-white with an umber accent',
@@ -49,7 +49,6 @@ class SocialLinkInline(TabularInline):
 @admin.register(SiteContent)
 class SiteContentAdmin(ModelAdmin):
     form = SiteContentAdminForm
-    inlines = (SocialLinkInline,)
     readonly_fields = ('about_photos',)
 
     def has_add_permission(self, request):
@@ -96,6 +95,25 @@ class SiteContentAdmin(ModelAdmin):
             'pages': pages,
         }
         return TemplateResponse(request, 'admin/content/appearance.html', context)
+
+
+@admin.register(SiteSettings)
+class SettingsAdmin(ModelAdmin):
+    form = SettingsForm
+    inlines = (SocialLinkInline,)
+    fieldsets = (
+        ('Site', {'fields': ('site_name', 'tagline', 'site_description')}),
+        ('Enquiries & sales', {'fields': ('notification_email', 'delivery')}),
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        return redirect('admin:content_sitesettings_change', SiteContent.load().pk)
 
 
 @admin.register(Page)

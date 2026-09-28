@@ -3,10 +3,16 @@ from decimal import Decimal
 from django import forms
 from unfold.widgets import UnfoldAdminDecimalFieldWidget
 
-from gesso.content.models import SiteContent
+from gesso.content.models import SiteContent, SiteSettings
 
 
 class SiteContentAdminForm(forms.ModelForm):
+    class Meta:
+        model = SiteContent
+        fields = ('intro', 'statement', 'biography', 'contact_details')
+
+
+class SettingsForm(forms.ModelForm):
     delivery = forms.DecimalField(
         label='UK delivery (£)',
         max_digits=7,
@@ -17,8 +23,8 @@ class SiteContentAdminForm(forms.ModelForm):
     )
 
     class Meta:
-        model = SiteContent
-        exclude = ('delivery_pence', 'theme', 'layout', 'work_layout', 'headings', 'italic_titles', 'motion', 'show_index', 'about_layout')  # noqa: DJ006
+        model = SiteSettings
+        fields = ('site_name', 'tagline', 'site_description', 'notification_email')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
