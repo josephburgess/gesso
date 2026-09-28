@@ -4,8 +4,9 @@ from django.utils import timezone
 
 from config.dashboard import orders_to_ship, unread_enquiries
 from gesso.artworks.models import ArtworkImage
-from gesso.commerce.models import Order, OrderStatus
+from gesso.commerce.models import Order, OrderSource, OrderStatus
 from gesso.enquiries.models import Enquiry
+from gesso.stats.models import DailyReferrer, DailyView
 
 
 def _paid_order(artwork) -> Order:
@@ -70,3 +71,43 @@ def test_dashboard_lists_works_with_photos_missing_alt_text(admin_client, make_a
 
     assert 'Undescribed' in card
     assert 'Described<' not in card
+
+
+def test_sales_this_year_count_offline_sales_and_refunds(admin_client, make_artwork):
+    _paid_order(make_artwork())
+    refunded = _paid_order(make_artwork())
+    refunded.record_refund(8500, relist=False)
+    Order.objects.create(
+        artwork=make_artwork(),
+        status=OrderStatus.SHIPPED,
+        source=OrderSource.EXHIBITION,
+        amount_pence=120000,
+        delivery_pence=0,
+        paid_at=timezone.now(),
+    )
+    Order.objects.create(
+        artwork=make_artwork(), status=OrderStatus.PAID, amount_pence=99900, delivery_pence=0, paid_at=timezone.now() - timedelta(days=400)
+    )
+    Order.objects.create(artwork=make_artwork(), status=OrderStatus.EXPIRED, amount_pence=99900, delivery_pence=0)
+
+    html = admin_client.get('/admin/').content.decode()
+
+    assert '£8,085' in html
+
+
+def test_dashboard_shows_views_and_where_they_came_from(admin_client, make_artwork):
+    today = timezone.localdate()
+    artwork = make_artwork(title='Harbour at Dusk', slug='harbour')
+    DailyView.objects.create(day=today, path='/work/harbour', artwork=artwork, views=12)
+    DailyView.objects.create(day=today - timedelta(days=1), path='/', views=30)
+    DailyView.objects.create(day=today - timedelta(days=45), path='/', views=21)
+    DailyReferrer.objects.create(day=today, host='instagram.com', visits=5)
+
+    html = admin_client.get('/admin/').content.decode()
+    works = html.split('Most viewed works')[1]
+
+    assert '>42<' in html.replace(' ', '').replace('\n', '')
+    assert '+100% on the 30 days before' in html
+    assert 'data-type="line"' in html
+    assert 'Harbour at Dusk' in works
+    assert 'instagram.com' in html

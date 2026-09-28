@@ -33,13 +33,31 @@
                 {% component "unfold/components/card.html" with href=stat.href %}
                     {% component "unfold/components/text.html" %}{{ stat.label }}{% endcomponent %}
                     {% component "unfold/components/title.html" %}{{ stat.value }}{% endcomponent %}
+                    {% if stat.note %}<p class="mt-1 text-xs opacity-70">{{ stat.note }}</p>{% endif %}
                 {% endcomponent %}
             {% endfor %}
         </div>
 
         <div class="flex flex-col lg:flex-row gap-6">
+            <div class="min-w-0 lg:w-2/3">
+                {% component "unfold/components/card.html" with title="Views, last 30 days" %}
+                    {% component "unfold/components/chart/line.html" with data=views_chart height=260 %}{% endcomponent %}
+                {% endcomponent %}
+            </div>
+            <div class="lg:w-1/3">
+                {% component "unfold/components/card.html" with title="Most viewed works" %}
+                    {% if works_table.rows %}
+                        {% component "unfold/components/table.html" with table=works_table card_included=1 %}{% endcomponent %}
+                    {% else %}
+                        {% component "unfold/components/text.html" %}No visits to works yet.{% endcomponent %}
+                    {% endif %}
+                {% endcomponent %}
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-6">
             <div class="lg:w-1/2">
-                {% component "unfold/components/card.html" with title="Orders to ship" %}
+                {% component "unfold/components/card.html" with title=orders_title %}
                     {% if orders_table.rows %}
                         {% component "unfold/components/table.html" with table=orders_table card_included=1 %}{% endcomponent %}
                     {% else %}
@@ -48,7 +66,7 @@
                 {% endcomponent %}
             </div>
             <div class="lg:w-1/2">
-                {% component "unfold/components/card.html" with title="Unread enquiries" %}
+                {% component "unfold/components/card.html" with title=enquiries_title %}
                     {% if enquiries_table.rows %}
                         {% component "unfold/components/table.html" with table=enquiries_table card_included=1 %}{% endcomponent %}
                     {% else %}
@@ -84,6 +102,13 @@
                 {% endcomponent %}
             </div>
             <div class="flex flex-col gap-6 lg:w-1/2">
+                {% component "unfold/components/card.html" with title="Where visitors came from" %}
+                    {% if referrers_table.rows %}
+                        {% component "unfold/components/table.html" with table=referrers_table card_included=1 %}{% endcomponent %}
+                    {% else %}
+                        {% component "unfold/components/text.html" %}No visits from other sites yet.{% endcomponent %}
+                    {% endif %}
+                {% endcomponent %}
                 {% component "unfold/components/card.html" with title="Works without images" %}
                     {% if without_images %}
                         <div class="flex flex-col gap-3">
