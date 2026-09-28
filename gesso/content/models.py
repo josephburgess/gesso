@@ -85,6 +85,15 @@ class SiteContent(models.Model):
         return content
 
 
+class SiteSettings(SiteContent):
+    class Meta:
+        proxy = True
+        verbose_name = verbose_name_plural = 'settings'
+
+    def __str__(self):
+        return 'Settings'
+
+
 class AboutImage(ProcessedImage):
     site_content = models.ForeignKey(SiteContent, on_delete=models.CASCADE, related_name='about_images')
     original = models.ImageField(upload_to='about/originals/')

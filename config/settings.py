@@ -179,6 +179,11 @@ UNFOLD = {
                         'badge': 'config.dashboard.unread_enquiries',
                     },
                     {'title': 'Mailing list', 'icon': 'contact_mail', 'link': reverse_lazy('admin:enquiries_subscriber_changelist')},
+                ],
+            },
+            {
+                'title': 'Site',
+                'items': [
                     {
                         'title': 'Site text',
                         'icon': 'edit_note',
@@ -187,6 +192,7 @@ UNFOLD = {
                     },
                     {'title': 'Appearance', 'icon': 'brush', 'link': reverse_lazy('admin:content_appearance')},
                     {'title': 'Pages', 'icon': 'gavel', 'link': reverse_lazy('admin:content_page_changelist')},
+                    {'title': 'Settings', 'icon': 'settings', 'link': reverse_lazy('admin:content_sitesettings_changelist')},
                 ],
             },
             {

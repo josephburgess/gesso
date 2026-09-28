@@ -97,6 +97,7 @@ def dashboard_callback(request: HttpRequest, context: dict) -> dict:
         {'label': 'Add a work', 'href': reverse('admin:artworks_artwork_add')},
         {'label': 'Edit site text', 'href': reverse('admin:content_sitecontent_changelist')},
         {'label': 'Change appearance', 'href': reverse('admin:content_appearance')},
+        {'label': 'Settings', 'href': reverse('admin:content_sitesettings_changelist')},
         {'label': 'View site', 'href': '/'},
     ]
     return context
