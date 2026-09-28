@@ -129,6 +129,7 @@ def dashboard_callback(request: HttpRequest, context: dict) -> dict:
                     'backgroundColor': 'var(--color-primary-600)',
                     'pointRadius': 0,
                     'tension': 0.3,
+                    'displayYAxis': True,
                 }
             ],
         }

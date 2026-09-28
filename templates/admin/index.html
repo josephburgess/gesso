@@ -18,6 +18,10 @@
 </style>
 {% endblock %}
 
+{% block extrahead %}
+<script>Chart.defaults.scales.linear.ticks.precision = 0;</script>
+{% endblock %}
+
 {% block content %}
     <div class="flex flex-col gap-8">
         <div class="flex flex-wrap gap-3">
