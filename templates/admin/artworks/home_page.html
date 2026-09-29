@@ -47,7 +47,7 @@
 
     {% component "unfold/components/card.html" %}
         <div class="home-label">In the studio</div>
-        <p class="home-help">Pick up to two process photos for the home page, and drag to set their order. Mark a photo as a studio / process photo on its work to see it here.</p>
+        <p class="home-help">Pick up to three process photos for the home page, and drag to set their order. Mark a photo as a studio / process photo on its work to see it here.</p>
         {% for error in form.studio.errors %}<div class="home-error" style="margin-bottom: 12px">{{ error }}</div>{% endfor %}
         {% if photos %}
             <div class="studio" x-data x-sort x-sort:config="{filter: 'input, label', preventOnFilter: false}">

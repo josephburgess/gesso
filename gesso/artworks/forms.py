@@ -85,8 +85,8 @@ class HomePageForm(forms.Form):
         cleaned = super().clean()
         if cleaned.get('hero') and cleaned.get('hero') == cleaned.get('second'):
             self.add_error('second', 'Choose a different work from the hero.')
-        if len(cleaned.get('studio') or []) > 2:
-            self.add_error('studio', 'Choose up to two studio photos.')
+        if len(cleaned.get('studio') or []) > 3:
+            self.add_error('studio', 'Choose up to three studio photos.')
         return cleaned
 
     @transaction.atomic

@@ -284,16 +284,16 @@ def test_home_page_rejects_the_same_work_twice(admin_client, make_artwork):
     assert 'Choose a different work from the hero.' in response.content.decode()
 
 
-def test_home_page_orders_up_to_two_studio_photos(admin_client, make_artwork):
+def test_home_page_orders_up_to_three_studio_photos(admin_client, make_artwork):
     work = make_artwork(is_published=True)
-    a, b, c = (_with_image(work, is_process=True) for _ in range(3))
+    a, b, c, d = (_with_image(work, is_process=True) for _ in range(4))
 
-    too_many = admin_client.post('/admin/artworks/artwork/home-page/', {'studio': [a.pk, b.pk, c.pk]})
-    admin_client.post('/admin/artworks/artwork/home-page/', {'studio': [c.pk, a.pk]})
+    too_many = admin_client.post('/admin/artworks/artwork/home-page/', {'studio': [a.pk, b.pk, c.pk, d.pk]})
+    admin_client.post('/admin/artworks/artwork/home-page/', {'studio': [c.pk, a.pk, d.pk]})
 
-    assert 'Choose up to two studio photos.' in too_many.content.decode()
+    assert 'Choose up to three studio photos.' in too_many.content.decode()
     positions = dict(ArtworkImage.objects.values_list('pk', 'home_position'))
-    assert (positions[c.pk], positions[a.pk], positions[b.pk]) == (0, 1, None)
+    assert (positions[c.pk], positions[a.pk], positions[d.pk], positions[b.pk]) == (0, 1, 2, None)
 
 
 def test_positioned_form_ignores_a_blank_row_renumbered_by_reordering(db):

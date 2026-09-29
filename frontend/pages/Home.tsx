@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useRef, type Ref } from 'react';
+import { useRef, type CSSProperties, type Ref } from 'react';
 import Figure from '@/components/Figure';
 import IndexOfWorks from '@/components/IndexOfWorks';
 import ResponsiveImage from '@/components/ResponsiveImage';
@@ -12,9 +12,14 @@ import Zoom from '@/components/Zoom';
 import useFitHeight from '@/hooks/useFitHeight';
 import useUltrawide from '@/hooks/useUltrawide';
 import SiteLayout from '@/layouts/SiteLayout';
-import type { ArtworkTile, Home as HomeProps } from '@/types';
+import type { ArtworkTile, Home as HomeProps, ProcessPhoto } from '@/types';
 
 const ratio = (tile: ArtworkTile) => (tile.cover ? tile.cover.width / tile.cover.height : 1);
+
+const photoRatio = (photo: ProcessPhoto) => photo.image.width / photo.image.height;
+
+const studioWidth = (photos: ProcessPhoto[]) =>
+  `calc(${photos.reduce((sum, photo) => sum + photoRatio(photo), 0)} * min(48vh, 440px) + ${photos.length - 1} * var(--spacing-grid-col))`;
 
 const fitWidth = (height: number | null, tile: ArtworkTile, scale = 1) =>
   height && tile.cover ? `min(100%, ${Math.round(height * scale * ratio(tile))}px)` : '100%';
@@ -121,18 +126,22 @@ export default function Home({ home }: { home: HomeProps }) {
           <Reveal>
             <SectionLabel>In the studio</SectionLabel>
           </Reveal>
-          <div className="mt-6.5 flex flex-wrap items-end gap-grid-col">
+          <div
+            style={{ '--row': studioWidth(home.process) } as CSSProperties}
+            className="mt-6.5 flex flex-col gap-grid-col wide:max-w-(--row) wide:flex-row wide:items-start"
+          >
             {home.process.map((photo, i) => (
               <Reveal
                 key={photo.image.src}
                 delay={i * 120}
-                className={`min-w-0 ${i === 0 ? 'max-w-[380px] flex-[1_1_240px]' : 'max-w-[520px] flex-[1.4_1_300px]'}`}
+                style={{ '--ratio': photoRatio(photo) } as CSSProperties}
+                className="min-w-0 wide:flex-(--ratio)"
               >
                 <Figure
                   image={photo.image}
                   alt={photo.caption || `${photo.title} in the studio`}
                   caption={[photo.caption, photo.title].filter(Boolean).join(' · ')}
-                  sizes="(min-width: 861px) 35vw, 92vw"
+                  sizes="(min-width: 861px) 40vw, 92vw"
                 />
               </Reveal>
             ))}
